@@ -1,0 +1,39 @@
+<nz-timeline nzMode="alternate">
+    <nz-timeline-item *ngFor="let item of activityLogList" [nzColor]="item.allowedOnBoard ? 'green' : 'red'">
+        {{ (item.created).toDate() | date: 'medium' }}
+        <p>Programa: {{ item.program === 'S' ? 'Salida':'Entrada' }}</p>
+        <p>Turno: {{ item.round }}</p>
+        <p>Unidad: {{ item.vehicle }}</p>
+        <p>PR: {{ item.driver }}</p>
+        <p>Mensaje: {{ item.description }}</p>
+    </nz-timeline-item>
+  </nz-timeline>
+
+  <table class="table table-bordered" *ngIf="!!userBoardingPass && userBoardingPass.length > 0">
+    <thead>
+        <th style="color: #4F6F57;">#</th>
+        <th style="color: #4F6F57;">QRCode</th>
+        <th style="color: #4F6F57;">Matrícula / ID Empleado</th>
+        <th style="color: #4F6F57;">Usuario</th>
+    </thead>
+    <tbody>
+        <tr *ngFor="let qrcode of userBoardingPass; let index=index">
+            <td>{{ index + 1 }}</td>
+            <td *ngIf="!!qrcode && qrcode.user && qrcode.user.id && qrcode.boardingPass && qrcode.boardingPass.id">
+              <div id="download">
+                    <nz-qrcode nzValue="qrcode.user.id + ',' + qrcode.boardingPass.id"></nz-qrcode>
+                    <a #download></a>
+                    <button nz-button nzType="primary" (click)="downloadImg()">Descargar</button>
+                </div>
+            </td>
+            <!-- <td *ngIf="!!qrcode && qrcode.user && qrcode.user.id && qrcode.boardingPass && qrcode.boardingPass.id">
+                DATA {{ qrcode.user.id }} {{ qrcode.boardingPass.id }}
+            </td> -->
+            <td *ngIf="!!qrcode && !!!qrcode.user || !!!qrcode.boardingPass">
+                No qrCode available
+            </td>
+            <td>qrcode.user.studentId</td>
+            <td>qrcode.user.displayName </td>
+        </tr>
+    </tbody>
+  </table>

@@ -1,0 +1,163 @@
+<div style="margin: buttom 15px;">
+    <div class="site-page-header-ghost-wrapper">
+        <nz-page-header [nzGhost]="false">
+            <nz-page-header-title>Organigrama de Rutas</nz-page-header-title>
+            <nz-page-header-subtitle></nz-page-header-subtitle>        
+        </nz-page-header>
+        <div class="body">
+            <nz-tabset>
+                <nz-tab nzTitle="Usuarios Interesados">
+                   <div style="margin-bottom: 10px;">                    
+                      <form nz-form nzLayout="horizontal" [formGroup]="validateForm" (ngSubmit)="submitFormUnPaid()">
+                        <table style="width: 1000px; border-collapse: collapse;" ngSkipHydration>
+                            <tr>
+                              <td style="width: 50%; ">
+                                    <nz-form-item>
+                                    <nz-form-label  style="width: 80px;">Empresa</nz-form-label>
+                                    <nz-select style="width: 300px;" formControlName="customerId" nzAllowClear nzPlaceHolder="Selecciona la Empresa"
+                                    (ngModelChange)="onCustomerSelectedC($event, customers)">
+                                    <nz-option *ngFor="let o of customers" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon
+                                      ></i> {{ o.name }}</nz-option>
+                                </nz-select>  
+                                </nz-form-item>
+                              </td>
+                            </tr>
+                            <tr>
+                                <td  style="width: 50%; ">
+                                <nz-form-item>
+                                    <nz-form-label  style="width: 80px;">Ruta</nz-form-label>
+                                    <nz-select style="width: 300px;" formControlName="routeId" nzAllowClear nzPlaceHolder="Selecciona la ruta"
+                                    (ngModelChange)="onRouteSelected($event, routes)">
+                                    <nz-option *ngFor="let o of routes" nzCustomContent [nzLabel]="o.name" [nzValue]="o.routeId"><i nz-icon
+                                     ></i> {{ o.name }}</nz-option>
+                                </nz-select>
+                                </nz-form-item>  
+                                <nz-form-label  style="width: 80px;">Turno</nz-form-label>
+                                <nz-select style="width: 300px;" formControlName="round" nzAllowClear nzPlaceHolder="Selecciona Turno">
+                                    <nz-option nzValue="1" nzLabel="Matutino"></nz-option>
+                                    <nz-option nzValue="2" nzLabel="Vespertino"></nz-option>
+                                    <nz-option nzValue="3" nzLabel="Nocturno"></nz-option>    
+                                  </nz-select>                          
+                                    <nz-form-item>
+                                        <nz-form-label >Programacón de Rutas: </nz-form-label>
+                                      <b> {{contenedores}}</b>
+                                    </nz-form-item>                                   
+                                </td>
+                            </tr>                      
+                          </table>  
+                        <button  nz-button  style=" background-color: #4F6F57; color: #f6f3ea;"  (click)="submitFormUnPaid()">Aceptar</button>                   
+                      </form>
+                    </div>
+                    <div>                    
+                      <div class="table-operations">
+                       <!--  <button nz-button (click)="sortBy()"> Agrupar </button>
+                        <button nz-button (click)="resetFilters()">Limpiar  Filtros </button>     -->
+                      </div>
+                      <nz-table #filterTable [nzData]="rowDataPay" nzTableLayout="fixed">
+                        <thead>
+                          <tr>
+                            <th
+                              *ngFor="let column of listOfColumns; trackBy: trackByName"
+                              [(nzSortOrder)]="column.sortOrder"
+                              [nzSortFn]="column.sortFn"
+                              [nzFilters]="column.listOfFilter"
+                              [nzFilterFn]="column.filterFn"
+                            >
+                              {{ column.name }}
+                            </th>
+                          </tr>
+                        </thead>                       
+                          <tr *ngFor="let data of filterTable.data">
+                            <td>{{ data.turno }}</td>
+                            <td>{{ data.roundTrip }}</td>
+                            <td>{{ data.displayName }}</td>
+                            <td>{{ data.studentId }}</td>
+                            <td>{{ data.phoneNumber }}</td>
+                            <td>{{ data.email }}</td>
+                            <td>{{ data.status }}</td>
+                          </tr>
+                       
+                      </nz-table>                   
+                    </div>              
+                </nz-tab>
+                  <nz-tab nzTitle="Usuarios con Pago">
+                    <div style="margin-bottom: 10px;">                        
+                        <form nz-form nzLayout="horizontal" [formGroup]="validateFormP" (ngSubmit)="submitFormPaid()">       
+                            <table style="width: 1000px; border-collapse: collapse;" ngSkipHydration>
+                                <tr>
+                                  <td style="width: 50%; ">
+                                    <nz-form-item>
+                                    <nz-form-label  style="width: 80px;">Empresa</nz-form-label>
+                                        <nz-select style="width: 300px;" formControlName="customerId" nzAllowClear nzPlaceHolder="Selecciona la Empresa"
+                                        (ngModelChange)="onCustomerSelectedP($event, customers)">
+                                        <nz-option *ngFor="let o of customers" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon
+                                            ></i> {{ o.name }}</nz-option>
+                                    </nz-select>  
+                                    </nz-form-item>
+                                  </td>
+                                </tr>
+                                <tr>
+                                   <td  style="width: 50%; ">
+                                    <nz-form-item>
+                                        <nz-form-label  style="width: 80px;">Ruta</nz-form-label>
+                                        <nz-select style="width: 300px;" formControlName="routeId" nzAllowClear nzPlaceHolder="Selecciona la ruta"
+                                        (ngModelChange)="onRouteSelectedP($event, routesP)">
+                                        <nz-option *ngFor="let o of routesP" nzCustomContent [nzLabel]="o.name" [nzValue]="o.routeId"><i nz-icon
+                                           ></i> {{ o.name }}</nz-option>
+                                    </nz-select>
+                                    </nz-form-item>  
+                                    <nz-form-label  style="width: 80px;">Turno</nz-form-label>
+                                    <nz-select style="width: 300px;" formControlName="round" 
+                                    (ngModelChange)="onRoundSelected()" nzAllowClear nzPlaceHolder="Selecciona Turno">
+                                        <nz-option nzValue="1" nzLabel="Matutino"></nz-option>
+                                        <nz-option nzValue="2" nzLabel="Vespertino"></nz-option>
+                                          <nz-option nzValue="3" nzLabel="Nocturno"></nz-option>                                      
+                                      </nz-select>                          
+                                        <nz-form-item>
+                                            <nz-form-label >Programacón de Rutas: </nz-form-label>
+                                          <b> {{contenedoresPay}}</b>
+                                        </nz-form-item>                                   
+                                    </td>
+                                </tr>                      
+                              </table>                                               
+                          <nz-form-item>                           
+                              <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="submitFormPaid()">Aceptar</button>
+                        </nz-form-item>  
+                         
+                        </form>
+                    </div> 
+                    <div>                    
+                      <div class="table-operations">
+                      <!--   <button nz-button (click)="sortBPay()"> Agrupar </button>
+                        <button nz-button (click)="resetFiltersPay()">Limpiar  Filtros </button>    --> 
+                      </div>
+                      <nz-table #filterTable [nzData]="rowDataPre" nzTableLayout="fixed">
+                        <thead>
+                          <tr>
+                            <th
+                              *ngFor="let column of listOfColumns; trackBy: trackByNamePay"
+                              [(nzSortOrder)]="column.sortOrder"
+                              [nzSortFn]="column.sortFn"
+                              [nzFilters]="column.listOfFilter"
+                              [nzFilterFn]="column.filterFn"
+                            >
+                              {{ column.name }}
+                            </th>
+                          </tr>
+                        </thead>                       
+                          <tr *ngFor="let data of filterTable.data">
+                            <td>{{ data.turno }}</td>
+                            <td>{{ data.roundTrip }}</td>
+                            <td>{{ data.displayName }}</td>
+                            <td>{{ data.studentId }}</td>
+                            <td>{{ data.phoneNumber }}</td>
+                            <td>{{ data.email }}</td>
+                            <td>{{ data.status }}</td>
+                          </tr>                  
+                      </nz-table>                   
+                    </div>                    
+                  </nz-tab>              
+            </nz-tabset>
+        </div>
+    </div>
+</div>

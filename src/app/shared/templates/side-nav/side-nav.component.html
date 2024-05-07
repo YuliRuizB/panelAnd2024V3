@@ -1,0 +1,16 @@
+  <ul  nz-menu nzMode="inline">
+    <div *ngFor="let item of menuItems">
+    <li nz-submenu *ngIf="item.submenu && item.submenu.length > 0" [nzTitle]="item.title" >
+      <ul>
+        <ng-container *ngFor="let subItem of item.submenu">          
+          <li nz-menu-item *ngIf="checkValiditySub(subItem.idRol)" [routerLink]="subItem.path" >
+            <span>{{subItem.title}}  </span>
+          </li>
+        </ng-container>
+      </ul>
+    </li>
+   <li nz-menu-item *ngIf="!item.submenu || item.submenu.length === 0" [routerLink]="item.path" >
+      <span>{{item.title}} </span>
+    </li> 
+    </div>
+  </ul>

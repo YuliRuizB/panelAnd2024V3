@@ -1,0 +1,188 @@
+<div class="page-header">
+  <div class="row align-items-md-center">
+    <div class="col-md-6">
+      <div class="row">
+        <div class="col-md-5">
+          <nz-input-group [nzPrefix]="searchPrefix">
+            <input type="text" nz-input placeholder="Buscar">
+          </nz-input-group>
+          <ng-template #searchPrefix>
+            <i class="opacity-04" nz-icon ></i>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="text-md-right m-v-10">
+       <!--  <nz-radio-group class="m-r-10" [(ngModel)]="view">
+          <label nz-radio-button nzValue="cardView" nzTitle="Vista tarjetas" nzPlacement="bottom" nz-tooltip>
+            Vista tarjetas
+          </label>
+          <label nz-radio-button nzValue="listView" nzTitle="Vista tabla" nzPlacement="bottom" nz-tooltip>
+            Vista tabla
+          </label>
+        </nz-radio-group> -->
+        <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="showNewProject(newProjectContent)">
+          <i nz-icon nzType="plus"></i>
+          <span>Nuevo Cliente</span>
+        </button>
+        <ng-template #newProjectContent>
+          <form nz-form nzLayout="vertical" [formGroup]="objectForm">
+            <nz-form-item>
+              <nz-form-label>Nombre</nz-form-label>
+              <nz-form-control>
+                <input type="text" formControlName="name" nz-input placeholder="Nombre con el que identifica al Cliente">
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+              <nz-form-label>Razón Social</nz-form-label>
+              <nz-form-control>
+                <input type="text" formControlName="legalName" nz-input placeholder="Razón social">
+              </nz-form-control>
+            </nz-form-item>
+            <div class="row">
+              <div class="col-sm-12 col-md-6 col-lg-4">
+                <nz-form-item>
+                  <nz-form-label>Contacto Principal</nz-form-label>
+                  <nz-form-control>
+                  <input type="text" formControlName="primaryContact" nz-input placeholder="Nombre completo">
+                </nz-form-control>
+                </nz-form-item>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-4">
+                <nz-form-item>
+                  <nz-form-label>Teléfono</nz-form-label>
+                  <nz-form-control>
+                  <input type="text" formControlName="primaryPhone" nz-input placeholder="Teléfono">
+                </nz-form-control>
+                </nz-form-item>
+              </div>
+              <div class="col-sm-12 col-md-6 col-lg-4">
+                <nz-form-item>
+                  <nz-form-label>Correo</nz-form-label>
+                  <nz-form-control>
+                  <input type="text" formControlName="primaryEmail" nz-input placeholder="Correo">
+                </nz-form-control>
+                </nz-form-item>
+              </div>
+            </div>
+            <nz-form-item>
+              <nz-form-label>Sitio Web</nz-form-label>
+              <nz-form-control>
+              <input type="text" formControlName="website" nz-input placeholder="Sitio web">
+            </nz-form-control>
+            </nz-form-item>
+          </form>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container-fluid">
+  <div class="row" *ngIf="view == 'cardView'">
+    <div class="col-md-3" *ngFor="let item of vendorList">
+      <nz-card [nzActions]="[actionSetting, actionEdit, actionEllipsis]">      
+        <nz-card-meta [nzAvatar]="avatarTemplate" [nzTitle]="item.name" >
+        </nz-card-meta>      
+      </nz-card>
+    
+  <ng-template #avatarTemplate>
+    <nz-avatar  [ngStyle]=""
+    [nzText]="item.name"
+    style="vertical-align: middle;"
+    nzSize="large"  
+    [nzSrc]="item.avatar"></nz-avatar>   
+  </ng-template>
+
+  <ng-template #actionSetting>               
+   <!--  <nz-tag class="m-b-0" *ngIf="item.status == 'In Progress'" [nzColor]="'blue'">{{item.status}}</nz-tag>
+    <nz-tag class="m-b-0" *ngIf="item.status == 'Ready'" [nzColor]="'cyan'">{{item.status}}</nz-tag>
+    <nz-tag class="m-b-0" *ngIf="item.status == 'Behind'" [nzColor]="'red'">{{item.status}}</nz-tag> -->
+    <i *ngIf="item.active" nz-icon 
+    [nzType]="'check-circle'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#52c41a'" 
+    nzTooltipTitle="Activo" nzTooltipPlacement="topLeft" nz-tooltip></i>
+    <i *ngIf="!item.active" 
+    nz-icon [nzType]="'pause-circle'" [nzTheme]="'twotone'" 
+    [nzTwotoneColor]="'#de4436'" nzTooltipTitle="Inactivo" 
+    nzTooltipPlacement="topLeft" nz-tooltip></i>
+  </ng-template>
+  <ng-template #actionEdit>
+    <i nz-icon nzType="edit" [routerLink]="['/vendor/edit', item.id]" routerLinkActive="router-link-active"
+    nzTooltipTitle="Editar" nzTooltipPlacement="topLeft" nz-tooltip></i>      
+ </ng-template>
+
+ <ng-template #actionEllipsis> 
+  <a (click)="modalConfirmDelete(item.id)">
+    <i nz-icon nzType="delete"  nzTooltipTitle="Eliminar" theme="outline"></i>    
+  </a>
+ </ng-template>
+
+</div>
+</div>
+
+  <nz-card *ngIf="view == 'listView'">
+    <nz-table #listViewTable [nzData]="vendorList">
+      <thead>
+        <tr>
+          <th style="color: #4F6F57;">Nombre</th>
+          <th style="color: #4F6F57;">Razón Social</th>
+          <th style="color: #4F6F57;">Sitio web</th>
+          <th style="color: #4F6F57;">Contacto</th>
+          <th style="color: #4F6F57;">Correo</th>
+          <th style="color: #4F6F57;">Teléfono</th>
+          <th class="text-center">Status</th>
+          <th style="color: #4F6F57;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of listViewTable.data">
+          <td>
+            <div class="media align-items-center">
+              <nz-avatar nzShape="square"  style="background-color: white ;  color: #4F6F57;" [nzSrc]="item.avatar"></nz-avatar>
+              <div class="m-l-10">
+                <h5 class="m-b-0">{{item.name}}</h5>
+              </div>
+            </div>
+          </td>
+          <td>{{item.legalName}}</td>
+          <td>
+            {{ item.website }}
+          </td>
+          <td>{{ item.primaryContact }}</td>
+          <td>{{ item.primaryEmail }}</td>
+          <td>{{ item.primaryPhone }}</td>
+          <td class="text-center">
+            <nz-tag class="m-b-0" *ngIf="item.status == 'In Progress'" [nzColor]="'blue'">{{item.status}}</nz-tag>
+            <nz-tag class="m-b-0" *ngIf="item.status == 'Ready'" [nzColor]="'cyan'">{{item.status}}</nz-tag>
+            <nz-tag class="m-b-0" *ngIf="item.status == 'Behind'" [nzColor]="'red'">{{item.status}}</nz-tag>
+          </td>
+          <td class="text-right">
+            <div>
+              <a class="text-gray font-size-18" nz-dropdown nzPlacement="bottomRight" nzTrigger="click"
+                [nzDropdownMenu]="projectListSetting2">
+                <i nz-icon nzType="ellipsis" theme="outline"></i>
+              </a>
+              <nz-dropdown-menu #projectListSetting2="nzDropdownMenu">
+                <ul nz-menu nzSelectable>
+                  <li nz-menu-item>
+                    <a [routerLink]="['/vendor/edit', item.id]" routerLinkActive="router-link-active" >
+                      <i nz-icon nzType="edit" theme="outline"></i>
+                      <span class="m-l-10">Editar</span>
+                    </a>
+                  </li>
+                  <li nz-menu-divider></li>
+                  <li nz-menu-item>
+                    <a>
+                      <i nz-icon nzType="delete" theme="outline"></i>
+                      <span class="m-l-10">Eliminar</span>
+                    </a>
+                  </li>
+                </ul>
+              </nz-dropdown-menu>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </nz-card>
+</div>

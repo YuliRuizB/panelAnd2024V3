@@ -1,0 +1,238 @@
+
+<!--
+<button nz-button style="margin-bottom: 1em; background-color: #4F6F57; color: #f6f3ea;" (click)="open()">Alertas</button>
+ <button nz-button style="margin-bottom: 1em; background-color: #4F6F57; color: #f6f3ea;" (click)="openMessage()">Mensajes</button>
+ -->  
+ <nz-tabset>
+  <nz-tab nzTitle="Actividad General">
+    <nz-card>
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Selecciona la fecha a validar</h5>
+      </div>
+      <div class="m-t-30">
+        <!-- Date Range Form -->
+        <form [formGroup]="dateRangeFormAct" (ngSubmit)="onDateRangeChangeAct()">
+          <!-- Start Date Picker -->
+          <nz-date-picker formControlName="startDate"></nz-date-picker>
+          
+          <!-- End Date Picker -->
+          <nz-date-picker formControlName="endDate"></nz-date-picker>
+
+          <!-- Submit Button -->
+          <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" type="submit">Aceptar</button>
+        </form>
+      </div>
+    </nz-card>
+
+    <nz-card  [nzTitle]="'Matutino'">
+      <nz-row [nzGutter]="16">
+        <nz-col [nzSpan]="12">
+          <nz-statistic [nzValue]="(1949101 | number)!" [nzTitle]="'Active Users'"></nz-statistic>
+        </nz-col>
+        <nz-col [nzSpan]="12">
+          <nz-statistic [nzValue]="(2019.111 | number: '1.0-2')!" [nzTitle]="'Account Balance (CNY)'"></nz-statistic>
+        </nz-col>
+      </nz-row>
+
+
+    <!--   <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"> </h5>
+        <div>
+          <a class="text-dark font-size-20" nz-dropdown [nzTrigger]="'click'" [nzPlacement]="'bottomRight'"
+           >
+           <i nz-icon nzType="ellipsis" theme="outline"></i>
+          </a>
+          <nz-dropdown-menu>
+            <ul nz-menu>
+              <li nz-menu-item>
+                <i nz-icon  theme="outline"></i>
+                <span class="m-l-5">Matutino</span>
+              </li>
+              <li nz-menu-item>
+                <i nz-icon theme="outline"></i>
+                <span class="m-l-5">Vespertino</span>
+              </li>
+              <li nz-menu-item>
+                <i nz-icon  theme="outline"></i>
+                <span class="m-l-5">Ayer</span>
+              </li>
+              <li nz-menu-item>
+                <i nz-icon  theme="outline"></i>
+                <span class="m-l-5">Antiér</span>
+              </li>
+            </ul>
+          </nz-dropdown-menu>
+        </div>
+      </div>
+      <div class="d-md-flex justify-content-space m-t-50">
+         <div id="chartdiv" style="width: 100%; height: 500px"></div> 
+      </div> -->
+    </nz-card>
+  </nz-tab>
+  <nz-tab nzTitle="Mapas" (nzClick)="getAccountsMaps()">
+    <nz-card nzTitle="Empresa">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Selecciona: </h5>
+      </div>
+      <div class="m-t-30">
+        <!-- Date Range Form -->
+        <form [formGroup]="dateRangeFormMap" (ngSubmit)="onDateRangeChangeMap()">
+          
+          <nz-select formControlName="customerId" nzAllowClear nzPlaceHolder="Selecciona la Empresa"
+          (ngModelChange)="onCustomerSelected($event)">
+          <nz-option *ngFor="let o of  accountsList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+              {{ o.name }}
+          </nz-option>
+          </nz-select>
+          <nz-select style="width: 320px;" formControlName="routeId" nzAllowClear
+          nzPlaceHolder="Selecciona la ruta" >
+          <nz-option *ngFor="let o of routes" nzCustomContent [nzLabel]="o.name" [nzValue]="o.routeId"
+           ><i nz-icon></i> {{ o.name }}</nz-option>
+        </nz-select>
+          <!-- Submit Button -->
+          <button nz- button style=" background-color: #4F6F57; color: #f6f3ea;" type="submit">Aceptar</button>
+        </form>
+      </div>
+    </nz-card>
+    <nz-card>
+      <div class="map" #map id="map" class="match-parent">
+        <google-map 
+        height="600px"
+        width="1100px"
+        [center]="center" 
+        [zoom]="9"
+        (mapClick)="moveMap($event)"
+        />      
+      </div>
+    </nz-card>
+  </nz-tab>
+  <nz-tab nzTitle="Usuarios">
+    <div class="row">
+      <div class="col-lg-12">
+        <nz-card>
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Actividad de los usuarios</h5>
+          </div>
+          <div class="m-t-30">
+            <!-- Date Range Form -->
+            <form [formGroup]="dateRangeForm" (ngSubmit)="onDateRangeChange()">
+              <!-- Start Date Picker -->
+              <nz-date-picker formControlName="startDate"></nz-date-picker>
+              
+              <!-- End Date Picker -->
+              <nz-date-picker formControlName="endDate"></nz-date-picker>
+  
+              <!-- Submit Button -->
+              <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" type="submit">Aceptar</button>
+            </form>
+            <nz-table #basicTable [nzData]="rowData" ngSkipHydration >
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Alumno</th>
+                  <th>Matrícula</th>           
+                  <th>Ingreso con</th>
+                  <th>Evento</th>
+                  <th>Tipo</th>         
+                  <th>Descripción</th>   
+                  <th>Ruta</th>   
+                  <th>Turno</th>   
+                  <th>Programa</th>   
+                  <th>Vehículo</th>   
+                  <th>¿Subió?</th>          
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let data of basicTable.data">    
+                  <td>{{ formatCreated(data.created) }}</td>
+                  <td>{{data.studentName}}</td>
+                  <td>{{data.studentId}}</td>            
+                  <td>{{data.studentId}}</td>
+                  <td>{{data.event}}</td>
+                  <td>{{ data.type }}</td>                  
+                  <td>{{ data.description }}</td>
+                  <td>{{ data.route }}</td>
+                  <td>{{ data.round }}</td>
+                  <td>{{ data.program }}</td>
+                  <td>{{ data.vehicle }}</td>
+                  <td>{{ data.allowedOnBoard }}</td>
+                </tr>
+              </tbody>
+            </nz-table>
+            <!-- Ag-Grid Component -->
+          <!--   <ag-grid-angular #agGrid style="width: 100%; height: 500px;" 
+            class="ag-theme-material" [rowData]="rowData"
+               [columnDefs]="columnDefs" [groupIncludeFooter]="true" [sideBar]="true">
+            </ag-grid-angular> -->
+          </div>
+        </nz-card>
+      </div>
+    </div>
+  </nz-tab> 
+<!--   <nz-tab nzTitle="Vehículos">
+    <div class="row">
+      <div class="col-lg-12">
+        <nz-card>
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Ejecución del Programa</h5>
+          </div>
+          <div class="m-t-30">
+            <ag-grid-angular #agGrid style="width: 100%; height: 500px;" class="ag-theme-material" [rowData]="rowFleetData"
+              [columnDefs]="columnFleetDefs" [defaultColDef]="defaultColDef" [groupIncludeFooter]="true" [sideBar]="true">
+            </ag-grid-angular>
+          </div>
+        </nz-card>
+      </div>
+    </div>
+  </nz-tab> -->
+  <nz-tab nzTitle="Alertas">  
+    <nz-card>
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Selecciona la fecha a validar</h5>
+      </div>
+      <div class="m-t-30">
+        <!-- Date Range Form -->
+        <form [formGroup]="dateRangeFormA" (ngSubmit)="onDateRangeChangeA()">
+          <!-- Start Date Picker -->
+          <nz-date-picker formControlName="startDate"></nz-date-picker>
+          
+          <!-- End Date Picker -->
+          <nz-date-picker formControlName="endDate"></nz-date-picker>
+
+          <!-- Submit Button -->
+          <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" type="submit">Aceptar</button>
+        </form>
+      </div>
+    </nz-card>
+        <nz-timeline>
+          <nz-timeline-item *ngFor="let item of activityList" [nzDot]="dotTemplate">
+            <div class="m-l-20">
+              <h5 class="m-b-5">{{item.studentName}}</h5>
+              <p class="m-b-0">
+                <span class="font-weight-semibold">{{ item.vehicle }} - {{ item.route }}</span>
+                <span class="m-l-5"> {{item.studentId}}</span>
+              </p>
+              <span class="text-muted font-size-13">
+                <i nz-icon  theme="outline"></i>
+                <span class="m-l-5">{{formatDate(item.created)}}</span>
+              </span>
+            </div>
+            <ng-template #dotTemplate>
+              <div class="font-size-20 p-5">
+                <i *ngIf="item.type == 'access'" class="text-success" nz-icon  theme="outline"></i>
+                <i *ngIf="item.type == 'Attached file'" class="text-info" nz-icon  theme="outline"></i>
+                <i *ngIf="item.type == 'Commented'" class="text-info" nz-icon  theme="outline"></i>
+                <i *ngIf="item.type == 'duplicate'" class="text-danger" nz-icon  theme="outline"></i>
+              </div>
+            </ng-template>
+          </nz-timeline-item>
+        </nz-timeline>  
+  </nz-tab>
+  <nz-tab nzTitle="Mensajes">
+   <!--  <nz-drawer [nzClosable]="false" [nzWidth]="800"  nzPlacement="right" nzTitle="Centro de Mensajes" (nzOnClose)="closeMessage()" >
+    </nz-drawer>
+  -->    
+    <app-shared-messageCenter></app-shared-messageCenter>
+    
+  </nz-tab>
+</nz-tabset>

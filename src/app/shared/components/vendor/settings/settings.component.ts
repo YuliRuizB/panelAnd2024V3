@@ -4,7 +4,6 @@ import { IRoute } from '../../../interfaces/route.type';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { map, takeUntil, tap } from 'rxjs/operators';
-import { _ } from 'ag-grid-community';
 import { RoutesService } from '../../../services/routes.service';
 import { RolService } from '../../../services/roles.service';
 import { AuthenticationService } from '../../../services/authentication.service';
@@ -119,9 +118,13 @@ export class SharedVendorSettingsComponent implements OnInit, OnDestroy {
 
    
     this.vendorRoutesSubscription = this.routesService.getAuthorizedRoutes(this.vendorId).subscribe((routes: any) => {    
+ 
+   console.log(routes);
    
       this.vendorRoutesList = !!routes && routes.length > 0 ? routes : [];
-      this.loading = false;
+      console.log(this.vendorRoutesList);
+    
+      this.userCanUpdate =true;
     }, err =>  {
       this.vendorRoutesList = [];    
       this.loading = false;
@@ -133,7 +136,6 @@ export class SharedVendorSettingsComponent implements OnInit, OnDestroy {
   }
 
   handleOk(): void {
-    this.isConfirmLoading = true;
     if(this.selectedRoute) {
     const dataArray = this.selectedRoute.split(',');
     const customerId = dataArray[0];
@@ -141,23 +143,25 @@ export class SharedVendorSettingsComponent implements OnInit, OnDestroy {
     const routeId = dataArray[2];
     const routeName = dataArray[3];
     const routePath = `customers/${customerId}/routes/${routeId}`;
+    const vendorId = this.vendorId;
     const record = {
       active: true,
       routeId,
       routeName,
       routePath,
       customerId,
-      customerName
-    };       
+      customerName,
+      vendorId
+    };   
+    console.log(this.vendorId);
+    console.log(record);
+    
+    
     this.routesService.setAuthorizedRoutes(this.vendorId, record).then( () => {
       this.isModalVisible = false;
       this.isConfirmLoading = false;
     });
   }
-    // setTimeout(() => {
-    //   this.isModalVisible = false;
-    //   this.isConfirmLoading = false;
-    // }, 3000);
   }
 
   handleCancel(): void {

@@ -1,7 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { AngularFireStorage, AngularFireUploadTask } from '@angular/fire/compat/storage';
 import { ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { CellEditingStartedEvent, ColDef, GridReadyEvent } from 'ag-grid-community';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzUploadChangeParam, NzUploadModule } from 'ng-zorro-antd/upload';
 import { Observable, Subscription } from 'rxjs';
@@ -17,19 +16,6 @@ export interface IFileInfo {
   creation_date?: Date;
   
 }
-export var QualityColumnDef: (ColDef)[] =[
-  { headerName: '--',width:90, enableRowGroup: true, sortable: true,
-  resizable: true, cellStyle: {color: 'blue'}, field: 'editMode',pinned: 'left', enableCellChangeFlash:true 
-  ,valueGetter: (params: any) => {
-    if(params && params.node) {     
-      return  "Detalle"
-    }
-    return null;
-  }},
-   { headerName: 'Folder',  enableRowGroup: true,field: 'folder',filter: true, sortable: true,  enableCellChangeFlash:true },
-  { headerName: 'Nombre', enableRowGroup: true, field: 'fileName', sortable: true, filter: true} //,
- ];
-
 @Component({
   templateUrl: './quality-dashboard.component.html',
   styleUrls: ['./quality-dashboard.component.css']
@@ -61,8 +47,6 @@ export class QualityDashboardComponent implements OnInit {
   validateForm!: UntypedFormGroup;
 
   rowFleetData: any[] | undefined;
-  columnFleetDefsProgram = QualityColumnDef;
-  columnDefs = QualityColumnDef;
   gridApi: any;
   gridApiDetail: any;
   gridColumnApiDetail: any;
@@ -85,7 +69,7 @@ export class QualityDashboardComponent implements OnInit {
     private bucketStorage: AngularFireStorage,
     private fb: UntypedFormBuilder) {
 
-      console.log("Entro a reportsw");
+    //  console.log("Entro a reportsw");
       
     this.authService.user.subscribe((user) => {
       this.user = user;
@@ -95,12 +79,9 @@ export class QualityDashboardComponent implements OnInit {
           this.userlevelAccess = this.infoLoad.optionAccessLavel;
         });
       }
-    });
-  
+    });  
   }
-
   ngOnInit() {
-
     this.validateForm = this.fb.group({
       folder: [''],
       fileUrl: [''],
@@ -112,7 +93,6 @@ export class QualityDashboardComponent implements OnInit {
   sendMessage(type: string, message: string): void {
     this.msg.create(type, message);
   }
-
 
   loadFiles() {
     this.qualitySubscription = this.qualityService.getFiles().subscribe((files) => {
@@ -133,14 +113,13 @@ export class QualityDashboardComponent implements OnInit {
 
 
   submitForm() {
-    console.log("GuardarArchivo");
-
+   // console.log("GuardarArchivo");
     var fileForm: Object;
     var fileinfoURL = this.fileURL || "";
     var folder = this.validateForm.controls['folder'].value || "";
     var fileName = this.fileName || "No-Name";
     var creation_date = new Date();
-    console.log(this.fileName);
+   // console.log(this.fileName);
     if (folder == "") {
       this.msg.error("Se requiere seleccionar una carpeta para almacenenar.");
     }
@@ -176,7 +155,7 @@ export class QualityDashboardComponent implements OnInit {
   }
 
   changeFolder(event: any) {
-    console.log("changeFolder");
+   // console.log("changeFolder");
   }
   newFolder() {
     this.addNewFolder = true;
@@ -186,19 +165,16 @@ export class QualityDashboardComponent implements OnInit {
     const status = event.file.status;
     if (status !== 'uploading') {
       const status = event.file.status;     
-      this.fileListInfo = event.file;
-      if (status === 'done') {
-        this.sendMessage('success', `${event.file.name} Archivo cargado satisfactoriamente.`);
-      } else if (status === 'error') {
-        this.sendMessage('error', `${event.file.name} archivo fallido, favor de validar.`);
-      }
+      this.fileListInfo = event.fileList; 
+     
       if (event.file.originFileObj) {
         this.getBase64(event.file.originFileObj, (img: string) => {
           this.fileUrl = img;
-          const fileRef = this.bucketStorage.ref(this.bucketPath);
-
-          this.task = this.bucketStorage.ref(this.bucketPath).putString(img, 'data_url');
-
+          const fileName = event.file.name;
+          const filePath = `${this.bucketPath}/${fileName}`;
+          const fileRef = this.bucketStorage.ref(filePath);
+          this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');         
+        
           // observe percentage changes
           this.uploadPercent = this.task.percentageChanges() as Observable<number>;
 
@@ -217,7 +193,12 @@ export class QualityDashboardComponent implements OnInit {
               this.uploading = false;
               this.downloadURL = fileRef.getDownloadURL();
               this.downloadURL.subscribe(async (url) => {
-                this.updateURL(url);
+                this.updateURL(url);              
+                if (url.length > 0) {
+                  this.sendMessage('success', `${event.file.name} Archivo cargado satisfactoriamente.`);
+                } else if (status === 'error') {
+                  this.sendMessage('error', `${event.file.name} archivo fallido, favor de validar.`);
+                }
               });
             })
           ).subscribe();
@@ -230,40 +211,23 @@ export class QualityDashboardComponent implements OnInit {
     this.fileURL = url;
   }
 
-  private getBase64(img: File, callback: (img: string) => void): void {
+  private getBase64(file: File, callback: (img: string) => void): void {
     const reader = new FileReader();
-    reader.addEventListener('load', () => {
-        if (reader.result !== null && typeof reader.result === 'string') {
-            callback(reader.result);
-        } else {
-            // Handle the case where reader.result is null or not a string
-            console.error('Invalid result from FileReader');
-        }
-    });
-    reader.readAsDataURL(img);
+  reader.readAsDataURL(file);
+  reader.onload = () => callback(reader.result as string);
+  reader.onerror = error => console.log('Error: ', error);
 }
 
   refreshTable() {
     this.loadFiles();
   }
-  onSelectionChangedEdit(params: GridReadyEvent) {
-    const selectedRows = this.gridApiDetail.getSelectedRows();
-    let recordToPatchValue = { ...selectedRows[0] };
-    this.isEditModalVisible = true;
-    this.selectedRecord = recordToPatchValue;
-    this.urlFile = recordToPatchValue.fileUrl;
-    this.selectedUid = recordToPatchValue.uid;
-  }
-
-  onGridReady(params: GridReadyEvent) {
-    console.log("onGridReady" + params);
+/*   onGridReady(params: GridReadyEvent) {   
     this.gridApiDetail = params.api;
     this.gridColumnApiDetail = params.columnApi;
   }
-
+ */
   newFolderSave() {
     const newFolderNameControl = this.validateForm.get('NewFolderName');
-
     if (newFolderNameControl && newFolderNameControl.value !== null) {
       this.rowFolders.push(newFolderNameControl.value);
           this.addNewFolder = false;
@@ -271,13 +235,10 @@ export class QualityDashboardComponent implements OnInit {
     }   
   }
 
-  public columnProgram: ColDef = {
-    resizable: true,
-  };
 
   handleOKEdit() {
-    console.log("borrararchivo." + this.view);
-    console.log(this.selectedRecord);
+    //console.log("borrararchivo." + this.view);
+    //console.log(this.selectedRecord);
 
     if (!this.isVerVisible) {
       if (this.userlevelAccess == "1") {
@@ -305,10 +266,8 @@ export class QualityDashboardComponent implements OnInit {
     this.isEditModalVisible = false;
   }
 
-  handleChangeUpload(info: NzUploadChangeParam): void {
-    console.log("pasa1 : " + info.file.status);
-    if (info.file.status !== 'uploading') {
-      console.log(info.file, info.fileList);
+  handleChangeUpload(info: NzUploadChangeParam): void { 
+    if (info.file.status !== 'uploading') {   
 
       if (info.file.status === 'done') {
         this.msg.success(`${info.file.name} file uploaded successfully`);
@@ -320,9 +279,7 @@ export class QualityDashboardComponent implements OnInit {
         this.fileUrl = img;
 
         const fileRef = this.bucketStorage.ref(this.bucketPath + info.file.name);
-        // this.bucketPath +=  info.file.name;
-        console.log(this.bucketPath);
-        console.log("this.task");
+        // this.bucketPath +=  info.file.name;       
         this.task = this.bucketStorage.ref(this.bucketPath + info.file.name).putString(img, 'data_url');
         this.fileName = info.file.name;
         // Create a reference under which you want to list

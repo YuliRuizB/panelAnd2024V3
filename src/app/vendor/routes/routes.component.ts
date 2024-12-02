@@ -34,7 +34,7 @@ export class RoutesComponentVendor implements OnInit {
         }
       },
       {
-        headerName: 'Control de ruta', headerClass: 'centered',
+        headerName: 'Control de operación', headerClass: 'centered',
         children: [
           { headerName: 'Kmz', field: 'kmzUrl',
             cellRenderer: function(params: any) {

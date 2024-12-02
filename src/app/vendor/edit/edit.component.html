@@ -1,6 +1,6 @@
-<nz-page-header nzBackIcon class="page-header">
+<nz-page-header nzBackIcon class="page-header"  style="background-color:#f9fbfd;">
   <nz-page-header-title>{{ record.name }}</nz-page-header-title>
-  <nz-page-header-subtitle>Detalles de los Clientes</nz-page-header-subtitle>
+  <nz-page-header-subtitle>Detalles de los División</nz-page-header-subtitle>
   <nz-page-header-content>
 
     <nz-tabset [nzSelectedIndex]="selectedIndex" class="page-header-tab">
@@ -9,14 +9,17 @@
           <div class="container">
             <nz-card *ngIf="!!record" nzType="inner" nzTitle="Información Básica" [nzExtra]="basicTpl">
               <div class="media align-items-center">
-                <nz-avatar [nzSize]="80" nzIcon="user" style="background-color: white ;  color: #4F6F57;" nzShape="square" [nzSrc]="record.avatar"></nz-avatar>
+                <nz-avatar [nzSize]="80" nzIcon="user"
+                 style="background-color: white ;  color: #4F6F57;" nzShape="square"
+                  [nzSrc]="record.avatar"></nz-avatar>
                 <div class="m-l-20 m-r-20">
                   <h5 class="m-b-5 font-size-18">{{ record.name }}</h5>
                   <p class="opacity-07 font-size-13 m-b-0">
                     {{ record.website }}
                   </p>
                 </div>
-                <nz-upload nzName="avatar" nzAction="action" [nzBeforeUpload]="beforeUpload"
+                <nz-upload nzName="avatar" nzAction="action" 
+                [nzBeforeUpload]="beforeUpload"
                   [nzShowUploadList]="false" (nzChange)="handleChange($event)">
                   <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" nzGhost>
                     <span>Cambiar imágen</span>
@@ -150,12 +153,12 @@
           <div class="media justify-content-end m-r-15 m-b-15">
             <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" type="submit" [disabled]="!objectForm.valid">
               <i nz-icon nzType="edit" theme="outline"></i>
-              <span>Actualizar</span>
+              <span>Actualizar </span>
             </button>
           </div>
         </form>
       </nz-tab>
-      <nz-tab nzTitle="Rutas">
+      <nz-tab nzTitle="Operación">
         <ng-template nz-tab>
           <app-shared-vendor-settings [vendorId]="recordId" [userCanUpdate]="true"></app-shared-vendor-settings>
         </ng-template>
@@ -170,7 +173,7 @@
           <app-shared-vendor-users-list [vendorId]="recordId"></app-shared-vendor-users-list>
         </ng-template>
       </nz-tab> -->
-      <nz-tab nzTitle="Flota">
+      <nz-tab nzTitle="Recursos">
         <ng-template nz-tab>
           <app-shared-vendor-vehicles [vendorId]="recordId"></app-shared-vendor-vehicles>
         </ng-template>

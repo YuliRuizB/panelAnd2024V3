@@ -1,7 +1,6 @@
 import { Component, Input, OnInit, inject } from '@angular/core';
 import { AngularFireStorage, AngularFireUploadTask } from '@angular/fire/compat/storage';
 import { ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { GridOptions } from 'ag-grid-community';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { Observable, Subscription } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
@@ -55,11 +54,11 @@ export class PromotionsComponent implements OnInit {
     usersList: any = [];
     columnDefs: any;
     rowGroupPanelShow = [];
-    gridOptions: GridOptions = this.getGridOptions();
     popupParent: any
     gridApi: any;
     gridColumnApi: any;;
     promotionsList:any = [];
+    promotionsListLoaded:any= [];
     showUploadList = {
       showPreviewIcon: true,
       showRemoveIcon: true,
@@ -151,6 +150,7 @@ export class PromotionsComponent implements OnInit {
     )
       .subscribe((prom: any) => {       
         this.promotionsList = prom;
+        this.promotionsListLoaded = prom;
       });
   }
   showCreateModal() {
@@ -204,7 +204,7 @@ export class PromotionsComponent implements OnInit {
    //   console.log(advanceForm);
       if (this.userlevelAccess != "3") {
         this.promotionsService.savePromotion(advanceForm,this.accountId).then(() => {          
-          this.messageService.success(`Todo salió bien.`, {
+          this.messageService.success(`Se agregó la promoción con éxito.`, {
             nzPauseOnHover: true,
             nzDuration: 3000
           });
@@ -219,19 +219,16 @@ export class PromotionsComponent implements OnInit {
     const status = event.file.status;
     if (status !== 'uploading') {
       const status = event.file.status;     
-      this.fileListInfo = event.file;
-      if (status === 'done') {
-        this.sendMessage('success', `${event.file.name} Archivo cargado satisfactoriamente.`);
-      } else if (status === 'error') {
-        this.sendMessage('error', `${event.file.name} archivo fallido, favor de validar.`);
-      }
+      this.fileListInfo = event.fileList;
+     
       if (event.file.originFileObj) {
         this.getBase64(event.file.originFileObj, (img: string) => {
           this.fileUrl = img;
-          const fileRef = this.bucketStorage.ref(this.bucketPath);
-
-          this.task = this.bucketStorage.ref(this.bucketPath).putString(img, 'data_url');
-
+          const fileName = event.file.name;
+          const filePath = `${this.bucketPath}/${fileName}`;
+          const fileRef = this.bucketStorage.ref(filePath);
+          this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');         
+        
           // observe percentage changes
           this.uploadPercent = this.task.percentageChanges() as Observable<number>;
 
@@ -251,6 +248,11 @@ export class PromotionsComponent implements OnInit {
               this.downloadURL = fileRef.getDownloadURL();
               this.downloadURL.subscribe(async (url) => {
                 this.updateAdvanceURL(url);
+                if (url.length > 0) {
+                  this.sendMessage('success', `${event.file.name} Archivo cargado satisfactoriamente.`);
+                } else if (status === 'error') {
+                  this.sendMessage('error', `${event.file.name} archivo fallido, favor de validar.`);
+                }
               });
             })
           ).subscribe();
@@ -261,17 +263,11 @@ export class PromotionsComponent implements OnInit {
 
 
 
-  private getBase64(img: File, callback: (img: string) => void): void {
+  private getBase64(file: File, callback: (img: string) => void): void {
     const reader = new FileReader();
-    reader.addEventListener('load', () => {
-        if (reader.result !== null && typeof reader.result === 'string') {
-            callback(reader.result);
-        } else {
-            // Handle the case where reader.result is null or not a string
-            console.error('Invalid result from FileReader');
-        }
-    });
-    reader.readAsDataURL(img);
+  reader.readAsDataURL(file);
+  reader.onload = () => callback(reader.result as string);
+  reader.onerror = error => console.log('Error: ', error);
 }
 
   async updateAdvanceURL(url: string) {   
@@ -283,7 +279,7 @@ export class PromotionsComponent implements OnInit {
     this.gridColumnApi = params.columnApi;
   }
 
-  getGridOptions(): GridOptions {
+/*   getGridOptions(): GridOptions {
     return {
       columnDefs: this.columnDefs,
       context: {
@@ -307,7 +303,7 @@ export class PromotionsComponent implements OnInit {
       },
       enableRangeSelection: true
     };
-  }
+  } */
   setPaginationPageSize(pageSize: number = 10) {
     this.pageSize = pageSize;   
     this.gridApi.paginationSetPageSize(Number(pageSize));
@@ -331,6 +327,24 @@ export class PromotionsComponent implements OnInit {
     }
  
   }
+
+  getItems(searchbar: any) {
+    const q = searchbar; // Assuming `searchbar` is an input element and you want to extract its value    
+    if (!q) {       
+        // If the search query is empty, reset the devicesList to its original state
+        this.promotionsList = this.promotionsListLoaded.slice();
+        return; 
+    }
+    const text = q.toLowerCase(); // Using `toLowerCase()` instead of `toLower()` for lowercase conversion   
+    this.promotionsList = this.promotionsListLoaded.filter((object: any) => {
+        // Check if any property of the object contains the search text
+        return Object.values(object).some((value: any) => {
+            // Convert the property value to lowercase and check if it includes the search text
+            return String(value).toLowerCase().includes(text);
+        });
+    });
+}
+
 
 
 }

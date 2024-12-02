@@ -1,9 +1,9 @@
 <div class="site-page-header-ghost-wrapper">
-  <nz-page-header [nzGhost]="false">
-    <!-- <nz-page-header-title>Rutas</nz-page-header-title>
-    <nz-page-header-subtitle>Listado de rutas del Empresa con detalles</nz-page-header-subtitle> -->
+  <nz-page-header [nzGhost]="false"  style="background-color:#f9fbfd;">
+    <!-- <nz-page-header-title>Operación</nz-page-header-title>
+    <nz-page-header-subtitle>Listado de Operación del Empresa con detalles</nz-page-header-subtitle> -->
     <nz-page-header-extra>
-      <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="addNewRoute(newProjectContent)">Agregar Ruta</button>
+      <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="addNewRoute(newProjectContent)">Agregar Operación</button>
     </nz-page-header-extra>
   </nz-page-header>
 </div>
@@ -11,9 +11,9 @@
 <ng-template #newProjectContent>
   <form [formGroup]="objectForm" nz-form nzLayout="vertical">
     <nz-form-item>
-      <nz-form-label>Nombre de la Ruta</nz-form-label>
+      <nz-form-label>Nombre de la Operación</nz-form-label>
       <nz-form-control>
-        <input type="text" formControlName="name" nz-input placeholder="Escriba el nombre de la ruta">
+        <input type="text" formControlName="name" nz-input placeholder="Escriba el nombre de la Operación">
       </nz-form-control>
     </nz-form-item>
     <nz-form-item>
@@ -22,11 +22,28 @@
         <textarea formControlName="description" nz-input></textarea>
       </nz-form-control>
     </nz-form-item>
+    <nz-form-item>
+      <nz-form-label>Horarios Entradas (Opcional)</nz-form-label>
+      <nz-form-control>
+        <nz-select formControlName="initialStart" nzMode="multiple">         
+            <nz-option *ngFor="let time of timeOptions" [nzValue]="time" [nzLabel]="time"></nz-option>
+          </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label>Horarios Salidas (Opcional)</nz-form-label>
+      <nz-form-control>
+        <nz-select formControlName="initialEnd" nzMode="multiple">         
+            <nz-option *ngFor="let time of timeOptions" [nzValue]="time" [nzLabel]="time"></nz-option>
+          </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+   
   </form>
 </ng-template>
 
 <nz-tabset [nzTabPosition]="nzTabPosition" [(nzSelectedIndex)]="selectedIndex">
-  <nz-tab *ngFor="let tab of routesList" [nzTitle]="tab.name">
+  <nz-tab *ngFor="let tab of routesList" [nzTitle]="getTabTitle(tab)">
     <app-shared-stoppoints-list [accountId]="accountId" [routeId]="tab.id"></app-shared-stoppoints-list>
   </nz-tab>
 </nz-tabset>

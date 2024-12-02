@@ -1,8 +1,11 @@
-<div style="margin: buttom 15px;">
+<div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
   <div class="site-page-header-ghost-wrapper">
-    <nz-page-header>
-      <nz-page-header-title>Evidencias</nz-page-header-title>     
+    <nz-page-header [nzGhost]="false"   style="background-color:#f9fbfd;">
+      <nz-page-header-title  style="margin-left: 350px;">Evidencias</nz-page-header-title>
+      <nz-page-header-subtitle >Reporte de evidencias  
+      </nz-page-header-subtitle>
     </nz-page-header>
+  </div>
     <div class="body">
       <nz-tabset>
         <nz-tab nzTitle="Evidencias Generales">
@@ -32,7 +35,7 @@
                     {{ data.comentario }}
                   </td>
                   <td>
-                    <a href="{{data.imageUrl}}">Ver Evidencia</a>
+                    <a href="{{data.imageUrl}}" target="_blank" >Ver Evidencia</a>
                   </td>
                   <td>
                     <app-audio-player [audioUrl]="data.audioUrl"></app-audio-player>
@@ -50,7 +53,7 @@
           </div>
           <div [formGroup]="dateFilterFormDriver">    
               <nz-form-control>
-                <nz-form-label style="width: 160px;">Clientes</nz-form-label>
+                <nz-form-label style="width: 160px;">División</nz-form-label>
                 <nz-select  style="width: 450px;" formControlName="vendorId" nzAllowClear nzPlaceHolder="Selecciona la estación"
                   (ngModelChange)="onVendorSelected($event, 'vendorName')">
                   <nz-option *ngFor="let o of vendorsList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon
@@ -87,7 +90,7 @@
                     {{ data.comentario }}
                   </td>
                   <td>
-                    <a href="{{data.imageUrl}}">Ver Evidencia</a>
+                    <a href="{{data.imageUrl}}"  target="_blank">Ver Evidencia</a>
                   </td>
                   <td>
                     <app-audio-player [audioUrl]="data.audioUrl"></app-audio-player>
@@ -98,15 +101,121 @@
             </nz-table>
           </div>
         </nz-tab>
-        <nz-tab nzTitle="Evidencias por Programa">
+        <nz-tab nzTitle="Evidencias por Programa">        
+          <div  [formGroup]="dateFilterFormProgram">   
+            <nz-form-control>
+              <nz-form-label style="width: 160px;" for="selectedDate"> Selecciona una Fecha </nz-form-label>
+              <div [ngStyle]="{ width: '300px', borderRadius: '4px', marginLeft: '160px' }">
+              <nz-calendar [ngStyle]="{ width: '300px'}"  [nzFullscreen]="false" (nzSelectChange)="onDateChangeProgram($event)"   [nzFullscreen]="false"
+              ></nz-calendar>          
+            </div>
+            </nz-form-control>
+            <nz-form-control>
+              <nz-form-label style="width: 160px;">Empresa</nz-form-label>   
+              <nz-select  style="width: 450px;" formControlName="customerId" nzAllowClear (ngModelChange)="onCustomerSelected($event)"
+              nzPlaceHolder="Seleccione una Empresa">
+                <nz-option *ngFor="let d of customerList" [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+            <nz-form-control>
+              <nz-form-label style="width: 160px;">Programa</nz-form-label>   
+              <nz-select  style="width: 450px;" formControlName="programId" nzAllowClear (ngModelChange)="onProgramSelected()"
+              nzPlaceHolder="Seleccione un PR">
+                <nz-option *ngFor="let d of programList" [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </div>
+          <div>
+            <nz-table #basicTable [nzData]="evidenceInfoByProgram" ngSkipHydration
+              *ngIf="evidenceInfoByProgram">
+              <thead>
+                <tr>
+                  <th >PR</th>
+                  <th >Fecha</th>
+                  <th >Comentarios </th>
+                  <th >Audio</th>
+                  <th >...</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let data of basicTable.data">
+                  <td>
+                    {{ data.displayName }}
+                  </td>
+                  <td>{{ data.dateTimeStamp.toDate() | date: 'yyyy-MM-dd HH:mm:ss' }}</td>
+                  <td>
+                    {{ data.comentario }}
+                  </td>
+                  <td>
+                    <a href="{{data.imageUrl}}"  target="_blank">Ver Evidencia</a>
+                  </td>
+                  <td>
+                    <app-audio-player [audioUrl]="data.audioUrl"></app-audio-player> 
+                  </td>
+                </tr>
+              </tbody>
 
-
+            </nz-table>
+          </div>
         </nz-tab>
-        <nz-tab nzTitle="Evidencias por Ruta">
+        <nz-tab nzTitle="Evidencias por Operación">
+          <div  [formGroup]="dateFilterFormProgramRoute">   
+            <nz-form-control>
+              <nz-form-label style="width: 160px;" for="selectedDate"> Selecciona una Fecha </nz-form-label>
+              <div [ngStyle]="{ width: '300px', borderRadius: '4px', marginLeft: '160px' }">
+              <nz-calendar [ngStyle]="{ width: '300px'}"  [nzFullscreen]="false" (nzSelectChange)="onDateChangeProgramRoute($event)"   [nzFullscreen]="false"
+              ></nz-calendar>          
+            </div>
+            </nz-form-control>
+            <nz-form-control>
+              <nz-form-label style="width: 160px;">Empresa</nz-form-label>   
+              <nz-select  style="width: 450px;" formControlName="customerId" nzAllowClear (ngModelChange)="onCustomerSelectedRoute($event)"
+              nzPlaceHolder="Seleccione una Empresa">
+                <nz-option *ngFor="let d of customerListRoute" [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+            <nz-form-control>
+              <nz-form-label style="width: 160px;">Ruta</nz-form-label>   
+              <nz-select  style="width: 450px;" formControlName="routeId" nzAllowClear (ngModelChange)="onRouteSelected()"
+              nzPlaceHolder="Seleccione un PR">
+                <nz-option *ngFor="let d of RouteList" [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
+              </nz-select>
+            </nz-form-control>
+          </div>
+          <div>
+            <nz-table #basicTableR [nzData]="evidenceInfoByRoute" ngSkipHydration
+              *ngIf="evidenceInfoByRoute">
+              <thead>
+                <tr>
+                  <th >PR</th>
+                  <th >Fecha</th>
+                  <th >Comentarios </th>
+                  <th >Audio</th>
+                  <th >...</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let data of basicTableR.data">
+                  <td>
+                    {{ data.displayName }}
+                  </td>
+                  <td>{{ data.dateTimeStamp.toDate() | date: 'yyyy-MM-dd HH:mm:ss' }}</td>
+                  <td>
+                    {{ data.comentario }}
+                  </td>
+                  <td>
+                    <a href="{{data.imageUrl}}"  target="_blank">Ver Evidencia</a>
+                  </td>
+                  <td>
+                    <app-audio-player [audioUrl]="data.audioUrl"></app-audio-player> 
+                  </td>
+                </tr>
+              </tbody>
 
+            </nz-table>
+          </div>
 
         </nz-tab>
       </nz-tabset>
-    </div>
-  </div>
+    </div>  
 </div>

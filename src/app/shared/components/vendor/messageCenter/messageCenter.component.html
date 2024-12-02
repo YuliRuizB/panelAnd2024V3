@@ -1,17 +1,126 @@
 
 <div>
     <nz-tabset>
-    <nz-tab nzTitle="Personalizado">
-        <nz-divider style='color: #72849a;' nzPlain nzText=""></nz-divider>
+      <nz-tab nzTitle="Individual">
         <div>
-          <nz-form-label [nzSpan]="2" nzFor="label">Empresa </nz-form-label>
-            <nz-select [nzMaxTagCount]="3" style="width: 80%;"
-               nzPlaceHolder="Selecciona una empresa" [(ngModel)]="listOfSelectedCustomer" 
-                (ngModelChange)="changesOverClient($event,listOfCustomer)">
+          <p>Nota: Los registros encontrados solo se muestran si cuentan con un token.
+            <br >
+            Para obtenerlo, es necesario que  la cuenta tenga la aplicacion instalada en su telefono y haya iniciado sessión.
+          </p>          
+        </div>
+        <div>
+          <nz-form-label [nzSpan]="4" nzFor="label">Empresa </nz-form-label>
+            <nz-select [(ngModel)]="selectedCustomer" [nzMaxTagCount]="3" style="width: 250px;"
+               nzPlaceHolder="Selecciona una empresa"
+                (ngModelChange)="changesOverClientInd($event)">
                 <nz-option *ngFor="let customer of listOfCustomer" [nzLabel]="customer.name" [nzValue]="customer.id">
                 </nz-option>
             </nz-select>
-               </div>
+        </div>
+        <div>
+          <nz-form-label [nzSpan]="4" nzFor="label"> Tipo Busqueda </nz-form-label>
+            <nz-select  [(ngModel)]="selectedSearchType" [nzMaxTagCount]="3" style="width: 250px;"
+               nzPlaceHolder="Selecciona un tipo de Busqueda"
+                (ngModelChange)="selectedCriteria($event)">
+                <nz-option nzValue="ejecutores" nzLabel="Ejecutores"></nz-option>
+                <nz-option nzValue="usuarios" nzLabel="Usuarios"></nz-option>
+            </nz-select>
+        </div>       
+        <div *ngIf="isUserSelectedInd">
+          <nz-form-label [nzSpan]="2" nzFor="label">Usuarios </nz-form-label>
+            <nz-select [nzMaxTagCount]="3" style="width: 70%;"
+               nzPlaceHolder="Selecciona un usuario" [(ngModel)]="selectedUser"
+                (ngModelChange)="userSelectedInd($event)">
+                <nz-option *ngFor="let user of userObj" [nzLabel]="user.label" [nzValue]="user.id">
+                </nz-option>
+            </nz-select>
+        </div>
+        <div *ngIf="isEjecutoresSelectedInd">
+          <nz-form-label [nzSpan]="2" nzFor="label">Ejecutores </nz-form-label>
+             <nz-select [nzMaxTagCount]="3" style="width: 70%;"
+               nzPlaceHolder="Selecciona un ejecutor" [(ngModel)]="selectedEjecutor" 
+                (ngModelChange)="userEjecutorInd($event)">
+                <nz-option *ngFor="let pr of ejecutorObj" [nzLabel]="pr.label" [nzValue]="pr.id">
+                </nz-option>
+            </nz-select> 
+        </div>
+        <div  *ngIf="isMessageInd" >
+        <div >
+          <nz-divider nzPlain nzText="Mensaje"></nz-divider>
+            <textarea rows="4" nz-input [(ngModel)]="newMessageInd" placeholder="Mensaje"></textarea>
+        </div>
+        <button class="m-r-10" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="sendIndMessage()">
+          <i nz-icon nzType="plus"></i>Enviar Mensaje</button>
+        </div>
+      </nz-tab>
+    <nz-tab nzTitle="General">
+      <div>
+        <nz-form-label [nzSpan]="4" nzFor="label">Empresa </nz-form-label>
+          <nz-select [nzMaxTagCount]="3" style="width: 250px;"
+             nzPlaceHolder="Selecciona una empresa" [(ngModel)]="selectedCustomerGral" 
+              (ngModelChange)="changesOverClientGral($event)">
+              <nz-option *ngFor="let customer of listOfCustomerGeneral" [nzLabel]="customer.name" [nzValue]="customer.id">
+              </nz-option>
+         </nz-select> 
+      </div>
+      <div>
+        <nz-form-label [nzSpan]="4" nzFor="label"> Tipo Busqueda </nz-form-label>
+        <nz-select [nzMaxTagCount]="3" style="width: 250px;"
+        [(ngModel)]="selectedSearchTypeG"
+           nzPlaceHolder="Selecciona un tipo de Busqueda"
+            (ngModelChange)="selectedCriteriaG($event)">
+            <nz-option nzValue="ejecutores" nzLabel="Ejecutores"></nz-option>
+            <nz-option nzValue="usuarios" nzLabel="Usuarios"></nz-option>
+        </nz-select>
+      </div>
+      <div>
+        <p>Nota: Los registros encontrados solo se muestran si cuentan con un token.
+          <br >
+          Se enviará el mensaje a todos los miembros del listado encontrados.
+        </p>          
+      </div>
+      <div *ngIf="isUserSelectedIndGeneral">
+        <nz-form-label [nzSpan]="2" nzFor="label">Usuarios </nz-form-label>
+          <nz-select [nzMaxTagCount]="3" style="width: 70%;">
+              <nz-option *ngFor="let user of userObjG" [nzLabel]="user.label" [nzValue]="user.id">
+              </nz-option>
+          </nz-select>
+      </div>
+      <div *ngIf="isEjecutoresSelectedIndGeneral">
+        <nz-form-label [nzSpan]="2" nzFor="label">Ejecutores </nz-form-label>
+           <nz-select [nzMaxTagCount]="3" style="width: 70%;">
+              <nz-option *ngFor="let pr of ejecutorObjG" [nzLabel]="pr.label" [nzValue]="pr.id">
+              </nz-option>
+          </nz-select> 
+      </div>
+      
+        <div>
+            <nz-divider nzPlain nzText="Mensaje"></nz-divider>
+              <textarea rows="4" nz-input [(ngModel)]="newMessageG" placeholder="Mensaje"></textarea>
+          </div>
+          <button class="m-r-10" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="sendGeneralMessage()"><i nz-icon nzType="plus"></i>Enviar
+            Mensaje</button>
+    </nz-tab>
+  <!--   <nz-tab nzTitle="Segmentación">
+        <nz-divider style='color: #72849a;' nzPlain nzText=""></nz-divider>
+        <div>
+          <nz-form-label [nzSpan]="2" nzFor="label">Empresa </nz-form-label>
+             <nz-select [nzMaxTagCount]="3" style="width: 250px;"
+               nzPlaceHolder="Selecciona una empresa" [(ngModel)]="listOfSeimport * as firebase from 'firebase';lectedCustomer" 
+                (ngModelChange)="changesOverClient($event,listOfCustomer)">
+                <nz-option *ngFor="let customer of listOfCustomer" [nzLabel]="customer.name" [nzValue]="customer.id">
+                </nz-option>
+            </nz-select> 
+        </div>
+        <div>   
+          <nz-form-label [nzSpan]="2" nzFor="label"> Tipo Busqueda </nz-form-label>
+          <nz-select [nzMaxTagCount]="3" style="width: 250px;"
+             nzPlaceHolder="Selecciona un tipo de Busqueda"
+              (ngModelChange)="selectedCriteria($event)">
+              <nz-option nzValue="ejecutores" nzLabel="Ejecutores"></nz-option>
+              <nz-option nzValue="usuarios" nzLabel="Usuarios"></nz-option>
+          </nz-select>
+        </div>
         <nz-divider  style='color: #72849a;' nzPlain nzText=""></nz-divider>
         <nz-form-label [nzSpan]="3" nzFor="label">Selecciona  </nz-form-label>
         <nz-checkbox-group style="margin-top: 10px;" [(ngModel)]="checkOptionsRoute" (ngModelChange)="updateSingleCheckedRoute()">
@@ -27,7 +136,7 @@
         </div>
         <nz-divider style='color: #72849a;' nzPlain nzText=""></nz-divider>
         <div style='margin-top: 15px' *ngIf="isShowDivRoutes">
-            <nz-select style="width: 80%;" nzAllowClear nzPlaceHolder="Selecciona la ruta" [(ngModel)]="listOfSelectedRoutes">
+            <nz-select style="width: 80%;" nzAllowClear nzPlaceHolder="Selecciona la Operación" [(ngModel)]="listOfSelectedRoutes">
               <nz-option *ngFor="let o of routes" nzCustomContent [nzLabel]="o.name" [nzValue]="o.routeId"><i nz-icon
                   nzType="fork"></i> {{ o.name }}</nz-option>
             </nz-select>
@@ -71,14 +180,6 @@
             <button nz-button style="margin-bottom: 1em; background-color: #4F6F57; color: #f6f3ea;" (click)="Cancel()">Cancelar</button>
           </div>
         </div>
-    </nz-tab>
-      <nz-tab nzTitle="General">
-        <div>
-            <nz-divider nzPlain nzText="Mensaje"></nz-divider>
-              <textarea rows="4" nz-input (ngModel)="newMessage" placeholder="Mensaje"></textarea>
-          </div>
-          <button class="m-r-10" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" disabled (click)="sendGeneralMessage()"><i nz-icon nzType="plus"></i>Enviar
-            Mensaje</button>
-      </nz-tab>
+    </nz-tab>  -->
     </nz-tabset>
 </div>

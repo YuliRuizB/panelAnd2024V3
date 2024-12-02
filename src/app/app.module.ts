@@ -30,6 +30,7 @@ import { SignupComponent } from './authentication/signup/signup.component';
 import { VerifyEmailComponent } from './authentication/verify-email/verify-email.component';
 import { PleaseVerifyEmailComponent } from './authentication/please-verify-email/please-verify-email.component';
 import { HeaderComponent } from './shared/templates/header/header.component';
+import { TermsComponent } from './shared/templates/terms/terms.component';
 import { SearchComponent } from './shared/templates/search/search.component';
 import { QuickViewComponent } from './shared/templates/quick-view/quick-view.component';
 import { NzResultModule } from 'ng-zorro-antd/result';
@@ -140,6 +141,15 @@ import { NzTimePickerModule } from 'ng-zorro-antd/time-picker';
 import { RouteEditComponent } from './customers/routes/edit/edit.component';
 import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import {GoogleMap, GoogleMapsModule} from '@angular/google-maps';
+import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
+import { PrivacyComponent } from './shared/templates/privacy/privacy.component';
+import { PrivacyPageComponent } from './shared/templates/privacy-page/privacy-page.component';
+import { NzSpaceModule } from 'ng-zorro-antd/space';
+import { CenterComponent } from './admin/center/center.component';
+import { RefaundComponent } from './admin/refaund/refaund.component';
+import { PrivacyPageComponentSNB } from './shared/templates/privacy-pageSNB/privacy-pageSNB.component';
+import { BajaUsuarioSNBComponent } from './shared/templates/baja-usuarioSNB/baja-usuarioSNB.component';
+
 
 const antDesignIcons = AllIcons as {
   [key: string]: IconDefinition;
@@ -152,11 +162,16 @@ const icons: IconDefinition[] = Object.keys(antDesignIcons).map(key => {
 
 @NgModule({
   declarations: [
+    PrivacyPageComponent,
+    PrivacyPageComponentSNB,
+    PrivacyComponent,
+    TermsComponent,
     RouteEditComponent,
     AppComponent,
     PageNotFoundComponent,
     LoginComponent,   
     BajaUsuarioComponent,
+    BajaUsuarioSNBComponent,
     ExternalPrivacyComponent,
     preRegisterComponent,
     CommonLayoutComponent,
@@ -221,10 +236,13 @@ const icons: IconDefinition[] = Object.keys(antDesignIcons).map(key => {
     ListComponentVendor,
     LogisticsComponent, 
     ProgramComponent,
-    RoutesNewComponents,    
+    RoutesNewComponents,
+    CenterComponent,
+    RefaundComponent,    
 
   ],
   imports: [
+    NzSpaceModule,
     GoogleMap,
     GoogleMapsModule,
     NzStatisticModule,
@@ -288,7 +306,8 @@ const icons: IconDefinition[] = Object.keys(antDesignIcons).map(key => {
     NzTabsModule,
     NzInputNumberModule,
     NzProgressModule,
-    NzTimePickerModule
+    NzTimePickerModule,
+    NzPopconfirmModule
   ],
   providers: [
     provideClientHydration(),

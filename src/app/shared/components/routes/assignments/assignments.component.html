@@ -1,5 +1,5 @@
 <div class="site-page-header-ghost-wrapper">
-  <nz-page-header [nzGhost]="false">
+  <nz-page-header [nzGhost]="false"  style="background-color:#f9fbfd;">
     <nz-page-header-extra>
       <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="showCreateModal()">Agregar asignación</button>
     </nz-page-header-extra>
@@ -10,7 +10,7 @@
   <thead>
     <tr>
       <th >Asignado A</th>
-      <th >Ruta</th>
+      <th >Operación</th>
       <th >Tarea</th>
       <th >Días</th>
       <th >Turno</th>
@@ -85,7 +85,7 @@
 <ng-template #modalContentAdd>
   <form nz-form [formGroup]="programForm" (ngSubmit)="createProgram()">
     <nz-form-item>
-      <nz-form-label>Clientes</nz-form-label>
+      <nz-form-label>División</nz-form-label>
       <nz-form-control>
         <nz-select formControlName="vendorId" nzAllowClear nzPlaceHolder="Selecciona la estación"
           (ngModelChange)="onVendorSelected($event, 'vendorName')">
@@ -100,16 +100,14 @@
           <nz-form-label>Tipo de asignación</nz-form-label>
           <nz-form-control>
             <nz-select formControlName="type">
-              <nz-option nzValue="Permanente" nzLabel="Permanente"></nz-option>
-              <nz-option nzValue="Temporal" nzLabel="Temporal"></nz-option>
-              <nz-option nzValue="Viaje Especial" nzLabel="Viaje Especial"></nz-option>
+              <nz-option nzValue="Permanente" nzLabel="Permanente"></nz-option>           
             </nz-select>
           </nz-form-control>
         </nz-form-item>
       </div>
       <div class="col-md-6 col-sm-12">
         <nz-form-item>
-          <nz-form-label>Ruta</nz-form-label>
+          <nz-form-label>Operación</nz-form-label>
           <nz-form-control>
             <nz-select formControlName="routeId" (ngModelChange)="onRouteSelected($event)">
               <nz-option *ngFor="let o of routesList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon
@@ -170,17 +168,7 @@
         </nz-form-item>
       </div>
       
-    </div>
-    <div class="row">
-      <div class="col-md-4 col-sm-12">
-        <nz-form-item>
-          <nz-form-label>Aire acondicionado</nz-form-label>
-          <nz-form-control>
-            <nz-switch formControlName="acRequired" nzCheckedChildren="Si" nzUnCheckedChildren="No"></nz-switch>
-          </nz-form-control>
-        </nz-form-item>
-      </div>
-    </div>
+    </div>   
     <nz-form-item>
       <nz-form-label nzFor="days">Días</nz-form-label>
       <nz-form-control>

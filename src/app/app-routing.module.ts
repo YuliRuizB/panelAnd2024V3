@@ -6,6 +6,9 @@ import { ExternalPrivacyComponent } from './shared/templates/privacy/external/ex
 import { PageNotFoundComponent } from './shared/templates/page-not-found/page-not-found.component';
 import { canActivate, redirectUnauthorizedTo } from '@angular/fire/auth-guard';
 import { CommonLayoutComponent } from './layouts/common-layout/common-layout.component';
+import { PrivacyPageComponent } from './shared/templates/privacy-page/privacy-page.component';
+import { PrivacyPageComponentSNB } from './shared/templates/privacy-pageSNB/privacy-pageSNB.component';
+import { BajaUsuarioSNBComponent } from './shared/templates/baja-usuarioSNB/baja-usuarioSNB.component';
 const redirectUnauthorizedToLogin = () => redirectUnauthorizedTo(["authentication/login"]);
 
 
@@ -46,7 +49,7 @@ const routes: Routes = [
       {
         path: 'vendor',
         data: {
-            title: 'Clientes'
+            title: 'División'
           },
         loadChildren: () => import('../app/vendor/vendor-routing.module').then(m => m.VendorRoutingModule)
       }   
@@ -57,6 +60,9 @@ const routes: Routes = [
   loadChildren: () => import('../app/authentication/authentication-routing.module').then(m => m.AuthenticationRoutingModule)  
 },
   { path: "bajaUsuario", component: BajaUsuarioComponent },
+  { path: "bajaUsuarioSNB", component: BajaUsuarioSNBComponent },
+  { path: "privacy-page", component: PrivacyPageComponent },
+  { path: "privacy-pageSNB", component: PrivacyPageComponentSNB },
   //{ path: '**', component: PageNotFoundComponent },
   
   { path: "external-privacy", component: ExternalPrivacyComponent },

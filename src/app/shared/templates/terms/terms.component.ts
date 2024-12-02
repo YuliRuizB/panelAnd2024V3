@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { NzModalRef } from 'ng-zorro-antd/modal';
+import { NzCardModule } from 'ng-zorro-antd/card';
 
 @Component({
   selector: 'app-terms', 

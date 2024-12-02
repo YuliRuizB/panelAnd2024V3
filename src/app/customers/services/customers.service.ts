@@ -80,7 +80,9 @@ export class CustomersService {
   }
 
   getAccountProducts(accountId: string) {
-    const products = this.afs.collection('customers').doc(accountId).collection('products', ref => ref.orderBy('date_created', 'asc'));
+    const products = this.afs.collection('customers').doc(accountId).collection('products', ref => 
+      ref.where('disable', '==', false).orderBy('date_created', 'asc')
+    );
     return products.snapshotChanges();
   }
 
@@ -246,11 +248,15 @@ export class CustomersService {
       });
   }
 
-  saveBoardingPassToUserPurchaseCollection(uid: string, purchase: object) {
+  saveBoardingPassToUserPurchaseCollection(uid: string, purchase: object){
+    console.log('purchase:' + uid);
+    
     this.userPurchasesCollection = this.usersCollection.doc(uid).collection('boardingPasses');
     return this.userPurchasesCollection.add(purchase).then(() => {
-      this.sendMessage('success', 'Se creo el pase de abordar.!');
+      console.log('success');
+      this.sendMessage('success', 'Se creo el pase.!');
     }).catch(err => {
+      console.log('error ' + err);
       this.sendMessage('error', `¡Oops! Algo salió mal ... ${err}`);
     });
   }

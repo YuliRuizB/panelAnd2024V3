@@ -69,7 +69,7 @@ export const ROUTES: SideNavInterface[] = [
         submenu: [
             {
                 path: '/admin/payments',
-                title: 'Pagos',
+                title: 'Validaciones',
                 iconType: 'nzIcon',
                 icon: 'profile',
                 iconTheme: 'outline',
@@ -77,7 +77,7 @@ export const ROUTES: SideNavInterface[] = [
                 submenu: []
             },{
                 path: '/admin/organigrama',
-                title: 'Organigrama de Rutas',
+                title: 'Organigrama de Operación',
                 iconType: 'nzIcon',
                 icon: 'profile',
                 iconTheme: 'outline',
@@ -92,6 +92,24 @@ export const ROUTES: SideNavInterface[] = [
                 iconTheme: 'outline',
                 idRol: 'w0Qg3s4GhGEliUSrfJmB',
                 submenu: []
+            },{
+                path: '/admin/center',
+                title: 'Centro de Atención',
+                iconType: 'nzIcon',
+                icon: 'profile',
+                iconTheme: 'outline',
+                idRol: '9f3cViaWh2d0WdiKsYQu',
+                submenu: []
+                
+            },{
+                path: '/admin/refaund',
+                title: 'Reembolso',
+                iconType: 'nzIcon',
+                icon: 'profile',
+                iconTheme: 'outline',
+                idRol: 'gmsIdFbfMNwdHhH0wERl',
+                submenu: []
+                
             }
         ]
     },
@@ -142,7 +160,7 @@ export const ROUTES: SideNavInterface[] = [
             },
             {
                 path: '/vendor/routes',
-                title: 'Rutas',
+                title: 'Operación',
                 iconType: 'nzIcon',
                 icon: 'build',
                 iconTheme: 'outline',
@@ -215,7 +233,7 @@ export const ROUTES: SideNavInterface[] = [
         submenu: [
             {
                 path: '/vendor/list',
-                title: 'Clientes',
+                title: 'División',
                 iconType: '',
                 icon: '',
                 iconTheme: '',
@@ -233,7 +251,7 @@ export const ROUTES: SideNavInterface[] = [
             }, */
             {
                 path: '/customers/routes',
-                title: 'Rutas',
+                title: 'Operación',
                 iconType: '',
                 icon: '',
                 iconTheme: '',
@@ -253,7 +271,7 @@ export const ROUTES: SideNavInterface[] = [
         submenu: [
            /*  {
                 path: '/authentication/login-1',
-                title: 'Servicios',
+                title: 'productos',
                 iconType: '',
                 icon: '',
                 iconTheme: '',

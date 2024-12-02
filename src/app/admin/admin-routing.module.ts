@@ -3,6 +3,8 @@ import { AdminPaymentsComponent } from "./payments/payments.component";
 import { OrganigramaComponent } from "./organigrama/organigrama.component";
 import { EvidenceComponent } from "./evidence/evidence.component";
 import { NgModule } from "@angular/core";
+import { CenterComponent } from "./center/center.component";
+import { RefaundComponent } from "./refaund/refaund.component";
 
 const routes: Routes = [  
     {
@@ -21,7 +23,7 @@ const routes: Routes = [
       path: 'organigrama',  
       component: OrganigramaComponent,
       data: {
-        title: 'Organigrama de Rutas'
+        title: 'Organigrama de Operación'
       }
     },
     {
@@ -29,6 +31,20 @@ const routes: Routes = [
       component : EvidenceComponent,
       data: {
         title: "Evidencias"
+      }
+    },
+    {
+      path: 'center',
+      component : CenterComponent,
+      data: {
+        title: "Centro de Atención"
+      }
+    },
+    {
+      path: 'refaund',
+      component : RefaundComponent,
+      data: {
+        title: "Reembolso"
       }
     }
 ]

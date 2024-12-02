@@ -1,11 +1,14 @@
 import { Component, OnInit, Input, OnDestroy, inject } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Subject, Subscription } from 'rxjs';
+import {  map, take, takeUntil, tap } from 'rxjs/operators';
 import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { DriversService } from '../../../services/drivers.service';
 import { RolService } from '../../../services/roles.service';
 import { AuthenticationService } from '../../../services/authentication.service';
+import { AccountsService } from '../../../services/accounts.service';
+import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/compat/firestore';
+import { ConsoleSqlOutline } from '@ant-design/icons-angular/icons';
 
 @Component({
   selector: 'app-shared-vendor-drivers',
@@ -16,7 +19,8 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
 
   @Input() vendorId: string = '';
   driversService = inject(DriversService);
-  driversList: any;
+  driversList: any =[];
+  driversListLoaded: any = [];
   driversSubscription!: Subscription;
   rolService = inject(RolService);
   authService = inject(AuthenticationService);
@@ -34,8 +38,16 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
   infoLoad: any = [];
   userlevelAccess!: string;
   user: any;
+  customerList: any[] = [];
+  accountsService = inject(AccountsService);
+  stopSubscription$: Subject<any> = new Subject();
+  infoSegment : any  = [];
+  cDocument: AngularFirestoreDocument<any> | undefined;
+  cCollection: AngularFirestoreCollection<any> | undefined;
+  customerSubscription: Subscription | undefined;
 
-  constructor(    
+  constructor(   
+    private afs: AngularFirestore, 
     private nzMessageService: NzMessageService,     
     private fb: UntypedFormBuilder
   ) {
@@ -46,6 +58,18 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
           this.infoLoad = item;
           this.userlevelAccess = this.infoLoad.optionAccessLavel;
         });
+        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+          takeUntil(this.stopSubscription$),
+          map((a:any) => {
+            const id = a.payload.id;
+            const data = a.payload.data() as any;
+            return { id, ...data }
+          }),
+          tap(record => {             
+            this.infoSegment = record;            
+            return record;
+          })
+        ).subscribe();
       }
     });
 
@@ -71,7 +95,8 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
       vendorName: [''],
       displayName: [''],
       password: ['', Validators.compose([Validators.required])],
-      verifyPassword1: ['', [this.confirmValidator]]
+      verifyPassword1: ['', [this.confirmValidator]],
+      customerId: ['']
     });
 
     this.signupFormEdit = this.fb.group({
@@ -82,7 +107,8 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
       employeeId: ['', Validators.compose([Validators.minLength(7), Validators.maxLength(7), Validators.required])],
       vendorId: [this.vendorId, Validators.compose([Validators.required])],
       vendorName: [''],
-      displayName: ['']
+      displayName: [''],
+      customerId: ['']
     });
 
     this.signupFormPassword = this.fb.group({
@@ -96,10 +122,14 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
     if (this.driversSubscription) {
       this.driversSubscription.unsubscribe();
     }
+    if (this.customerSubscription) {
+      this.customerSubscription.unsubscribe();
+    }
   }
 
   getSubscriptions() {
-    this.driversService.getDrivers(this.vendorId).pipe(
+    console.log(this.vendorId);
+    this.driversService.getDriversByCustomergetDrivers(this.vendorId).pipe(
       map((actions:any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
@@ -108,7 +138,10 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
     ).subscribe((drivers) => {
       console.log(drivers);
       this.driversList = drivers;
+      this.driversListLoaded = drivers;
     })
+
+
   }
 
   toggleActive(data: any) {
@@ -130,6 +163,31 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
 
   editRecord(data: any) {
     this.isEditMode = true;
+
+ if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
+      this.cDocument = this.afs.collection('customers').doc(this.user.customerId);
+      this.customerSubscription = this.cDocument.snapshotChanges().pipe(
+        map(action => {
+          const id = action.payload.id;
+          const data = action.payload.data() as any;
+          return { id, ...data };
+        })
+       ).subscribe(customers => {       
+        this.customerList = [customers];
+      });
+    } else {      
+      this.cCollection = this.afs.collection<any>('customers', ref => ref.where('active','==',true));
+      this.customerSubscription  = this.cCollection.snapshotChanges().pipe(
+        map((actions:any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data }
+        }))
+      ).subscribe(customers => {
+        this.customerList = customers; 
+      });
+    }
+
     this.isEditPassword = false;
     this.modalName = "Editar PR";
     this.patchForm(data);
@@ -143,6 +201,7 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
   }
 
   patchForm(data: any) {
+    console.log(data);
     this.signupFormEdit.patchValue({ ...data });
     this.openCreateDriverModal();
   }
@@ -197,7 +256,7 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
           }
         } else {
           // is update contraseña
-          console.log(this.signupFormPassword.value);
+        //  console.log(this.signupFormPassword.value);
           if (this.signupFormPassword.valid) {
             this.driversService.resetPassword(this.signupFormPassword.controls['id'].value, this.signupFormPassword.controls['password'].value).then((response) => {
               this.isEditPassword = false;
@@ -262,5 +321,24 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
     }
     return {};
   };
+
+  
+  getItems(searchbar: any) {   
+    const q = searchbar; // Assuming `searchbar` is an input element and you want to extract its value    
+    if (!q) {       
+        // If the search query is empty, reset the devicesList to its original state
+        this.driversList = this.driversListLoaded.slice();
+        return; 
+    }
+    const text = q.toLowerCase(); // Using `toLowerCase()` instead of `toLower()` for lowercase conversion   
+    this.driversList = this.driversListLoaded.filter((object: any) => {
+        // Check if any property of the object contains the search text
+        return Object.values(object).some((value: any) => {
+            // Convert the property value to lowercase and check if it includes the search text
+            return String(value).toLowerCase().includes(text);
+        });
+    });
+}
+
 
 }

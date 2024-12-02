@@ -3,72 +3,91 @@
 <button nz-button style="margin-bottom: 1em; background-color: #4F6F57; color: #f6f3ea;" (click)="open()">Alertas</button>
  <button nz-button style="margin-bottom: 1em; background-color: #4F6F57; color: #f6f3ea;" (click)="openMessage()">Mensajes</button>
  -->  
+ <div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
+  <div class="site-page-header-ghost-wrapper">
+    <nz-page-header [nzGhost]="false"    style="background-color:#f9fbfd;">
+      <nz-page-header-title  style="margin-left: 350px;">En Vivo</nz-page-header-title>
+      <nz-page-header-subtitle >Información en vivo del proceso
+      </nz-page-header-subtitle>
+    </nz-page-header>
+  </div>
  <nz-tabset>
   <nz-tab nzTitle="Actividad General">
     <nz-card>
       <div class="d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Selecciona la fecha a validar</h5>
+        <h5 class="mb-0">Selecciona</h5>
       </div>
-      <div class="m-t-30">
+      <nz-row [nzGutter]="16">
         <!-- Date Range Form -->
-        <form [formGroup]="dateRangeFormAct" (ngSubmit)="onDateRangeChangeAct()">
-          <!-- Start Date Picker -->
-          <nz-date-picker formControlName="startDate"></nz-date-picker>
-          
-          <!-- End Date Picker -->
-          <nz-date-picker formControlName="endDate"></nz-date-picker>
-
+        <form [formGroup]="dateRangeFormAct" (ngSubmit)="onDateRangeChangeAct()" class="form-inline">
+            <nz-date-picker formControlName="startDate" id="startDate" class="form-control"></nz-date-picker>
+            <nz-date-picker formControlName="endDate" id="endDate" class="form-control"></nz-date-picker>          
+            
+            <nz-select   style="width: 250px;" formControlName="customerId" id="customerId" nzAllowClear nzPlaceHolder="Selecciona el Cliente" class="form-control">
+              <nz-option *ngFor="let o of accountsList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                {{ o.name }}
+              </nz-option>
+            </nz-select>          
           <!-- Submit Button -->
-          <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" type="submit">Aceptar</button>
+          <button nz-button style="background-color: #4F6F57; color: #f6f3ea;" type="submit" class="btn btn-primary">Aceptar</button>
         </form>
-      </div>
+      </nz-row> 
     </nz-card>
 
-    <nz-card  [nzTitle]="'Matutino'">
+    <nz-card  [nzTitle]="'Registro de Usuarios'">
+      <nz-row [nzGutter]="16">        
+        <nz-col [nzSpan]="12">       
+            <nz-statistic [nzValue]="(sumTotalUsersRange | number)!" [nzTitle]="'Usuarios Nuevos'"></nz-statistic>          
+        </nz-col>
+      <nz-col [nzSpan]="12">
+        <nz-statistic [nzValue]="(sumTotalUsers | number)!" [nzTitle]="'Total de Usuarios'"></nz-statistic>
+      </nz-col>
+    </nz-row>  
+    </nz-card>
+
+    <nz-card  [nzTitle]="'Dia'">
+      <nz-row [nzGutter]="16">        
+          <nz-col [nzSpan]="12">
+            <ng-container *ngFor="let item of resultLiveRoundDLevel2">
+              <nz-statistic [nzValue]="(item.sum | number)!" [nzTitle]="item.route"></nz-statistic>
+            </ng-container>
+          </nz-col>      
+        <nz-col [nzSpan]="12">
+          <nz-statistic [nzValue]="(sumD | number)!" [nzTitle]="'Total turno Día'"></nz-statistic>
+        </nz-col>
+      </nz-row>  
+    </nz-card>
+
+
+    <nz-card  [nzTitle]="'Tarde'">               
       <nz-row [nzGutter]="16">
         <nz-col [nzSpan]="12">
-          <nz-statistic [nzValue]="(1949101 | number)!" [nzTitle]="'Active Users'"></nz-statistic>
-        </nz-col>
+          <ng-container *ngFor="let item of resultLiveRoundTLevel2">
+            <nz-statistic [nzValue]="(item.sum | number)!" [nzTitle]="item.route"></nz-statistic>
+          </ng-container>
+        </nz-col>   
         <nz-col [nzSpan]="12">
-          <nz-statistic [nzValue]="(2019.111 | number: '1.0-2')!" [nzTitle]="'Account Balance (CNY)'"></nz-statistic>
+          <nz-statistic [nzValue]="(sumT | number)!" [nzTitle]="'Total turno Tarde'"></nz-statistic>
         </nz-col>
       </nz-row>
+    </nz-card>
 
 
-    <!--   <div class="d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"> </h5>
-        <div>
-          <a class="text-dark font-size-20" nz-dropdown [nzTrigger]="'click'" [nzPlacement]="'bottomRight'"
-           >
-           <i nz-icon nzType="ellipsis" theme="outline"></i>
-          </a>
-          <nz-dropdown-menu>
-            <ul nz-menu>
-              <li nz-menu-item>
-                <i nz-icon  theme="outline"></i>
-                <span class="m-l-5">Matutino</span>
-              </li>
-              <li nz-menu-item>
-                <i nz-icon theme="outline"></i>
-                <span class="m-l-5">Vespertino</span>
-              </li>
-              <li nz-menu-item>
-                <i nz-icon  theme="outline"></i>
-                <span class="m-l-5">Ayer</span>
-              </li>
-              <li nz-menu-item>
-                <i nz-icon  theme="outline"></i>
-                <span class="m-l-5">Antiér</span>
-              </li>
-            </ul>
-          </nz-dropdown-menu>
-        </div>
-      </div>
-      <div class="d-md-flex justify-content-space m-t-50">
-         <div id="chartdiv" style="width: 100%; height: 500px"></div> 
-      </div> -->
+    <nz-card  [nzTitle]="'Noche'">               
+      <nz-row [nzGutter]="16">
+        <nz-col [nzSpan]="12">
+          <ng-container *ngFor="let item of resultLiveRoundNLevel2">
+            <nz-statistic [nzValue]="(item.sum | number)!" [nzTitle]="item.route"></nz-statistic>
+          </ng-container>
+        </nz-col>   
+        <nz-col [nzSpan]="12">
+          <nz-statistic [nzValue]="(sumT | number)!" [nzTitle]="'Total turno Noche'"></nz-statistic>
+        </nz-col>
+      </nz-row>
     </nz-card>
   </nz-tab>
+
+
   <nz-tab nzTitle="Mapas" (nzClick)="getAccountsMaps()">
     <nz-card nzTitle="Empresa">
       <div class="d-flex justify-content-between align-items-center">
@@ -78,14 +97,14 @@
         <!-- Date Range Form -->
         <form [formGroup]="dateRangeFormMap" (ngSubmit)="onDateRangeChangeMap()">
           
-          <nz-select formControlName="customerId" nzAllowClear nzPlaceHolder="Selecciona la Empresa"
+          <nz-select   style="width: 250px;" formControlName="customerId" nzAllowClear nzPlaceHolder="Selecciona la Empresa"
           (ngModelChange)="onCustomerSelected($event)">
           <nz-option *ngFor="let o of  accountsList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
               {{ o.name }}
           </nz-option>
           </nz-select>
           <nz-select style="width: 320px;" formControlName="routeId" nzAllowClear
-          nzPlaceHolder="Selecciona la ruta" >
+          nzPlaceHolder="Selecciona la Operación" >
           <nz-option *ngFor="let o of routes" nzCustomContent [nzLabel]="o.name" [nzValue]="o.routeId"
            ><i nz-icon></i> {{ o.name }}</nz-option>
         </nz-select>
@@ -100,12 +119,20 @@
         height="600px"
         width="1100px"
         [center]="center" 
+        [options]="mapOptions"
         [zoom]="9"
         (mapClick)="moveMap($event)"
-        />      
+        >
+        @for (position of markerPositions; track position) {
+          <map-marker [position]="position" [options]="markerOptions" />
+        }
+        <!-- <map-polyline [path]="vertices" /> -->
+    </google-map>    
       </div>
     </nz-card>
   </nz-tab>
+
+
   <nz-tab nzTitle="Usuarios">
     <div class="row">
       <div class="col-lg-12">
@@ -130,12 +157,12 @@
                 <tr>
                   <th>Fecha</th>
                   <th>Alumno</th>
-                  <th>Matrícula</th>           
+                  <th>Identificación</th>           
                   <th>Ingreso con</th>
                   <th>Evento</th>
                   <th>Tipo</th>         
                   <th>Descripción</th>   
-                  <th>Ruta</th>   
+                  <th>Operación</th>   
                   <th>Turno</th>   
                   <th>Programa</th>   
                   <th>Vehículo</th>   
@@ -185,21 +212,21 @@
       </div>
     </div>
   </nz-tab> -->
-  <nz-tab nzTitle="Alertas">  
+ <!--  <nz-tab nzTitle="Alertas">  
     <nz-card>
       <div class="d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Selecciona la fecha a validar</h5>
       </div>
       <div class="m-t-30">
-        <!-- Date Range Form -->
+    
         <form [formGroup]="dateRangeFormA" (ngSubmit)="onDateRangeChangeA()">
-          <!-- Start Date Picker -->
+    
           <nz-date-picker formControlName="startDate"></nz-date-picker>
           
-          <!-- End Date Picker -->
+      
           <nz-date-picker formControlName="endDate"></nz-date-picker>
 
-          <!-- Submit Button -->
+       
           <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" type="submit">Aceptar</button>
         </form>
       </div>
@@ -227,7 +254,7 @@
             </ng-template>
           </nz-timeline-item>
         </nz-timeline>  
-  </nz-tab>
+  </nz-tab> -->
   <nz-tab nzTitle="Mensajes">
    <!--  <nz-drawer [nzClosable]="false" [nzWidth]="800"  nzPlacement="right" nzTitle="Centro de Mensajes" (nzOnClose)="closeMessage()" >
     </nz-drawer>
@@ -236,3 +263,4 @@
     
   </nz-tab>
 </nz-tabset>
+</div>

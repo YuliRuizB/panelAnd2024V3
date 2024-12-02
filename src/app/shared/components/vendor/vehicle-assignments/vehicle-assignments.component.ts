@@ -116,7 +116,7 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
       this.loading = false;
     });
 
-    this.driversSubscription = this.driversService.getDrivers(this.vendorId).pipe(
+    this.driversSubscription = this.driversService.getDriversByCustomergetDrivers(this.vendorId).pipe(
       takeUntil(this.stopSubscription$),
       map((actions:any) => actions.map((a: any) => {
         const id = a.payload.doc.id;

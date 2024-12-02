@@ -1,14 +1,19 @@
-<div class="page-header">
+<div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
+<div class="site-page-header-ghost-wrapper">
+  <nz-page-header [nzGhost]="false"    style="background-color:#f9fbfd;">
+    <nz-page-header-title  style="margin-left: 350px;">División</nz-page-header-title>
+    <nz-page-header-subtitle >Divisiones del Sistema
+    </nz-page-header-subtitle>
+  </nz-page-header>
+</div>
+<div class="body">
   <div class="row align-items-md-center">
     <div class="col-md-6">
       <div class="row">
         <div class="col-md-5">
-          <nz-input-group [nzPrefix]="searchPrefix">
-            <input type="text" nz-input placeholder="Buscar">
-          </nz-input-group>
-          <ng-template #searchPrefix>
-            <i class="opacity-04" nz-icon ></i>
-          </ng-template>
+          <i nz-icon  nzTheme="outline" class="search-icon"></i>
+          <input placeholder="Buscar" #searchBar (keyup)="getItems(searchBar.value)">
+
         </div>
       </div>
     </div>
@@ -24,7 +29,7 @@
         </nz-radio-group> -->
         <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="showNewProject(newProjectContent)">
           <i nz-icon nzType="plus"></i>
-          <span>Nuevo Cliente</span>
+          <span>Nueva División</span>
         </button>
         <ng-template #newProjectContent>
           <form nz-form nzLayout="vertical" [formGroup]="objectForm">
@@ -98,10 +103,10 @@
    <!--  <nz-tag class="m-b-0" *ngIf="item.status == 'In Progress'" [nzColor]="'blue'">{{item.status}}</nz-tag>
     <nz-tag class="m-b-0" *ngIf="item.status == 'Ready'" [nzColor]="'cyan'">{{item.status}}</nz-tag>
     <nz-tag class="m-b-0" *ngIf="item.status == 'Behind'" [nzColor]="'red'">{{item.status}}</nz-tag> -->
-    <i *ngIf="item.active" nz-icon 
+    <i *ngIf="item.active" nz-icon (click)="toggleAccountActive(item.id, true)"
     [nzType]="'check-circle'" [nzTheme]="'twotone'" [nzTwotoneColor]="'#52c41a'" 
     nzTooltipTitle="Activo" nzTooltipPlacement="topLeft" nz-tooltip></i>
-    <i *ngIf="!item.active" 
+    <i *ngIf="!item.active" (click)="toggleAccountActive(item.id, false)" 
     nz-icon [nzType]="'pause-circle'" [nzTheme]="'twotone'" 
     [nzTwotoneColor]="'#de4436'" nzTooltipTitle="Inactivo" 
     nzTooltipPlacement="topLeft" nz-tooltip></i>
@@ -185,4 +190,5 @@
       </tbody>
     </nz-table>
   </nz-card>
+</div>
 </div>

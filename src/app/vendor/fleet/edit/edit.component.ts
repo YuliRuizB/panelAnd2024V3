@@ -4,7 +4,7 @@ import { Subscription, Observable, Subject, of } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzUploadFile, NzUploadModule } from 'ng-zorro-antd/upload';
-import { map, takeWhile, debounceTime, finalize, takeUntil, tap } from 'rxjs/operators';
+import { map, takeWhile, debounceTime, finalize, takeUntil, tap, switchMap, catchError } from 'rxjs/operators';
 import { AngularFireStorage, AngularFireUploadTask } from '@angular/fire/compat/storage';
 import { IVehicle } from '../../../shared/interfaces/vehicle.type';
 import { RolService } from '../../../shared/services/roles.service';
@@ -62,16 +62,27 @@ export class VehicleEditComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.authService.user.pipe(
-      takeUntil(this.stopSubscriptions$)
-    ).subscribe(user => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-          this.infoLoad = item;
-          this.userlevelAccess = this.infoLoad.optionAccessLavel;
-        });
-      }
-    });
+      takeUntil(this.stopSubscriptions$),
+      tap((user: any) => {
+        this.user = user;
+      }),
+      switchMap((user: any) => {
+        if (user && user.rolId) {
+          return this.rolService.getRol(user.rolId).valueChanges().pipe(
+            tap((item: any) => {
+              this.infoLoad = item;
+              this.userlevelAccess = this.infoLoad.optionAccessLavel;
+            }),
+            catchError(error => {
+              console.error('Error fetching role:', error);
+              return of(null); // Handle error and return a fallback value
+            })
+          );
+        } else {
+          return of(null); // Return a fallback observable if rolId is not available
+        }
+      })
+    ).subscribe();
 
     this.objectSubscription = this.route.params.pipe(
       takeUntil(this.stopSubscriptions$)

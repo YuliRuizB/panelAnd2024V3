@@ -18,7 +18,14 @@ export class UsersService {
   constructor(private afs: AngularFirestore, private message: NzMessageService) { 
     
   }
-  getBoardingPassesByRoute(vendorId: string) {
+  getActiveCustomers(){
+    const routes = this.afs.collection('customers', ref => 
+      ref.where('active','==',true)
+      );
+      return routes.snapshotChanges();
+  }
+
+  getBoardingPassesByRoute(vendorId: string) {   
     const today = new Date();
     this.joined$ = this.afs.collectionGroup('routesAccess', ref => ref.where('active', '==', true)).valueChanges()
       .pipe(
@@ -31,7 +38,9 @@ export class UsersService {
             of(permissions),
             combineLatest(
               routeIds.map( (routeId: any) =>                          
-                this.afs.collectionGroup('boardingPasses', ref => ref.where('routeId', '==', routeId)).snapshotChanges().pipe( //.where('validFrom','>=', today)
+                this.afs.collectionGroup('boardingPasses', ref => 
+                  ref.where('routeId', '==', routeId)
+                     .where('active', '==', true)).snapshotChanges().pipe( //.where('validFrom','>=', today)
                   map((boardingPasses: any) => boardingPasses.map((bp:any) => {
                     const id = bp.payload.doc.id;
                     const data = bp.payload.doc.data();
@@ -44,6 +53,8 @@ export class UsersService {
           )
         }),
        map(([permissions, boardingPasses]) => {       
+        console.log(boardingPasses);
+        
           const sanitized = boardingPasses.filter(item => !!item && item.length > 0);        
           return typeof sanitized != "undefined" ? sanitized.map((boardingPass:any) => {
 
@@ -64,60 +75,82 @@ export class UsersService {
       return this.joined$;
   }
 
-  getBoardingPassesByRoutebyCustomerId(vendorId: string , customerId:string) {
+  getBoardingPassesByRoutebyCustomerId(vendorId: string, customerId: string) {    
     const today = new Date();
     this.joined$ = this.afs.collectionGroup('routesAccess', ref => ref
-    .where('customerId', '==', customerId)
-    .where('active', '==', true)).valueChanges()
+      .where('customerId', '==', customerId)
+      .where('active', '==', true)).valueChanges()
       .pipe(
         take(1),
-        switchMap((permissions:any) => {       
-          const routeIds = uniq(permissions.map((p:any) => p.routeId
-           ));
-          return routeIds.length === 0 ? of([]) :
-          combineLatest(
-            of(permissions),
-            combineLatest(
-              routeIds.map( (routeId: any) =>                          
-                this.afs.collectionGroup('boardingPasses', ref => ref.where('routeId', '==', routeId)).snapshotChanges().pipe( //.where('validFrom','>=', today)
-                  map((boardingPasses: any) => boardingPasses.map((bp:any) => {
-                    const id = bp.payload.doc.id;
-                    const data = bp.payload.doc.data();
-                    const uid = bp.payload.doc.ref.parent.parent.id;
-                    return { id, uid, ...data}
-                  }))
+        switchMap((permissions: any[]) => {     
+          const routeIds = _.uniq(permissions.map((p: any) => p.routeId));              
+          if (routeIds.length === 0) {
+            return of<[any[], any[]]>([permissions, []]);
+          } else {
+            return combineLatest([
+              of(permissions),
+              combineLatest(                
+                routeIds.map((routeId: string) =>
+                  this.afs.collectionGroup('boardingPasses', ref => ref.where('routeId', '==', routeId)).snapshotChanges().pipe(
+                    map((boardingPasses: any[]) => boardingPasses.map((bp: any) => {
+                      const id = bp.payload.doc.id;
+                      const data = bp.payload.doc.data();
+                      const uid = bp.payload.doc.ref.parent.parent?.id;
+                      return { id, uid, ...data };
+                    }))
+                  )
                 )
               )
-            )
-          )
+            ]).pipe(
+              map(([permissions, boardingPassesNested]) => {
+                // Flatten nested arrays
+                const boardingPasses = boardingPassesNested.flat();
+                return [permissions, boardingPasses] as [any[], any[]];
+              })
+            );
+          }
         }),
-       map(([permissions, boardingPasses]) => {       
+        map(([permissions, boardingPasses]) => {               
           const sanitized = boardingPasses.filter(item => !!item && item.length > 0);        
-          return typeof sanitized != "undefined" ? sanitized.map((boardingPass:any) => {
-
-            const permission = _.filter(permissions, (p) => {
-                return boardingPass[0].routeId === p.routeId
-            });        
+          return typeof sanitized != "undefined" ? boardingPasses.map((boardingPass:any) => {           
+         //   console.log(boardingPass[0].routeId);
+         if (!Array.isArray(boardingPass) || boardingPass.length === 0) {
+            const permission = _.filter(permissions, (p) => {            
+                return boardingPass.routeId === p.routeId
+            });
             return {
-              passes: [...boardingPass],
+              passes: [...[boardingPass]],
               permission: permission[0].active ? permission[0].active : false,
               permissionId: permission[0].id,
               customerId: permission[0].customerId || '',
               routeName:permission[0].routeName || '',
               customerName: permission[0].customerName || ''
             }
+          }  
+          else {
+            return {
+              passes: [...boardingPass],
+              permission: false,
+              permissionId: null,
+              customerId: '',
+              routeName: '',
+              customerName: ''
+            };
+          }
           }) : of([])
         }) 
-      )
-      return this.joined$;
+      );
+    return this.joined$;
   }
 
   getBoardingPassesByProduct(productId: string) {
     const today = new Date();
+
     this.joined$ = this.afs.collectionGroup('routesAccess', ref => ref.where('active', '==', true)).valueChanges()
       .pipe(
         take(1),
-        switchMap((permissions:any) => {        
+        switchMap((permissions:any) => { 
+          console.log(permissions); 
           const routeIds = uniq(permissions.map((p:any) => p.routeId
            ));
           return routeIds.length === 0 ? of([]) :
@@ -142,13 +175,20 @@ export class UsersService {
             )
           )
         }),
-       map(([permissions, boardingPasses]) => {       
+        map(([permissions, boardingPasses]) => {       
           const sanitized = boardingPasses.filter(item => !!item && item.length > 0);        
           return typeof sanitized != "undefined" ? sanitized.map((boardingPass:any) => {
-
+            console.log("permissions");
+            console.log(permissions);
+            console.log("boardingPasses");
+            console.log(boardingPasses);
+            console.log("routeId");
+            console.log(boardingPass[0].routeId);
             const permission = _.filter(permissions, (p) => {
                 return boardingPass[0].routeId === p.routeId
-            });      
+            });    
+                console.log("permission");
+                console.log(permission);
             return {
               passes: [...boardingPass],
               permission: permission[0].active ? permission[0].active : false,
@@ -482,6 +522,18 @@ export class UsersService {
      })
    }
  
+   updateUserPreRegisterE(userId: string, status: string, customerId:string, customerName:string) {   
+    const vendorRef = this.afs.collection('drivers').doc(userId);
+    console.log("toChange " + userId +  " to status  " + status);
+    vendorRef.update({status: status, validCompanyRequest: status,
+        customerId: customerId, customerName:customerName, active: true
+     }).then( () => {      
+    }).catch( (err) => {
+     // this.message.remove();
+      this.message.error('Hubo un error: ', err);
+      console.log(err)
+    })
+  }
 
   updateUserCollection(uid: string, user: any) {   
     this.user =  this.afs.collection('users').doc(uid);
@@ -508,4 +560,69 @@ export class UsersService {
          .where('customerId', '==' ,accountId));
     return usersCollection.snapshotChanges();
   }
+
+  getUserByAccount(accountId:string){
+    const usersCollection = this.afs.collection("users", ref => 
+      ref.where('status', 'in', ['active', 'preRegister'])
+          .where('token', '!=', null)
+         .where('customerId', '==' ,accountId));
+    return usersCollection.snapshotChanges();
+  }
+
+  getPreRegisterInfo() {
+    const getpre = this.afs.collectionGroup('users', ref => 
+    ref.where('status','==','preRegister')
+      .orderBy('firstName','desc')
+    );
+    return getpre.valueChanges();
+  }
+  getPreRegisterInfoByCustomer(customerId:string) {
+    const getpre = this.afs.collectionGroup('users', ref => 
+    ref.where('status','==','preRegister')
+      .where('customerId','==', customerId)
+      .orderBy('firstName','desc')
+    );
+    return getpre.valueChanges();
+  }
+  getPreRegisterInfoE() {
+    const getpre = this.afs.collectionGroup('drivers', ref => 
+    ref.where('status','==','pending')
+      .orderBy('firstName','desc')
+    );
+    return getpre.valueChanges();
+  }
+  getPreRegisterInfoEByCustomer(customerId:string) {
+    const getpre = this.afs.collectionGroup('drivers', ref => 
+    ref.where('status','==','pending')
+    .where('customerId','==', customerId)
+      .orderBy('firstName','desc')
+    );
+    return getpre.valueChanges();
+  }
+  getTransferInfoByCustomer(customerId:string) {
+    const getpre = this.afs.collectionGroup('transfers', ref => 
+    ref.where('status','!=','complete')
+    .where('customerId','==', customerId)
+      .orderBy('dateTime','desc')
+    );
+    return getpre.valueChanges();
+  }
+  getTransferInfo() {
+    const getpre = this.afs.collectionGroup('transfers', ref => 
+    ref.where('status','!=','complete')  
+      .orderBy('dateTime','desc')
+    );
+    return getpre.valueChanges();
+  }
+  updateTransfer(uidTransfer: any , status: any) {   
+    const vendorRef = this.afs.collection('transfers').doc(uidTransfer);   
+    vendorRef.update({status: status}).then( () => {      
+    }).catch( (err) => {
+     // this.message.remove();
+      this.message.error('Hubo un error: ', err);
+      console.log(err)
+    })
+  }
+
+
 }

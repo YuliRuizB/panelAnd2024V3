@@ -5,3 +5,23 @@
   .table-operations > button {
     margin-right: 8px;
   }
+  .custom-table {
+    max-width: 900px; /* Ajusta el ancho máximo de la tabla */
+    margin: auto; /* Centra la tabla */
+    height: 160px;
+  }
+  
+  .custom-table th, .custom-table td {
+    padding: 8px; /* Ajusta el padding para reducir el tamaño de las celdas */
+    font-size: 14px; /* Ajusta el tamaño del texto */
+  }
+  
+  .custom-table th {
+    background-color: #f0f0f0; /* Color de fondo para los encabezados */
+    text-align: center; /* Centra el texto en los encabezados */
+  }
+  
+  .custom-table td {
+    text-align: center; /* Centra el texto en las celdas del cuerpo */
+  }
+  

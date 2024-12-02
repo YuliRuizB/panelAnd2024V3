@@ -1,12 +1,15 @@
 import { Component, OnInit, Input, OnDestroy, inject } from '@angular/core';
 import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Subject, Subscription } from 'rxjs';
-import { takeUntil, map, tap } from 'rxjs/operators';
+import { Subject, Subscription, Observable, of } from 'rxjs';
+import { takeUntil, map, tap, finalize } from 'rxjs/operators';
+import { NzUploadFile, NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { AccountsService } from '../../../services/accounts.service';
 import { RolService } from '../../../services/roles.service';
 import { UsersService } from '../../../services/users.service';
 import { AuthenticationService } from '../../../services/authentication.service';
+import { AngularFireStorage, AngularFireUploadTask } from '@angular/fire/compat/storage';
+import { VendorService } from '../../../../shared/services/vendor.service';
 
 @Component({
   selector: 'app-shared-account-edit',
@@ -20,6 +23,7 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
   stopSubscription$: Subject<boolean> = new Subject();
   loading: boolean = true;
   record: any;
+  recordId: any;
   infoLoad: any = [];
   userlevelAccess:string | undefined;
  user: any;  
@@ -31,9 +35,26 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
  userService= inject(UsersService);
  infoSegment: any = [];
  jobType: any;
+ usersList: any;
+ avatarUrl: string = "http://themenate.com/applicator/dist/assets/images/avatars/thumb-13.jpg";
+ uploading: boolean = false;
+ bucketPath: string = 'customers/';
+// Upload Task 
+  task!: AngularFireUploadTask;
+  // Progress in percentage
+  uploadPercent!: Observable<number>;
+  uploadvalue: number = 0;
+  downloadURL!: Observable<string>;
+  // Snapshot of uploading file
+  snapshot!: Observable<any>;
+  // Uploaded File URL
+  UploadedFileURL!: Observable<string>;
+  images!: Observable<any[]>;
+  vendorService= inject(VendorService);
 
   constructor(   
-    private messageService: NzMessageService,       
+    private messageService: NzMessageService, 
+    private bucketStorage: AngularFireStorage,      
     private fb: UntypedFormBuilder
   ) {
     this.authService.user.subscribe((user) => {
@@ -53,6 +74,17 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
         ).subscribe( (jobTypeList) => {
           this.jobType = jobTypeList;  
         });
+
+        this.accountsSubscription = this.accountsService.getUsersByCustomer(this.accountId).pipe(
+          map((actions:any) => actions.map((a:any) => {
+            const id = a.payload.doc.id;
+            const data = a.payload.doc.data() as any;
+            return { id: id, ...data }
+          }))
+        ).subscribe( (usersList) => {
+          this.usersList = usersList;  
+        });
+
 
         this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
           takeUntil(this.stopSubscription$),
@@ -97,7 +129,8 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
       phoneNumber: [''],
       jobTypeID:[''],
       custConsecutive:[''],
-      primaryContact: ['']
+      primaryContact: [''],
+      responsableUser: ['']
     })
   }
 
@@ -105,7 +138,7 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
   //  console.log(record);
     this.objectForm.patchValue({
       active: record.active || false,
-      imageUrl: record.avatar || '',
+      imageUrl: record.imageUrl || '',
       address: record.address || '',
       addressNumber: record.addressNumber || '',
       name: record.name || '',
@@ -124,7 +157,8 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
       phoneNumber: record.phoneNumber || '',
       jobTypeID: record.jobTypeID || '',
       custConsecutive: record.custConsecutive || '',
-      primaryContact: record.primaryContact || ''
+      primaryContact: record.primaryContact || '',
+      responsableUser: record.responsableUser || ''
     });
 
   }
@@ -152,14 +186,78 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
     ).subscribe();
   }
 
-  handleChange() {
 
+  private getBase64(img: File, callback: (img: string) => void): void {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+        if (reader.result !== null && typeof reader.result === 'string') {
+            callback(reader.result);
+        } else {
+            // Handle the case where reader.result is null or not a string
+            console.error('Invalid result from FileReader');
+        }
+    });
+    reader.readAsDataURL(img);
+}
+
+  handleChange(info: { file: NzUploadFile }): void {
+    console.log(info);
+    if (info.file.originFileObj) {
+    this.getBase64(info.file.originFileObj, (img: string) => {
+      this.avatarUrl = img;
+    //  console.log(img);
+    const fileName = info.file.name;
+    const filePath = `${this.bucketPath}/${fileName}`;
+    
+    const fileRef = this.bucketStorage.ref(filePath); 
+      this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');
+
+      // observe percentage changes
+      this.uploadPercent = this.task.percentageChanges() as Observable<number>;
+      console.log(filePath);
+      this.uploadPercent.pipe(
+        map(a => {
+          return Number((a / 100).toFixed(2));
+        })
+      ).subscribe((value) => {
+        this.uploading = value != 0;
+        this.uploadvalue = value;
+      })
+
+      // get notified when the download URL is available
+      this.task.snapshotChanges().pipe(
+        finalize(() => {
+          this.uploading = false;
+          this.downloadURL = fileRef.getDownloadURL();
+          this.downloadURL.subscribe(async (url) => {
+            this.updatePhotoURL(url);
+          });
+        })
+      ).subscribe();
+
+    });
+    }
   }
+
+  async updatePhotoURL(url: any) {
+
+      console.log("started updatePhotoURL with url: ", url);
+      this.objectForm.controls['imageUrl'].patchValue(url);
+  
+      if (this.userlevelAccess != "3") {
+        console.log("update");
+        this.accountsService.updateAvatarAccount(this.accountId, url);
+        console.log("afdter");
+      } else {
+        this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
+      }
+    }
   sendMessage(type: string, message: string): void {
     this.messageService.create(type, message);
 }
   onSubmit() {
     if (this.userlevelAccess != "3") {
+      console.log(this.objectForm.value);
       this.accountsService.updateAccount(this.accountId, this.objectForm.value).then(() => {
        // console.log('ok')
       }, err => {

@@ -13,15 +13,25 @@ export class DriversService {
     private aff: AngularFireFunctions
     ) { }
 
-  getDriver(driverId: string) {
+  getDrivers(driverId: string) {
     const driver = this.afs.collection('drivers').doc(driverId);
     return driver.snapshotChanges();
   }
 
-  getDrivers(vendorId: string) {
-    const drivers = this.afs.collection('drivers', ref => ref.where('vendorId','==', vendorId));
+  getDriversByCustomergetDrivers(vendorId: string) {
+    const drivers = this.afs.collection('drivers', ref => 
+      ref.where('vendorId','==', vendorId)
+        .where('active','==',true));
     return drivers.snapshotChanges();
   }
+
+  getDriversByCustomer(customerId: string) {
+    const drivers = this.afs.collection('drivers', ref => 
+      ref.where('customerId','==', customerId)  
+          .where('active','==',true));
+    return drivers.snapshotChanges();
+  }
+
 
   getDriversbyCustomer(vendorId: string, customerId:string) {
     const drivers = this.afs.collection('drivers', ref => ref
@@ -62,11 +72,19 @@ export class DriversService {
   }
 
   async createDriver(driver: any): Promise<any> {
-    console.log(driver);
+   /*  console.log(driver);
     const createNewDriver = this.aff.httpsCallable('createDriver');
     return createNewDriver(driver).toPromise().then((response:any) => {
       console.log(response);
-    });
+    }); */
+    
+      const newDriver = this.afs.createId();
+      driver.uid = newDriver;
+      const rolN = this.afs.collection('drivers').doc(newDriver);
+      return rolN.set(driver).then(() => {
+        return newDriver;
+      })
+        
   }
 
   getEvidenceDrivers(selectedDate: Date) {
@@ -125,6 +143,20 @@ export class DriversService {
          .where('uid', '==', uidDriver)
     );
   
+    return evidence.snapshotChanges();
+  }
+
+  getEvidenceByProgram(programId: string) {
+    const evidence = this.afs.collection('driversEvidence', ref =>
+      ref.where('programId', '==', programId)     
+    );  
+    return evidence.snapshotChanges();
+  }
+
+  getEvidenceByRoute(routeId: string) {
+    const evidence = this.afs.collection('driversEvidence', ref =>
+      ref.where('routeId', '==', routeId)     
+    );  
     return evidence.snapshotChanges();
   }
 

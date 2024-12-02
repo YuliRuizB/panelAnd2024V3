@@ -29,6 +29,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   vendorRoutesSubscription!: Subscription;
   vendorRoutesList: any[] = [];
   customersList: any[] = [];
+  customersActiveList: any[] = [];
   loading:boolean = true;
   objectForm!: UntypedFormGroup;
 
@@ -134,26 +135,41 @@ export class AssignmentComponent implements OnInit, OnDestroy {
 
   createNestedTableData(data: any) {
     this.vendorRoutesList = [];
-   // console.log(data);
-    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
 
-         const filteredData = data.filter((item: any) => item.customerId === this.user.customerId);
-        // Extract unique customerName values from the filtered data
-        this.customersList = [] = _.chain(filteredData).map('customerName').uniq().value();
+    this.usersService.getActiveCustomers().pipe(
+      takeUntil(this.stopSubscription$),
+      map((actions:any) => actions.map((a: any) => {
+        const id = a.payload.doc.id;
+        const data = a.payload.doc.data() as any;
+        return { id, ...data }
+      }))
+    ).subscribe( customersActiveList => {           
+      this.customersActiveList = customersActiveList; 
+    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual  
+      
+      const filteredData = data.filter((item: any) => item.customerId === this.user.customerId);
+     // Extract unique customerName values from the filtered data
+     this.customersList = _.chain(filteredData)
+     .map('customerName')
+     .uniq()
+     .filter(customerName => _.includes(_.map(this.customersActiveList, 'name'), customerName))
+     .value();
 
     } else {
-      this.customersList = [] = _.chain(data).map('customerName').uniq().value();
+      this.customersList = _.chain(data)
+      .map('customerName')
+      .uniq()
+      .filter(customerName => _.includes(_.map(this.customersActiveList, 'name'), customerName))
+      .value();
     }
-
-  
-    //console.log(this.customersList);
 
     for (let i = 0; i < data.length; ++i) {
       data[i].routeName = data[i].passes[0].routeName;
       data[i].routeId = data[i].passes[0].routeId;
     }
-   // console.log(data);
-    this.vendorRoutesList = data;
+    console.log(data);
+      this.vendorRoutesList = data;
+    })  
   }
 
   sort(sortAttribute: any) {

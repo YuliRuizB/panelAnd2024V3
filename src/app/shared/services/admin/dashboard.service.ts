@@ -35,19 +35,25 @@ export class DashboardService {
   }
 
   setChatMessage(data:object) {
-    //console.log(data);
+    console.log("shetchatmsj");
+    
+    console.log(data);
     const key = this.afs.createId();
-    //console.log('key '+ key );
+    console.log('key '+ key );
+
     const sendChatMessage = this.afs.collection('chatMessages').doc(key);
     return sendChatMessage.set(data);
   }
   setMessage(data:object,idUser:string) {
-    //console.log(data);
+    console.log(data);
+    console.log("idUser" + idUser);
+    
+
    const key = this.afs.createId();
     //console.log('key '+ key );
     const sendMessage = this.afs.collection('users').doc(idUser).collection('messages').doc(key);
     return sendMessage.set(data);
-  }
+  } 
 
   getUserChatMessages(userId:string, limit?: number){
     //console.log('userChatMessages:'+userId);
@@ -62,5 +68,26 @@ export class DashboardService {
         return { id, ...data }
       }))
     )
+  }
+
+  getJobType(customerId: string) {
+    const deviceDoc = this.afs.collection('customers').doc(customerId);
+    return deviceDoc.snapshotChanges().pipe(
+      map(snapshot => {
+        const data = snapshot.payload.data() as any;
+        const id = snapshot.payload.id;
+        return { ...data, id };
+      })
+    );
+  }
+  getJobTypeInfo(jobtypeId: string) {
+    const deviceDoc = this.afs.collection('jobType').doc(jobtypeId);
+    return deviceDoc.snapshotChanges().pipe(
+      map(snapshot => {
+        const data = snapshot.payload.data() as any;
+        const id = snapshot.payload.id;
+        return { ...data, id };
+      })
+    );
   }
 }

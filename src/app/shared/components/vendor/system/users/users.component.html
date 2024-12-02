@@ -1,4 +1,4 @@
-<nz-page-header class="site-page-header">
+<nz-page-header class="site-page-header"  style="background-color:#f9fbfd;">
 
     <!--title-->
     <nz-page-header-title>Usuarios del sistema</nz-page-header-title>
@@ -29,10 +29,10 @@
     </nz-page-header-content>
   </nz-page-header>
   <br />
-  <ag-grid-angular style="width: 100%; height: 450px;" class="ag-theme-material" [rowData]="usersList"
+<!--   <ag-grid-angular style="width: 100%; height: 450px;" class="ag-theme-material" [rowData]="usersList"
     [getContextMenuItems]="getContextMenuItems" [columnDefs]="columnDefs" [gridOptions]="gridOptions"
     [popupParent]="popupParent">
-  </ag-grid-angular>
+  </ag-grid-angular> -->
   
   
   <!-- Modal -->
@@ -119,7 +119,7 @@
             <nz-form-control [nzSm]="14"
             [nzXs]="24" nzHasFeedback>
               <nz-select name="select-error" formControlName="role">
-                <nz-option nzValue="vendor" nzLabel="CLientes"></nz-option>
+                <nz-option nzValue="vendor" nzLabel="División"></nz-option>
               </nz-select>
             </nz-form-control>
           </nz-form-item>

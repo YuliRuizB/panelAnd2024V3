@@ -4,16 +4,19 @@ import { AngularFirestore, AngularFirestoreCollection ,AngularFirestoreCollectio
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { map, switchMap, take, takeUntil } from 'rxjs/operators';
+import { map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import * as _ from 'lodash';
 import {  UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
-import {  SideBarDef } from 'ag-grid-community';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { RoutesService } from '../../shared/services/routes.service';
 import { AuthenticationService } from '../../shared/services/authentication.service';
 import { ProductsService } from '../../shared/services/products.service';
 import { UsersService } from '../../shared/services/users.service';
 import { GeoPoint } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore'; 
+import { AccountsService } from '../../shared/services/accounts.service';
+import { Product } from '../../shared/interfaces/product.type';
+import { CustomersService } from '../../customers/services/customers.service';
 
 export interface IStopPoint {
   id: string;
@@ -39,23 +42,19 @@ interface IRound {
 })
 export class ReportsDashboardComponent implements OnInit {
   authService = inject(AuthenticationService);
-  usersService= inject(UsersService);
+  usersService= inject(UsersService); 
+  usersServices = inject(CustomersService);
   routesService = inject(RoutesService);
   productsService = inject(ProductsService);
+  accountsService= inject(AccountsService);
   stopSubscription$: Subject<any> = new Subject();
   gridApi :any;
   gridColumnApi: any;
-  columnDefs : any ;
-  columnDefsPagos: any;
   defaultColDef: any;
   userRoutes:any;
   sumOfField = 0;
   detailCellRendererParams : any;
   detailCellRendererParamsPagos: any;
-  usersColumnDefs: any;
-  usersColumnDefsAnticipo: any;
-  usersColumnDefsCV: any;
-  usersColumnDefsCVDetalle: any;
   columnProgram: any;
   rowData: any = [];
   rowDataPay: any = [];
@@ -69,7 +68,7 @@ export class ReportsDashboardComponent implements OnInit {
   usersList: any = [];
   usersListA: any = [];
   usersListCV : any = [];
-  usersListCVByR? : any [];
+  usersListCVByR! : any [];
   usersListCVByRDetalle!:any [];
   FusersListCVByRDetalle!:any [];
   routesList: any = [];
@@ -80,8 +79,9 @@ export class ReportsDashboardComponent implements OnInit {
   accountId$ = new Subject<string>();
   joined$: Observable<any> | undefined;
   cCollection: AngularFirestoreCollectionGroup<any> | undefined;
-  productsListV:any;
+  productsListV:any =[];
   validateForm: UntypedFormGroup;
+  validateFormO: UntypedFormGroup;
   validateFormTurn:UntypedFormGroup;
   validateFormPase: UntypedFormGroup;
   validateFormAnticipos:UntypedFormGroup;
@@ -93,11 +93,16 @@ export class ReportsDashboardComponent implements OnInit {
   public rowSelection: 'multiple' | undefined;
   isModalVisible: boolean = false;
   isModalVisibleCV:boolean = false;
-  public sideBar: SideBarDef | string | string[] | boolean | null = 'filters';
   accountsSubscription?: Subscription;
  routeSubscription?: Subscription;
  routes:any;
  routeIdSelected!:string;
+ customersList: any[] = [];
+ checkOptionsOne: any[] = [];
+ infoSegment: any  =[];
+ userCustomerId: string = "";
+ selectedOption: any;
+ sub?: Subscription;
 
   constructor( 
       private fb: UntypedFormBuilder,
@@ -107,27 +112,37 @@ export class ReportsDashboardComponent implements OnInit {
 
         this.validateForm = this.fb.group({
           id: [null], // Initialize the product_id control
+          customerId: [null]
         });
+
+        this.validateFormO = this.fb.group({
+          id: [null], // Initialize the product_id control
+          customerId: [null]
+        });        
         this.validateFormPase = this.fb.group({
           id: [null], // Initialize the product_id control
+          customerId: [null]
         });
         this.validateFormTurn = this.fb.group({
           id: [null], // Initialize the product_id control
-          turno: [""]
+          turno: [""],
+          customerId: [null]
         });
         this.validateFormAnticipos = this.fb.group({
           id: [null], // Initialize the product_id control
-          turno: [""]
+          turno: [""],
+          customerId: [null]
         });
 
         this.validateFormCV =  this.fb.group({
-          id: [null] 
+          id: [null] ,
+          customerId: [null]
         });
-
         
         this.validateFormCVByRoute =  this.fb.group({
           id: [null] ,
-          routeId:[""]
+          routeId:[""],
+          customerId: [null]
         });
 
         this.signupForm = this.fb.group({
@@ -162,378 +177,94 @@ export class ReportsDashboardComponent implements OnInit {
           { id: 'Noche', name: 'Noche' }
         ];
 
-    const productsObservable: Observable<any>  = this.accountId$.pipe(
-      switchMap(accountId => this.afs.collection('customers').doc(accountId).collection('products', ref => ref.where('active', '==', true)).valueChanges({ idField: 'productId' })
-      ));
+    this.validateForm.get('id')?.valueChanges.subscribe(selectedProductId => {
+         console.log('Selected Product ID:', selectedProductId);
+    });
+
+    this.authService.user.subscribe(user => {   
+      this.user = user; 
+          
+      if(this.user) {      
+        this.userCustomerId = this.user.customerId;  
        
-    this.columnDefs = [
-      {
-        headerName: 'Empresa', field: 'customerName',
-        cellRenderer: 'agGroupCellRenderer', sortable: true
-      },
-      { headerName: 'Ruta', sortable: true, field: 'routeName' },
-      { headerName: 'Usuarios Mete', field: 'customerName', cellRenderer: (params: { data: { passes: any; }; }) => {
-        const passes = params.data.passes;
-       /*  const isTaskIn = _.filter(passes, (p) => {
-          return !!p.isTaskIn;
-        })
-        return isTaskIn.length; */
-        return passes;
-      }},
-      { headerName: 'Usuarios Saca', field: 'customerName', cellRenderer: (params: { data: { passes: any; }; }) => {
-        const passes = params.data.passes;
-       /*  const isTaskOut = _.filter(passes, (p) => {
-          return !!p.isTaskOut;
-        }) */
-        return passes; //isTaskOut.length;
-      }},
-      { headerName: 'Activa', field: 'permission', cellRenderer: (params: { value: any; }) => {
-        return !!params.value ? 'Si' : 'No'
-      }}
-    ];
-    this.columnDefsPagos = [
-      {
-        headerName: 'Empresa', field: 'customerName',
-        cellRenderer: 'agGroupCellRenderer', sortable: true
-      },
-      { headerName: 'Ruta', sortable: true, field: 'routeName' },
-      { headerName: 'Usuarios', aggFunc: 'sum', filter: true, sortable: true, field: 'customerName', cellRenderer: (params: { data: { passes: any; }; }) => {
-        const passes = params.data.passes;
-        const rowCount = passes.reduce((accumulator: number) => {
-          return accumulator + 1;
-        }, 0);
-        return rowCount;
-      }},
-
-     
-      { headerName: 'Monto', aggFunc: 'sum', field: 'customerName', cellRenderer: (params: { data: { passes: any; }; }) => {
-        const passes = params.data.passes;
-        const totalAmount = passes.reduce((accumulator: any, currentValue: { amount: any; }) => {
-          return accumulator + currentValue.amount;
-        }, 0);
-        const formattedAmount = totalAmount.toLocaleString('en-US', {
-          style: 'currency',
-          currency: 'USD' // Change 'USD' to the appropriate currency code if needed
-        });
-
-        return formattedAmount; 
-        //return passes;
-      }},     
-      { headerName: 'Activa', field: 'permission', cellRenderer: (params: { value: any; }) => {
-        return !!params.value ? 'Si' : 'No'
-      }}
-    ];
-    this.columnProgram = [
-      {
-        headerName: 'Inicia', field: 'time',
-        cellRenderer: 'agGroupCellRenderer', sortable: true
-      },
-      { headerName: 'Empresa', sortable: true, field: 'customerName' },
-      { headerName: 'Ruta', sortable: true, field: 'routeName'},
-      { headerName: 'Programa / Turno', Field: 'round'},
-      { headerName: 'PR', sortable: true, field: 'driver'},
-      { headerName: 'Vehículo', sortable: true, field: 'vehicleName'},
-      { headerName: 'Inició', sortable: true, field: 'startedAt'},
-      { headerName: 'Finalizó', sortable: true, field: 'endedAt'}
-    ];
-    this.usersColumnDefs = [
-      { headerName: 'Empresa', field: 'customerName', enableRowGroup: true },
-      { headerName: 'Ruta', field: 'routeName', enableRowGroup: true },
-      { headerName: 'Turno', field: 'round', enableRowGroup: true },
-      { headerName: 'Estación', field: 'stopName', enableRowGroup: true },
-      { headerName: 'Pase de abordar', field: 'name' },
-      { headerName: 'Mete', field: 'isTaskIn', cellRenderer: (params: { value: any; }) => {
-        return !!params.value ? 'Si' : 'No'
-      }},
-      { headerName: 'Saca', field: 'isTaskOut', cellRenderer: (params: { value: any; }) => {
-        return !!params.value ? 'Si' : 'No'
-      }},
-      { headerName: 'Pase Cortesía', field: 'is_courtesy', cellRenderer: (params: { value: any; }) => {
-        return !!params.value ? 'Si':'No'
-      }},
-      { headerName: 'Válido desde', field: 'validFrom', cellRenderer: (params: { value: any; }) => {
-        const date = (params.value).toDate();
-        return format(date, 'MMMM dd yyyy', {
-          locale: es
-        })
-      }},
-      { headerName: 'Válido hasta', field: 'validTo', cellRenderer: (params: { value: any; }) => {
-        const date = (params.value).toDate();
-        return format(date, 'MMMM dd yyyy', {
-          locale: es
-        })
-      }}
-    ];
-    this.usersColumnDefsAnticipo = [
-      { headerName: 'Empresa',width: 200, field: 'customerName', enableRowGroup: true },
-      { headerName: 'Ruta',width: 200,field: 'routeName', enableRowGroup: true },
-      { headerName: 'Turno',  width: 100,  field: 'round', enableRowGroup: true },
-      { headerName: 'Monto Anticipo',   enableRowGroup: true,field: 'amountPayment', cellRenderer: (params: { data: { amountPayment: any; }; }) => {       
-        const totalAmount = params.data.amountPayment;       
-        const formattedAmount = totalAmount.toLocaleString('en-US', {
-          style: 'currency',
-          currency: 'USD' // Change 'USD' to the appropriate currency code if needed
-        });
-        return formattedAmount; 
-      }},       
-      { headerName: 'Promesa  de Pago', field: 'promiseDate', cellRenderer: (params: { value: any; }) => {
-        const date = (params.value).toDate();
-        return format(date, 'MMMM dd yyyy', {
-          locale: es
-        })
-      }},   
-      {
-        headerName: 'Días vencidos',
-       
-        field: 'promiseDate',
-        cellRenderer: (params: any) => {
-          const promiseTimestamp = params.value; // Firestore Timestamp
-          const promiseDate = promiseTimestamp.toDate(); // Convert Firestore Timestamp to JavaScript Date
-          const today: Date = new Date(); // Explicitly declare the type as Date
-          const timeDifference = promiseDate.getTime() - today.getTime(); // Calculate the time difference in milliseconds
-          const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
-          return daysDifference + ' días';
-        }
-      },   
-      { headerName: 'Pase de abordar', field: 'name' },
-      { headerName: 'Mete / Saca / Cortesía', field: 'isTaskIn', width: 210, cellRenderer: (params: { data: { isTaskIn: any; isTaskOut: any; is_courtesy: any; }; }) => {
-        const meteSacaText = !!params.data.isTaskIn ? 'Si' : 'No';
-        const sacaText = !!params.data.isTaskOut ? 'Si' : 'No';
-        const cortesiaText = !!params.data.is_courtesy ? 'Si' : 'No';
-        return ` ${meteSacaText} / ${sacaText} / ${cortesiaText}`;
-      }},  
-      { headerName: 'Válido desde', field: 'validFrom', cellRenderer: (params: { value: any; }) => {
-        const date = (params.value).toDate();
-        return format(date, 'MMMM dd yyyy', {
-          locale: es
-        })
-      }},
-      { headerName: 'Válido hasta', field: 'validTo', cellRenderer: (params: { value: any; }) => {
-        const date = (params.value).toDate();
-        return format(date, 'MMMM dd yyyy', {
-          locale: es
-        })
-      }}
-    ];
-
-    this.usersColumnDefsCV = [
-      { headerName: 'Empresa',width: 200, field: 'customerName', enableRowGroup: true },
-      { headerName: 'Ruta',width: 200,field: 'routeName', enableRowGroup: true },      
-      { headerName: 'Turno',  width: 100,  field: 'round', enableRowGroup: true },
-      { headerName: 'Monto Anticipo',  enableRowGroup: true,field: 'amountPayment', cellRenderer: (params: { data: { amountPayment: any; }; }) => {       
-        const totalAmount = params.data.amountPayment;       
-        const formattedAmount = totalAmount.toLocaleString('en-US', {
-          style: 'currency',
-          currency: 'USD' // Change 'USD' to the appropriate currency code if needed
-        });
-        return formattedAmount; 
-      }},  
-
-      { headerName: 'Pendiente de Pago',  cellRenderer: (params: { data: { amount: number; amountPayment: number; }; }) => {       
-        const totalAmount = params.data.amount - params.data.amountPayment;       
-        const formattedAmount = totalAmount.toLocaleString('en-US', {
-          style: 'currency',
-          currency: 'USD' // Change 'USD' to the appropriate currency code if needed
-        });
-        return formattedAmount; 
-      }},     
-      { headerName: 'Promesa  de Pago', field: 'promiseDate', cellRenderer: (params: { value: any; }) => {
-        const date = (params.value).toDate();
-        return format(date, 'MMMM dd yyyy', {
-          locale: es
-        })
-      }},   
-      {
-        headerName: 'Días vencidos',       
-        field: 'promiseDate',
-        cellRenderer: (params: any) => {
-          const promiseTimestamp = params.value; // Firestore Timestamp
-          const promiseDate = promiseTimestamp.toDate(); // Convert Firestore Timestamp to JavaScript Date
-          const today: Date = new Date(); // Explicitly declare the type as Date
-          const timeDifference = promiseDate.getTime() - today.getTime(); // Calculate the time difference in milliseconds
-          const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
-          return daysDifference + ' días';
-        }
-      },   
-      { headerName: 'Pase de abordar', field: 'name' },
-      { headerName: 'Mete / Saca / Cortesía', field: 'isTaskIn', width: 210, cellRenderer: (params: { data: { isTaskIn: any; isTaskOut: any; is_courtesy: any; }; }) => {
-        const meteSacaText = !!params.data.isTaskIn ? 'Si' : 'No';
-        const sacaText = !!params.data.isTaskOut ? 'Si' : 'No';
-        const cortesiaText = !!params.data.is_courtesy ? 'Si' : 'No';
-        return ` ${meteSacaText} / ${sacaText} / ${cortesiaText}`;
-      }},  
-      { headerName: 'Válido desde', field: 'validFrom', cellRenderer: (params: { value: any; }) => {
-        const date = (params.value).toDate();
-        return format(date, 'MMMM dd yyyy', {
-          locale: es
-        })
-      }},
-      { headerName: 'Válido hasta', field: 'validTo', cellRenderer: (params: { value: any; }) => {
-        const date = (params.value).toDate();
-        return format(date, 'MMMM dd yyyy', {
-          locale: es
-        })
-      }}
-    ];
-    this.usersColumnDefsCVDetalle = [ 
-      { headerName: 'Nombre',width: 300,field: 'displayName' },  
-      { headerName: 'Matricula',width: 140,field: 'studentId'},  
-      { headerName: 'Telefono',width: 140,field: 'phone'},  
-      { headerName: 'Correo',width: 300,field: 'email'},
-     { headerName: 'Monto Anticipo',field: 'amountPayment', cellRenderer: (params: { data: { amountPayment: any; }; }) => {       
-        const totalAmount = params.data.amountPayment;       
-        const formattedAmount = totalAmount.toLocaleString('en-US', {
-          style: 'currency',
-          currency: 'USD' // Change 'USD' to the appropriate currency code if needed
-        });
-        return formattedAmount; 
-      }},  
-      { headerName: 'Pendiente de Pago',  cellRenderer: (params: { data: { amount: number; amountPayment: number; }; }) => {       
-        const totalAmount = params.data.amount - params.data.amountPayment;       
-        const formattedAmount = totalAmount.toLocaleString('en-US', {
-          style: 'currency',
-          currency: 'USD' // Change 'USD' to the appropriate currency code if needed
-        });
-        return formattedAmount; 
-      }}, 
-      { headerName: 'Promesa  de Pago', field: 'promiseDate', cellRenderer: (params: { value: any; }) => {
-        const date = (params.value).toDate();
-        return format(date, 'MMMM dd yyyy', {
-          locale: es
-        })
-      }},  
-      {
-        headerName: 'Días vencidos',       
-        field: 'promiseDate',
-        cellRenderer: (params: { value: any; }) => {
-          const promiseTimestamp = params.value; // Firestore Timestamp
-          const promiseDate = promiseTimestamp.toDate(); // Convert Firestore Timestamp to JavaScript Date
-          const today: Date = new Date(); // Explicitly declare the type as Date
-          const timeDifference = promiseDate.getTime() - today.getTime(); // Calculate the time difference in milliseconds
-          const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
-          return daysDifference + ' días';
-        }
-      } 
-    ];
-
-    this.defaultColDef = {
-      flex: 1,
-      minWidth: 100,
-      filter: true,
-      sortable: true,
-      resizable: true,
-     };
-     this.detailCellRendererParams = {
-      detailGridOptions: {
-        columnDefs: [
-          { headerName: 'Pase de abordar', field: 'name' },
-          { headerName: 'Mete / Saca / Cortesía', field: 'isTaskIn', width: 210, cellRenderer: (params: { data: { isTaskIn: any; isTaskOut: any; is_courtesy: any; }; }) => {
-            const meteSacaText = !!params.data.isTaskIn ? 'Si' : 'No';
-            const sacaText = !!params.data.isTaskOut ? 'Si' : 'No';
-            const cortesiaText = !!params.data.is_courtesy ? 'Si' : 'No';
-            return ` ${meteSacaText} / ${sacaText} / ${cortesiaText}`;
-          }},  
-          { headerName: 'Estación', field: 'stopName' },
-          { headerName: 'Válido desde', field: 'validFrom', cellRenderer: (params: { value: any; }) => {
-            const date = (params.value).toDate();
-            return format(date, 'MMMM dd yyyy', {
-              locale: es
-            })
-          }},
-          { headerName: 'Válido hasta', field: 'validTo', cellRenderer: (params: { value: any; }) => {
-            const date = (params.value).toDate();
-            return format(date, 'MMMM dd yyyy', {
-              locale: es
-            })
-          }}
-        ],
-        defaultColDef: { flex: 1 },
-      },
-      getDetailRowData: function (params: { successCallback: (arg0: any) => void; data: { passes: any; }; }) {
-        params.successCallback(params.data.passes);
-      },
-    };
-    this.detailCellRendererParamsPagos = {
-      detailGridOptions: {
-        columnDefs: [
-          { headerName: 'Pase de abordar', field: 'name' , width: 250},
-          { headerName: 'Mete / Saca / Cortesía', field: 'isTaskIn', width: 210, cellRenderer: (params: { data: { isTaskIn: any; isTaskOut: any; is_courtesy: any; }; }) => {
-            const meteSacaText = !!params.data.isTaskIn ? 'Si' : 'No';
-            const sacaText = !!params.data.isTaskOut ? 'Si' : 'No';
-            const cortesiaText = !!params.data.is_courtesy ? 'Si' : 'No';
-            return ` ${meteSacaText} / ${sacaText} / ${cortesiaText}`;
-          }},                 
-          { headerName: 'Pago', width: 140, field: 'payment' },
-          { headerName: 'Tipo de Pago', width: 145, field: 'typePayment' },
-          { headerName: 'Monto', field: 'amount' , width: 120} , 
-          { headerName: 'Status', field: 'status' , width: 130,cellRenderer: (params: { data: { status: any; }; }) => {  
-            const statusText = params.data.status;
-            if (statusText !== 'completed') {return 'Pago Parcial'} else  { return'Completo'}
-            return statusText;
-          }},
-          { headerName: 'Válido desde', field: 'validFrom', width: 130,cellRenderer: (params: { value: any; }) => {
-            const date = (params.value).toDate();
-            return format(date, 'MMMM dd yyyy', {
-              locale: es
-            })
-          }},
-          { headerName: 'Válido hasta', field: 'validTo', width: 130, cellRenderer: (params: { value: any; }) => {
-            const date = (params.value).toDate();
-            return format(date, 'MMMM dd yyyy', {
-              locale: es
-            })
-          }}
-        ],
-        defaultColDef: { flex: 1 },
-      },
-      getDetailRowData: function (params: { successCallback: (arg0: any) => void; data: { passes: any; }; }) {
-        params.successCallback(params.data.passes);
-      },
-    };
-    productsObservable.subscribe((products: any) => {      
-    //  this.products = products;
-     // console.log("entro ");
-     // console.log(this.products);
-    });  
-
-   
+        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+          map((a: any) => {
+            if (a && a.payload) {
+              const id = a.payload.id;
+              const data = a.payload.data ? a.payload.data() : {}; // Maneja el caso cuando data es undefined
+             // console.log(a);
+              return { id, ...data };
+            } else {
+              console.warn('Unexpected payload structure:', a);
+              return {};
+            }
+          })
+        ).subscribe((record: any) => {        
+          this.infoSegment = record;      
+          this.getCustomersList();
+        }) 
+      }    
+    });   
   }
 
- 
-  ngOnInit() {
-  
-    this.authService.user.subscribe((user: any) => {   
-      this.user = user;
-      this.getSubscriptionsByRoute(user.vendorId);
-      this.cCollection = this.afs.collectionGroup<any>('products', ref => ref.where('active','==',true));
-      this.productsListV = this.cCollection.snapshotChanges().pipe(
-        map((actions:any) => actions.map((a: any) => {
+  getCustomersList() {
+
+    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
+      console.log( this.userCustomerId);
+      
+      const customersCollection = this.afs.collection('customers').doc(this.userCustomerId);
+      customersCollection.snapshotChanges().pipe(
+        takeUntil(this.stopSubscription$),
+        map((action: any) => {
+          const id = action.payload.id;
+          const data = action.payload.data() as any;
+          return { id, ...data };
+        }),
+        tap((customer: any) => {
+          console.log(customer);
+          
+          this.customersList = [customer];  // Asigna un array con un único objeto
+          
+          this.checkOptionsOne = [{
+            value: customer.id,
+            label: customer.name
+          }];
+          console.log(this.checkOptionsOne);
+          
+          return customer;
+        })
+      ).subscribe();
+        
+    } else {
+      const customersCollection = this.afs.collection('customers', ref => ref.orderBy('name'));
+      customersCollection.snapshotChanges().pipe(
+        takeUntil(this.stopSubscription$),
+        map((actions:any) => actions.map((a:any) => {
           const id = a.payload.doc.id;
           const data = a.payload.doc.data() as any;
           return { id, ...data }
-        }))
-      ).subscribe(productsList => {        
-        this.products = productsList;      
-      //  console.log(this.products);
-      });
-    }); 
+        })),
+        tap((customers:any) => {
+          this.customersList = customers;
+          this.checkOptionsOne = customers.map((customer: any) => ({
+            value: customer.id,
+            label: customer.name
+          }));
+       //   console.log(this.checkOptionsOne);
+          return customers;
+        })
+      ).subscribe();
+    }
+  }
+
+ 
+  ngOnInit() {  
   }
 
   onFirstDataRendered(params: any) {
     setTimeout(function () {
      // params.api.getDisplayedRowAtIndex(1).setExpanded(false);
     }, 0);
-  }
-
-  onGridReady(params:any) {
-    this.gridApi = params.api;
-    this.gridColumnApi = params.columnApi;
-    this.rowData = this.routesList;
-    //params.api.getToolPanelInstance('filters')!.expandFilters();
-  }
-  onGridReadyD(params:any) {
-    this.gridApi = params.api;
-    this.gridColumnApi = params.columnApi;
   }
  
   ngOnDestroy() {
@@ -550,14 +281,11 @@ export class ReportsDashboardComponent implements OnInit {
   }
   }
  
-  getSubscriptionsByRoute(vendorId: string) {   
-    this.usersService.getBoardingPassesByRoute(vendorId).pipe(
+  getSubscriptionsByRoute(vendorId: string, customerId:string) {   
+    this.usersService.getBoardingPassesByRoutebyCustomerId(vendorId, customerId).pipe(
       takeUntil(this.stopSubscription$)
-    ).subscribe(data => {
-      //console.log("data Result");
-      //console.log(data);
-      this.rowData = data;
-     // this.createNestedTableData(data);
+    ).subscribe(data => {    
+      this.rowData = data;     
     })
   }
 
@@ -766,7 +494,7 @@ export class ReportsDashboardComponent implements OnInit {
 
   onProductSelect(selectedProductId: any) {
     // Handle the selected product here
-    console.log('Selected Product ID:', selectedProductId);  
+    console.log('Selected Product ID s:', selectedProductId);  
     // You can perform additional actions based on the selected product
   }
   onProductSelectByRoute(selectedProductId: any) {
@@ -784,11 +512,25 @@ export class ReportsDashboardComponent implements OnInit {
     // Search the routes related! 
     this.routeIdSelected = routeID;   
   }
+
+  submitFormO(){
+    const idCust = this.validateFormO.controls['customerId'].value;
+    this.getSubscriptionsByRoute(this.user.vendorId, idCust);
+  }
   
   submitForm() {    
-    this.rowDataPay= [];
-    const idProduct = this.validateForm.controls['id'].value;
-    this.getSubscriptions(idProduct);
+    console.log(this.selectedOption);
+    
+    if (this.validateForm.valid) {
+      console.log('Form Submitted:', this.validateForm.value);
+      this.rowDataPay= [];
+      const idProduct = this.validateForm.controls['id'].value;
+      this.getSubscriptions(idProduct);
+
+    } else {
+      console.error('Form is invalid');
+    }
+  
    //console.log(amount);  
   }
    submitFormTurn(){    
@@ -828,7 +570,7 @@ export class ReportsDashboardComponent implements OnInit {
    } 
 
    onRowClicked(event: any) {
-    console.log('Row clicked:', event.data.uid); // This will log the clicked row data to the console
+    //console.log('Row clicked:', event.data.uid); // This will log the clicked row data to the console
   
     this.accountsSubscription =  this.usersService.getUserInfo(event.data.uid).subscribe((data: any) => {
      //console.log(data.payload.data()['customerName']); // Extract user information
@@ -847,7 +589,7 @@ export class ReportsDashboardComponent implements OnInit {
   }  
 
   onRowClickedCV(event: any) {
-    console.log('Row clicked:', event.data.uid); // This will log the clicked row data to the console
+    //log('Row clicked:', event.data.uid); // This will log the clicked row data to the console
   
     this.accountsSubscription =  this.usersService.getUserInfo(event.data.uid).subscribe((data: any) => {
      //console.log(data.payload.data()['customerName']); // Extract user information
@@ -867,7 +609,7 @@ export class ReportsDashboardComponent implements OnInit {
 
   detalleCVbyR() {
     if (this.TotalMPByRoute == 0) {
-      this.sendMessage('error', "Se requiere seleccionar un producto y ruta para detallar.");
+      this.sendMessage('error', "Se requiere seleccionar un producto y operación para detallar.");
     } else {
       //Show detail of the process  
     this.FusersListCVByRDetalle = this.usersListCVByRDetalle;
@@ -888,5 +630,92 @@ export class ReportsDashboardComponent implements OnInit {
     this.isModalVisible = false;
     this.isModalVisibleCV = false;
   }
+
+  customCellRenderer(params: { data: { passes: any; }; }): string {
+    const passes = params.data.passes;
+    const rowCount = passes.reduce((accumulator: number) => {
+      return accumulator + 1;
+    }, 0);
+    return rowCount.toString(); // Convert the result to a string
+  }
+
+  customCellRendererMonto(params: { data: { passes: any; }; }): string {
+    const passes = params.data.passes;
+    const totalAmount = passes.reduce((accumulator: any, currentValue: { amount: any; }) => {
+      return accumulator + currentValue.amount;
+    }, 0);
+    const formattedAmount = totalAmount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD' // Change 'USD' to the appropriate currency code if needed
+    });
+
+    return formattedAmount; 
+  }
+
+  formatPermission(value: any): string {
+    return !!value ? 'Si' : 'No';
+  }
+  formatValidTo(value: any): string {
+    //console.log(value);
+    
+    if (!value) return ''; // Handle case when value is null or undefined
+    const date = new Date(value.seconds * 1000); // Convierte los segundos a milisegundos
+  
+  // Formatea la fecha utilizando date-fns
+  return format(date, 'MMMM dd yyyy', { locale: es });
+  }
+
+  formatMeteSacaCortesia(data: any): string {
+    const meteSacaText = !!data.isTaskIn ? 'Si' : 'No';
+    const sacaText = !!data.isTaskOut ? 'Si' : 'No';
+    const cortesiaText = !!data.is_courtesy ? 'Si' : 'No';
+    return `${meteSacaText} / ${sacaText} / ${cortesiaText}`;
+  }
+
+  calculateDaysDifference(promiseDate: Timestamp): string {
+   // console.log(promiseDate);
+    if (!promiseDate) return '';
+    const promiseTimestamp = promiseDate; // Firestore Timestamp    
+    const promiseDateObj = promiseTimestamp.toDate(); // Convert Firestore Timestamp to JavaScript Date
+    const today: Date = new Date(); // Get today's date
+    const timeDifference = promiseDateObj.getTime() - today.getTime(); // Calculate the time difference in milliseconds
+    const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
+    return daysDifference + ' días';
+  }
+  
+  formatPromiseDate(value: any): string {
+    if (!value) return ''; // Handle case when value is null or undefined
+    const date = new Date(value); // Assuming value is a valid date string or Date object
+    return format(date, 'MMMM dd yyyy', { locale: es });
+  }
+  calculatePendingPayment(data: { amount: number; amountPayment: number }): string {
+    const totalAmount = data.amount - data.amountPayment;
+    const formattedAmount = totalAmount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD' // Change 'USD' to the appropriate currency code if needed
+    });
+    return formattedAmount;
+  }
+
+  log(value:any): void {
+    //this.selectedOption = value; 
+   console.log(value);
+   this.sub = this.usersServices.getAccountProducts(value).pipe(
+    map((actions:any) => actions.map((a: any) => {
+      const id = a.payload.doc.id;
+    const data = a.payload.doc.data() as Product;
+    return { ...data, id }; // Include id property only once
+    }))
+  ).subscribe((products: Product[]) => {
+
+    this.products = products;    
+    if (this.products.length === 0){
+      this.sendMessage('error', "No hay productos relacionados a este cliente.");
+   
+    }
+  });    
+
+  }
+
   
 }

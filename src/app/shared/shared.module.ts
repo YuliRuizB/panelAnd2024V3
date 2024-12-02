@@ -6,9 +6,9 @@ import { RouterModule } from '@angular/router';
 import { ThemeConstantService } from './services/theme-constant.service';
 import { SearchPipe } from './pipes/search.pipe';
 import { CurrencyPipe } from './pipes/currency.pipe';
-import { AgGridModule } from 'ag-grid-angular';
 import { globalImputs } from './directives/global-imputs';
 import { TableService } from './services/table.service';
+import { TermsComponent } from './templates/terms/terms.component';
 
 @NgModule({ 
     schemas: [NO_ERRORS_SCHEMA],
@@ -18,8 +18,7 @@ import { TableService } from './services/table.service';
         HttpClientModule,
         globalImputs,     
         SearchPipe,   
-        ReactiveFormsModule,
-        AgGridModule,      
+        ReactiveFormsModule,              
       ],
     imports: [
         RouterModule,
@@ -27,11 +26,11 @@ import { TableService } from './services/table.service';
         FormsModule,
         ReactiveFormsModule,
         globalImputs,
-        AgGridModule,     
+        AgGridModule,
     ],
     declarations: [
         SearchPipe,
-        CurrencyPipe,     
+        CurrencyPipe,
     ],
     providers: [  
         TableService

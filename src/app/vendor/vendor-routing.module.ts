@@ -52,7 +52,7 @@ const routes: Routes = [
         path: 'fleet',
         component: FleetComponent,
         data: {
-          title: 'Flota Vehicular'
+          title: 'Recursos'
         }
       },
       {
@@ -80,14 +80,14 @@ const routes: Routes = [
         path: 'routes',
         component: RoutesComponentVendor,
         data: {
-            title: 'Rutas'
+            title: 'Operación'
         }
       },
       {
         path: 'routes/new',
         component: RoutesNewComponents,
         data: {
-            title: 'Rutas'
+            title: 'Operación'
         }
       },
       {

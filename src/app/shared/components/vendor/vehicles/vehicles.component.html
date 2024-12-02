@@ -93,10 +93,8 @@
           nzSize="large"   [nzSrc]="item.avatar"></nz-avatar>          
         </ng-template>
 
-        <ng-template #actionSetting>
-          <nz-tag class="m-b-0" *ngIf="item.active" [nzColor]="'blue'">
-            activo</nz-tag>
-          <nz-tag class="m-b-0" *ngIf="item.disabled" [nzColor]="'red'">Deshabilitado B2U
+        <ng-template #actionSetting>         
+          <nz-tag class="m-b-0" *ngIf="item.disabled" [nzColor]="'red'">Deshabilitado 
           </nz-tag>
           <nz-tag class="m-b-0" *ngIf="!item.disabled" [nzColor]="'cyan'">Habilitado
           </nz-tag>
@@ -107,7 +105,7 @@
           </a>
         </ng-template>
         <ng-template #actionEllipsis>
-          <a (click)="cancelDelete()">
+          <a (click)="deletePermission(item)">
           <i nz-icon nzTooltipTitle="Eliminar" nzType="delete" theme="outline"></i>            
           </a>
         </ng-template>

@@ -1,4 +1,4 @@
-import { ColDef } from 'ag-grid-community';
+
 import { format, fromUnixTime } from 'date-fns';
 import esLocale from 'date-fns/locale/es';
 import * as firebase from 'firebase/app';
@@ -52,12 +52,12 @@ export interface IActivityLog {
     }},
     // { headerName: 'Fecha', field: 'created' },
     { headerName: 'Alumno', field: 'studentName', sortable: true },
-    { headerName: 'Matrícula', field: 'studentId', sortable: true, enableValue: true, allowedAggFuncs: ['count'] },
+    { headerName: 'Identificación', field: 'studentId', sortable: true, enableValue: true, allowedAggFuncs: ['count'] },
     { headerName: 'Ingreso con', field: 'studentId', sortable: true, enableValue: true, allowedAggFuncs: ['count'] },
     { headerName: 'Evento', field: 'event', sortable: true, enableRowGroup: true },
     { headerName: 'Tipo', field: 'type', sortable: true, enableRowGroup: true },
     { headerName: 'Descripción', field: 'description', sortable: true },
-    { headerName: 'Ruta', field: 'route', enableRowGroup: true },
+    { headerName: 'Operación', field: 'route', enableRowGroup: true },
     { headerName: 'Turno', field: 'round', enableRowGroup: true },
     { headerName: 'Programa', field: 'program', enableRowGroup: true },
     { headerName: 'Vehículo', field: 'vehicle', enableRowGroup: true },
@@ -78,7 +78,7 @@ export interface IActivityLog {
       } else { return ''}
   } },
   { headerName: 'Empresa',width:170, field: 'customerName', enableCellChangeFlash:true },
-  { headerName: 'Ruta', width:130,field: 'routeName',  enableCellChangeFlash:true },
+  { headerName: 'Operación', width:130,field: 'routeName',  enableCellChangeFlash:true },
   { headerName: 'Programa / Turno',width:175, field: 'round', valueGetter: (params : any ) => {
     if(params && params.node) {     
       return  params.node.data.round + " / " + params.node.data.program
@@ -107,10 +107,10 @@ export interface IActivityLog {
     } else { return ''}
   }}
  ];
- export var LiveAsignColumnDef: (ColDef)[] =[
+/*  export var LiveAsignColumnDef: (ColDef)[] =[
   { headerName: 'Empresa', field: 'customerName',  headerCheckboxSelection: true, 
   headerCheckboxSelectionFilteredOnly: true, filter: true, checkboxSelection: true, sortable: true, enableRowGroup: true },
-   { headerName: 'Ruta', field: 'routeName',filter: true, sortable: true,  enableCellChangeFlash:true },
+   { headerName: 'Operación', field: 'routeName',filter: true, sortable: true,  enableCellChangeFlash:true },
   { headerName: 'Inicia', field: 'stopBeginHour', sortable: true, filter: true
    },
   { headerName: 'Programa / Turno', field: 'round', valueGetter: (params) => {
@@ -132,7 +132,7 @@ export interface IActivityLog {
    { headerName: 'Folder',  enableRowGroup: true,field: 'folder',filter: true, sortable: true,  enableCellChangeFlash:true },
   { headerName: 'Nombre', enableRowGroup: true, field: 'fileName', sortable: true, filter: true} 
  ];
-
+ */
   export var LiveProgramColumnDefs = [
     { headerName: 'PR', field: 'driver', sortable: true, enableCellChangeFlash:true },
     { headerName: 'Vehículo', field: 'vehicleName', sortable: true, enableCellChangeFlash:true },
@@ -179,7 +179,7 @@ export interface IActivityLog {
     { headerName: 'Tipo de problema', field: 'troubleType', sortable: true, enableValue: true, enableCellChangeFlash:true },
     { headerName: 'Programa', field: 'program', sortable: true, enableValue: true, enableCellChangeFlash:true },
     { headerName: 'Turno', field: 'round', sortable: true, enableRowGroup: true, enableCellChangeFlash:true },
-    { headerName: 'Ruta', field: 'routeName', sortable: true, enableRowGroup: true, enableCellChangeFlash:true },
+    { headerName: 'Operación', field: 'routeName', sortable: true, enableRowGroup: true, enableCellChangeFlash:true },
     { headerName: 'Tipo', field: 'type', enableRowGroup: true, enableCellChangeFlash:true },
     { headerName: 'Capacidad', field: 'capacity', enableRowGroup: true },
     { headerName: 'Usuarios', field: 'count', enableRowGroup: true, enableCellChangeFlash:true }

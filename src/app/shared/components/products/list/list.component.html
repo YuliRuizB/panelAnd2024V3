@@ -1,15 +1,18 @@
 <div class="page-header">
   <div class="row align-items-md-center">
     <div class="col-md-6">
-      <div class="row">
-        <div class="col-md-5">
-          <nz-input-group [nzPrefix]="searchPrefix">
-            <input type="text" nz-input placeholder="Buscar">
+      <div class="row">     
+        <div style="margin-left: 10px; width: 280px;"> 
+        <nz-form-control>        
+          <nz-input-group [nzSuffix]="suffixIconSearch">
+            <input type="text" #searchBar 
+            nz-input placeholder="Selecciona unn producto" (keyup)="getItems(searchBar.value)"/>
           </nz-input-group>
-          <ng-template #searchPrefix>
-            <i class="opacity-04" nz-icon nzType="search"></i>
-          </ng-template>
-        </div>
+          <ng-template #suffixIconSearch>
+            <span nz-icon nzType="search"></span>
+         </ng-template>         
+        </nz-form-control> 
+      </div>
       </div>
     </div>
     <div class="col-md-6">
@@ -27,7 +30,7 @@
           <span>Agregar nuevo</span>
         </button>
         <ng-template #newContent>
-          <form nz-form [formGroup]="validateForm" nzLayout="vertical" (ngSubmit)="submitForm()">
+          <form nz-form [formGroup]="validateForm" nzLayout="vertical" (ngSubmit)="submitForm('A')">
             <div class="row">
               <div class="col-md-8">
                 <nz-form-item>
@@ -36,7 +39,160 @@
                     <input type="text" formControlName="name" nz-input placeholder="Escriba el nombre del producto / servicio">
                   </nz-form-control>
                 </nz-form-item>
+              </div>     
+              <div class="col-md-4">
+                <nz-form-item>
+                  <nz-form-label>Activo</nz-form-label>
+                  <nz-form-control>
+                    <nz-switch formControlName="active"></nz-switch>
+                  </nz-form-control>
+                </nz-form-item>
               </div>
+            </div> 
+            <div class="row">
+              <div class="col-md-8">
+                <nz-form-item>
+                  <nz-form-label>Descripción</nz-form-label>
+                  <nz-form-control>
+                    <textarea nz-input formControlName="description"></textarea>
+                  </nz-form-control>
+                </nz-form-item>     
+              </div>
+              <div class="col-md-4">
+                <nz-form-item>
+                  <nz-form-label>Adjuntar Imagen</nz-form-label>
+                  <nz-form-control>
+                    <nz-upload nzAction="https://www.mocky.io/v2/5cc8019d300000980a055e76"
+                               nzListType="picture-card"
+                               [(nzFileList)]="fileList"
+                               [nzShowButton]="true"
+                               [nzShowUploadList]="showUploadList"
+                               [nzPreview]="handlePreview"
+                               (nzChange)="handleChange($event)">
+                   
+                      <div class="ant-upload-text">Cargar</div>
+                    </nz-upload>            
+                  </nz-form-control>
+                  <ng-template #modalContent>
+                    <img [src]="previewImage" [ngStyle]="{ width: '100%' }" />
+                  </ng-template>
+                </nz-form-item>  
+              </div>  
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <nz-form-item>
+                  <nz-form-label>Categoría</nz-form-label>
+                  <nz-form-control>
+                    <nz-select class="w-100" nzPlaceHolder="Selecciona una opción" formControlName="category">
+                      <nz-option nzLabel="Servicio de Transporte Ordinario" nzValue="permanente"></nz-option>
+                      <nz-option nzLabel="Servicio Especial" nzValue="especial"></nz-option>
+                      <nz-option nzLabel="Producto" nzValue="producto"></nz-option>
+                      <nz-option nzLabel="Comedor" nzValue="comedor"></nz-option>
+                      <nz-option nzLabel="Seguridad" nzValue="seguridad"></nz-option>
+                      <nz-option nzLabel="Monitoreo" nzValue="monitoreo"></nz-option>
+                      <nz-option nzLabel="Limpieza" nzValue="limpieza"></nz-option>
+                      <nz-option nzLabel="Construcción" nzValue="construccion"></nz-option>
+                      <nz-option nzLabel="Bienes Raices" nzValue="bienesRaices"></nz-option>
+                      <nz-option nzLabel="Mantenimiento" nzValue="mantenimiento"></nz-option>
+                      <nz-option nzLabel="Otros" nzValue="otros"></nz-option>
+                    </nz-select>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              <div class="col-md-6">
+                <nz-form-item>
+                  <nz-form-label>Validez</nz-form-label>
+                  <nz-form-control>
+                    <nz-range-picker (nzOnCalendarChange)="mapDateValues($event)" formControlName="rangeDatePicker"></nz-range-picker>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+            </div>        
+            <div class="row">
+              <div class="col-md-2">
+                <nz-form-item>
+                  <nz-form-label>Mete</nz-form-label>
+                  <nz-form-control>
+                    <nz-switch formControlName="isTaskIn"></nz-switch>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              <div class="col-md-2">
+                <nz-form-item>
+                  <nz-form-label>Saca</nz-form-label>
+                  <nz-form-control>
+                    <nz-switch formControlName="isTaskOut"></nz-switch>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              <div class="col-md-3">
+                <nz-form-label>Precio</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number [nzMin]="0" [nzMax]="120000" [nzStep]="1" formControlName="price"></nz-input-number>
+                  <div *ngIf="isPriceInvalid()" class="error-message">
+                    <div *ngIf="isPriceRequired()"  class="error-message">
+                      El precio es requerido.
+                    </div>
+                    <div *ngIf="isPriceMin()"  class="error-message">
+                      El precio debe ser mayor a 0.
+                    </div>
+                  </div>
+                </nz-form-control>
+              </div>
+              <div class="col-md-2">
+                <nz-form-item>
+                  <nz-form-label>Calculado</nz-form-label>
+                  <nz-form-control>
+                    <nz-switch formControlName="isCalculate"></nz-switch>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              <div class="col-md-3">
+                <div>
+                  <nz-form-label>Asientos</nz-form-label>           
+                  <nz-input-number [nzMin]="0" [nzMax]="200" [nzStep]="1" formControlName="sits"></nz-input-number>      
+                </div>                           
+              </div>
+            </div>
+            <div class="row"> 
+              <div class="col-md-6">
+                <nz-form-item> 
+                  <nz-form-label>Frecuencias (Opcional)</nz-form-label>
+                  <nz-select formControlName="frequencies" >         
+                    <nz-option [nzValue]="1" [nzLabel]="1"></nz-option>
+                    <nz-option [nzValue]="2" [nzLabel]="2"></nz-option>
+                    <nz-option [nzValue]="3" [nzLabel]="3"></nz-option>
+                    <nz-option [nzValue]="4" [nzLabel]="4"></nz-option>
+                    <nz-option [nzValue]="5" [nzLabel]="5"></nz-option>
+                  </nz-select>       
+                </nz-form-item>
+              </div>
+              <div class="col-md-6">
+                <nz-form-item> 
+                  <nz-form-label>Tipo de Producto (Opcional)</nz-form-label>
+                  <nz-select formControlName="transportType" >         
+                    <nz-option [nzValue]="camioneta" [nzLabel]="camioneta"></nz-option>
+                    <nz-option [nzValue]="camion" [nzLabel]="camion"></nz-option>                   
+                  </nz-select>       
+                </nz-form-item>
+              </div>
+            </div>                  
+          </form>
+        </ng-template>
+        
+        <ng-template #editContent>
+          <form nz-form [formGroup]="validateFormE" nzLayout="vertical" (ngSubmit)="submitForm('A')">
+            <div class="row">
+              <div class="col-md-8">
+                <nz-form-item>
+                  <nz-form-label nzRequired="true">Nombre</nz-form-label>
+                  <nz-form-control>
+                    <input type="text" formControlName="name" nz-input placeholder="Escriba el nombre del servicio">
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              <!--
               <div class="col-md-3">
                 <nz-form-item>
                   <nz-form-label nzRequired="true">Tipo</nz-form-label>
@@ -46,45 +202,52 @@
                   </nz-radio-group>
                 </nz-form-item>
               </div>
-              <div class="col-md-1">
+               <div class="col-md-1">
                 <nz-form-item>
                   <nz-form-label>Activo</nz-form-label>
                   <nz-switch formControlName="active"></nz-switch>
                 </nz-form-item>
+              </div> -->
+            </div>
+            <div class="row">
+              <div class="col-md-8"> 
+                <nz-form-item>
+                  <nz-form-label>Descripción</nz-form-label>
+                  <nz-form-control>
+                    <textarea nz-input formControlName="description"></textarea>
+                  </nz-form-control>
+                </nz-form-item>
+              </div>
+              <div class="col-md-4">
+                <nz-form-item>
+                  <nz-form-label>Adjuntar Imagen</nz-form-label>
+                  <nz-form-control>
+                    <nz-upload nzAction="/api/posts/" 
+                        nzListType="picture-card"
+                        [(nzFileList)]="fileListE" [nzShowButton]="true" 
+                        [nzShowUploadList]="showUploadList"
+                        [nzPreview]="handlePreviewE" (nzChange)="handleChange2($event)">
+                     
+                        <div class="ant-upload-text">Cargar</div>
+                    </nz-upload>
+                    <nz-modal [nzVisible]="previewVisibleE" 
+                    [nzContent]="modalContent" [nzFooter]="null"
+                        (nzOnCancel)="previewVisibleE = false">
+                    </nz-modal>
+                  </nz-form-control>
+                  <ng-template #modalContent>
+                      <img [src]="previewImage" [ngStyle]="{ width: '100%' }" />
+                  </ng-template>
+                </nz-form-item>
               </div>
             </div>
-            <nz-form-item>
-              <nz-form-label>Adjuntar Imagen</nz-form-label>
-              <nz-form-control>
-                <nz-upload nzAction="https://jsonplaceholder.typicode.com/posts/" 
-                    nzListType="picture-card"
-                    [(nzFileList)]="fileList" [nzShowButton]="true" 
-                    [nzShowUploadList]="showUploadList"
-                    [nzPreview]="handlePreview" (nzChange)="handleChange2($event)">
-                    <i nz-icon></i>
-                    <div class="ant-upload-text">Upload</div>
-                </nz-upload>
-                <nz-modal [nzVisible]="previewVisible" [nzContent]="modalContent" [nzFooter]="null"
-                    (nzOnCancel)="previewVisible = false">
-                </nz-modal>
-              </nz-form-control>
-              <ng-template #modalContent>
-                  <img [src]="previewImage" [ngStyle]="{ width: '100%' }" />
-              </ng-template>
-            </nz-form-item>
-            <nz-form-item>
-              <nz-form-label>Descripción</nz-form-label>
-              <nz-form-control>
-                <textarea nz-input formControlName="description"></textarea>
-              </nz-form-control>
-            </nz-form-item>
             <div class="row">
               <div class="col-md-6">
                 <nz-form-item>
                   <nz-form-label>Categoría</nz-form-label>
                   <nz-form-control>
                     <nz-form-control>
-                      <nz-select class="w-100" nzPlaceHolder="Selecciona una opción" formControlName="category">
+                      <nz-select [disabled]="true" class="w-100" nzPlaceHolder="Selecciona una opción" formControlName="category">
                         <nz-option nzLabel="Servicio de Transporte Ordinario" nzValue="permanente"></nz-option>
                         <nz-option nzLabel="Servicio Especial" nzValue="especial"></nz-option>
                         <nz-option nzLabel="Producto" nzValue="producto"></nz-option>
@@ -105,29 +268,72 @@
                 <nz-form-item>
                   <nz-form-label>Validez</nz-form-label>
                   <nz-form-control>
-                    <nz-range-picker (nzOnCalendarChange)="mapDateValues($event)" formControlName="rangeDatePicker"></nz-range-picker>
+                    <nz-range-picker [disabled]="true" (nzOnCalendarChange)="mapDateValues($event)" formControlName="rangeDatePicker"></nz-range-picker>
                   </nz-form-control>
                 </nz-form-item>
               </div>
             </div>
             <div class="row">
-              <div class="col-md-3">
+              <div class="col-md-2">
                 <nz-form-item>
                   <nz-form-label>Mete</nz-form-label>
-                  <nz-switch formControlName="isTaskIn"></nz-switch>
+                  <nz-switch [disabled]="true" formControlName="isTaskIn"></nz-switch>
+                </nz-form-item>
+              </div>
+              <div class="col-md-2">
+                <nz-form-item>
+                  <nz-form-label>Saca</nz-form-label>
+                  <nz-switch  [disabled]="true" formControlName="isTaskOut"></nz-switch>
+                </nz-form-item>
+              </div>             
+              <div class="col-md-3">
+                <nz-form-label>Precio</nz-form-label>           
+                  <nz-input-number [nzMin]="0" [nzMax]="120000" [nzStep]="1" formControlName="price"></nz-input-number>
+                  <div *ngIf="isPriceInvalid()" class="error-message">
+                    <div *ngIf="isPriceRequired()"  class="error-message">
+                      El precio es requerido.
+                    </div>
+                    <div *ngIf="isPriceMin()"  class="error-message">
+                      El precio debe ser mayor a 0.
+                    </div>
+                  </div>           
+              </div>
+              <div class="col-md-2">
+                <nz-form-item>
+                  <nz-form-label>Calculado</nz-form-label>
+                  <nz-switch formControlName="isCalculate"></nz-switch>
                 </nz-form-item>
               </div>
               <div class="col-md-3">
-                <nz-form-item>
-                  <nz-form-label>Saca</nz-form-label>
-                  <nz-switch formControlName="isTaskOut"></nz-switch>
+                <div>
+                  <nz-form-label>Asientos</nz-form-label>           
+                  <nz-input-number [nzMin]="0" [nzMax]="200" [nzStep]="1" formControlName="sits"></nz-input-number>      
+                </div>                           
+              </div>
+            </div>           
+            <div class="row"> 
+              <div class="col-md-6">
+                <nz-form-item> 
+                  <nz-form-label>Frecuencias (Opcional)</nz-form-label>
+                  <nz-select formControlName="frequencies" >         
+                    <nz-option [nzValue]="1" [nzLabel]="1"></nz-option>
+                    <nz-option [nzValue]="2" [nzLabel]="2"></nz-option>
+                    <nz-option [nzValue]="3" [nzLabel]="3"></nz-option>
+                    <nz-option [nzValue]="4" [nzLabel]="4"></nz-option>
+                    <nz-option [nzValue]="5" [nzLabel]="5"></nz-option>
+                  </nz-select>       
                 </nz-form-item>
               </div>
               <div class="col-md-6">
-                <nz-form-label>Precio</nz-form-label>
-                <nz-input-number [nzMin]="0" [nzMax]="120000" [nzStep]="1" formControlName="price"></nz-input-number>
+                <nz-form-item> 
+                  <nz-form-label>Tipo de Producto (Opcional)</nz-form-label>
+                  <nz-select formControlName="transportType" >         
+                    <nz-option [nzValue]="camioneta" [nzLabel]="camioneta"></nz-option>
+                    <nz-option [nzValue]="camion" [nzLabel]="camion"></nz-option>                   
+                  </nz-select>       
+                </nz-form-item>
               </div>
-            </div>
+            </div>    
           </form>
         </ng-template>
       </div>
@@ -137,10 +343,60 @@
 <div class="container-fluid">
   <div class="row" *ngIf="view == 'cardView'">
     <div class="col-md-3" *ngFor="let item of productsList">
-      <nz-card>
+      <nz-card nzHoverable style="width:240px" [nzCover]="coverTemplate">
+          
+        <nz-card-meta nzTitle="{{item.name}}" nzDescription="{{item.description}}">     
+        </nz-card-meta>     
+        <div>
+          <a class="text-gray font-size-18" nz-dropdown nzPlacement="bottomRight" nzTrigger="click"
+            [nzDropdownMenu]="projectListSetting">
+            <i nz-icon nzType="ellipsis" theme="outline"></i>
+          </a>
+          <nz-dropdown-menu #projectListSetting="nzDropdownMenu">
+            <ul nz-menu nzSelectable>
+              <li nz-menu-item *ngIf="item.active" (click)="toggleActivateProduct(item)">
+                <a>
+                  <i nz-icon nzType="pause-circle" theme="outline"></i>
+                  <span class="m-l-10">Detener venta</span>
+                </a>
+              </li>
+              <li nz-menu-item *ngIf="!item.active" (click)="toggleActivateProduct(item)">
+                <a>
+                  <i nz-icon nzType="check-circle" theme="outline"></i>
+                  <span class="m-l-10">Activar venta</span>
+                </a>
+              </li>
+              <li nz-menu-item (click)="editProduct(item,editContent)">
+                <a>
+                  <i nz-icon nzType="edit" theme="outline"></i>
+                  <span class="m-l-10">Editar</span>
+                </a>
+              </li>
+              <li nz-menu-divider></li>                
+              <li nz-menu-item (click)="deleteProduct(item)">
+                <a>
+                <i nz-icon nzType="delete" theme="outline"></i>
+                  <span class="m-l-10">Eliminar </span>
+                </a>
+              </li>
+            </ul>
+          </nz-dropdown-menu>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <nz-tag class="m-b-0" [nzColor]="'blue'">{{item.type}}</nz-tag>
+            <nz-tag class="m-b-0" *ngIf="item.active" [nzColor]="'green'">Venta Activa</nz-tag>
+            <nz-tag class="m-b-0" *ngIf="!item.active" [nzColor]="'red'">Venta Detenida</nz-tag>
+            </div>            
+        </div>
+        <ng-template #coverTemplate>
+          <img alt="" src="{{item.imageUrl}}" />
+        </ng-template>   
+      </nz-card>
+     <!--  <nz-card>
         <div class="d-flex justify-content-between">
           <div class="media">
-            <nz-avatar [nzSize]="40" nzShape="square" [nzSrc]=""></nz-avatar>
+            <nz-avatar [nzSize]="40" nzShape="square" [nzSrc]="item.imageUrl"></nz-avatar>
             <div class="m-l-10">
               <h5 class="m-b-0">{{item.name}}</h5>
               <span class="text-muted font-size-13">{{ item.timesSold  || 0}} Ventas</span>
@@ -165,21 +421,17 @@
                     <span class="m-l-10">Activar venta</span>
                   </a>
                 </li>
-                <li nz-menu-item (click)="editProduct(item,newContent)">
+                <li nz-menu-item (click)="editProduct(item,editContent)">
                   <a>
                     <i nz-icon nzType="edit" theme="outline"></i>
                     <span class="m-l-10">Editar</span>
                   </a>
                 </li>
-                <li nz-menu-divider></li>
-                <li nz-menu-item>
-                  <a nz-popconfirm
-                  nzPopconfirmTitle="¿Estás seguro de eliminarlo?"
-                  nzPopconfirmPlacement="bottom"
-                  nzOkType="danger"
-                  (nzOnConfirm)="deleteProduct(item)">
+                <li nz-menu-divider></li>                
+                <li nz-menu-item (click)="deleteProduct(item)">
+                  <a>
                   <i nz-icon nzType="delete" theme="outline"></i>
-                    <span class="m-l-10">Eliminar</span>
+                    <span class="m-l-10">Eliminar </span>
                   </a>
                 </li>
               </ul>
@@ -203,19 +455,13 @@
               <nz-tag class="m-b-0" [nzColor]="'blue'">{{item.type}}</nz-tag>
               <nz-tag class="m-b-0" *ngIf="item.active" [nzColor]="'green'">Activo</nz-tag>
               </div>
-            <div>
-             <!--  <a routerLinkActive="router-link-active" class="m-r-5"                
-                *ngFor="let item of (item.member ? item.member.slice(0,2): Product [])">
-                  <nz-avatar nzSize="small" style="background-color: white; color: #4F6F57;"
-                   [nzSrc]="item.avatar" [title]="item.name"></nz-avatar>
-              </a> -->
+            <div>         
               <a *ngIf="item.price > 2">
-                <!-- <nz-avatar class="font-size-11 text-dark" nzSize="small" [nzText]="'+' + [item.member.length - 2].toString()" nz-tooltip [nzTitle]="[item.member.length - 2].toString() + ' More'"></nz-avatar> -->
-              </a>
+               </a>
             </div>
           </div>
         </div>
-      </nz-card>
+      </nz-card> -->
     </div>
   </div>
   <nz-card *ngIf="view == 'listView'">
@@ -234,7 +480,7 @@
         <tr *ngFor="let item of listViewTable.data">
           <td>
             <div class="media align-items-center">
-              <nz-avatar nzShape="square"  [nzSrc]=""></nz-avatar>
+              <nz-avatar nzShape="square"  nzSrc="{{item.imageUrl}}"></nz-avatar>
               <div class="m-l-10">
                 <h5 class="m-b-0">{{item.name}}</h5>
               </div>
@@ -271,16 +517,12 @@
                     </a>
                   </li>
                   <li nz-menu-divider></li>
-                  <li nz-menu-item>
-                    <a nz-popconfirm
-                    nzPopconfirmTitle="¿Estás seguro de eliminarlo?"
-                    nzPopconfirmPlacement="bottom"
-                    nzOkType="danger"
-                    (nzOnConfirm)="deleteProduct(item)">
-                    <i nz-icon nzType="delete" theme="outline"></i>
-                      <span class="m-l-10">Eliminar</span>
-                    </a>
-                  </li>
+                <li nz-menu-item (click)="deleteProduct(item)"> 
+                  <a>
+                  <i nz-icon nzType="delete" theme="outline"></i>
+                    <span class="m-l-10">Eliminar </span>
+                  </a>
+                </li>
                 </ul>
               </nz-dropdown-menu>
             </div>
@@ -290,3 +532,4 @@
     </nz-table>
   </nz-card>
 </div>
+<nz-modal></nz-modal>

@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, OnDestroy, inject } from '@angular/core';
-import { map, takeUntil, tap } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
 import { IVehicle, columnDefs } from '../../../interfaces/vehicle.type';
 import * as _ from 'lodash';
 import { UntypedFormGroup, UntypedFormBuilder, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -9,7 +9,6 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { AuthenticationService } from '../../../services/authentication.service';
 import { RolService } from '../../../services/roles.service';
 import { DevicesService } from '../../../services/devices.service';
-import { ColDef } from 'ag-grid-community';
 import { format } from 'date-fns';
 import esLocale from 'date-fns/locale/es';
 
@@ -28,38 +27,7 @@ export class SharedVendorVehiclesComponent implements OnInit {
   stopSubscriptions$: Subject<boolean> = new Subject();
   searchValue: string = "";
   isVisible: boolean = false;
-  isOkLoading: boolean = false;
-  columnDefs : ColDef[] = [
-    { headerName: 'Id', sortable: true, filter: true, field: 'chassis' },
-    { headerName: 'Vehículo', sortable: true, filter: true, field: 'name' },
-    { headerName: 'Placas', sortable: true, filter: true, field: 'licensePlate' },
-    { headerName: 'PR', sortable: true, filter: true, field: 'driver' },
-    { headerName: 'Carrocería', sortable: true, filter: true, field: 'carMaker' },
-    { headerName: 'Puertas', sortable: true, filter: true, field: 'doors' },
-    { headerName: 'Asientos', sortable: true, filter: true, field: 'seats' },
-    { headerName: 'Modelo', sortable: true, filter: true, field: 'model' },
-    { headerName: 'Motor', sortable: true, filter: true, field: 'engineType' },
-    { headerName: 'Emisiones', sortable: true, filter: true, field: 'emissions' },
-    { headerName: 'Combustible', sortable: true, filter: true, field: 'fuelType' },
-    { headerName: 'Póliza Seguro', sortable: true, filter: true, field: 'insuranceId' },
-    { headerName: 'Póliza Vence', sortable: true, filter: true, field: 'insuranceDateDue', cellRenderer: (params: any) => {
-        if(!params.value) return '';
-        return format((params.value).toDate(), 'dd MMMM yyyy', {
-          locale: esLocale
-        });
-      }
-    },
-    { headerName: 'Activo', sortable: true, filter: true, field: 'active', cellRenderer: (params: any) => {
-        if(!params.value) return '';
-        return !!params.value ? 'Si' : 'No'
-      }
-    },
-    { headerName: 'Deshabilitado', sortable: true, filter: true, field: 'disabled', cellRenderer: (params: any) => {
-        if(!params.value) return 'No';
-        return !!params.value ? 'Si' : 'No'
-      }
-    },
-  ];;
+  isOkLoading: boolean = false; 
   vehicleForm!: UntypedFormGroup;
   user: any;
   userlevelAccess!: string;
@@ -82,16 +50,24 @@ export class SharedVendorVehiclesComponent implements OnInit {
       tap((user: any) => {
         this.getSubscriptions(this.vendorId);
         this.createForm();
+      }),
+      switchMap(user => {
+        this.user = user;
+        if (this.user && this.user.rolId) {
+          return this.rolService.getRol(this.user.rolId).valueChanges();
+        } else {
+          return []; // Return an empty observable if user or user.rolId is not defined
+        }
+      }),
+      tap((item: any) => {
+        this.infoLoad = item;
+        this.userlevelAccess = this.infoLoad?.optionAccessLevel;
+      }),
+      catchError(err => {
+        console.error('Error fetching user role data', err);
+        return of(null); // Handle the error and return a safe observable
       })
-    ).subscribe(user => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-          this.infoLoad = item;
-          this.userlevelAccess = this.infoLoad.optionAccessLavel;
-        });
-      }
-    });
+    ).subscribe();
   }
 
   ngOnDestroy() {

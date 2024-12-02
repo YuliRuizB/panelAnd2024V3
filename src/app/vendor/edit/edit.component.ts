@@ -191,9 +191,13 @@ beforeUpload(): Observable<boolean> {
     this.getBase64(info.file.originFileObj, (img: string) => {
       this.avatarUrl = img;
     //  console.log(img);
-      const fileRef = this.bucketStorage.ref(this.bucketPath);
+    const fileName = info.file.name;
+    const filePath = `${this.bucketPath}/${fileName}`;
+    
+    const fileRef = this.bucketStorage.ref(filePath); 
+ 
 
-      this.task = this.bucketStorage.ref(this.bucketPath).putString(img, 'data_url');
+      this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');
 
       // observe percentage changes
       this.uploadPercent = this.task.percentageChanges() as Observable<number>;

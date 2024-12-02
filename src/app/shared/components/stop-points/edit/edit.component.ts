@@ -23,7 +23,7 @@ export class SharedStopPointsEditComponent implements OnInit, OnDestroy {
 
 
   ngOnInit() {
-    
+    console.log(this.stopPoint);
     this.validateForm = this.fb.group({
       active: [this.stopPoint.active],
       name: [this.stopPoint.name, [Validators.required]],

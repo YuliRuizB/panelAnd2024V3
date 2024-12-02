@@ -3,7 +3,7 @@ import { ColDef } from 'ag-grid-community';
 import { Timestamp } from 'firebase/firestore';
 export const columnDefs: ColDef[] = [
   { headerName: 'Id', field: 'uid', hide:true, sortable: true, filter: 'agTextColumnFilter' },
-  { headerName: 'Matrícula', field: 'studentId', sortable: true, filter: 'agTextColumnFilter', aggFunc: 'count', chartDataType: 'series' },
+  { headerName: 'Identificación', field: 'studentId', sortable: true, filter: 'agTextColumnFilter', aggFunc: 'count', chartDataType: 'series' },
   { headerName: 'Nombre', field: 'firstName', sortable: true, filter: true },
   { headerName: 'Nombre', field: 'lastName', sortable: true, filter: true },
   { headerName: 'Email', field: 'email', sortable: true, filter: true, cellRenderer: (params: { data: any; value: string; }) => {

@@ -4,16 +4,12 @@ import { map, take, takeUntil, tap } from 'rxjs/operators';
 import { startOfToday, endOfToday, format, fromUnixTime, startOfDay, yearsToMonths } from 'date-fns';
 import esLocale from 'date-fns/locale/es';
 import * as _ from 'lodash';
-
 import * as am4core from "@amcharts/amcharts4/core";
 import * as am4charts from "@amcharts/amcharts4/charts";
-
 import am4themes_animated from "@amcharts/amcharts4/themes/animated";
-import { IActivityLog, ColumnDefs ,LiveProgramColumnDefs, LiveProgramColumnsDef, LiveAsignColumnDef } from '../../logistics/classes';
+import { IActivityLog, ColumnDefs ,LiveProgramColumnDefs, LiveProgramColumnsDef } from '../../logistics/classes';
 import { GeoJson, FeatureCollection } from '../../logistics/map';
 import { range, Subject, Subscription } from 'rxjs';
-import { CellValueChangedEvent, ColDef, GridReadyEvent, ICellEditorParams, ValueParserParams } from 'ag-grid-community';
-//import 'ag-grid-community/dist/styles/ag-grid.css';
 import { FormControl, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { LogisticsService } from '../../logistics/services.service';
@@ -64,6 +60,7 @@ interface IActivityLogAssing {
   driverName?:string;
 }
 
+
 @Component({
   selector: 'app-program',
   templateUrl: './program.component.html',
@@ -83,63 +80,11 @@ export class ProgramComponent implements OnInit, OnDestroy {
   date: any = startOfToday();
   mode: any = 'month';
   // Grid
-  rowFleetData!: any[];
-  columnFleetDefsProgram : ColDef[] = [
-    { headerName: '--',width:90, cellStyle: {color: 'blue'}, field: 'editMode',pinned: 'left', 
-    enableCellChangeFlash:true 
-    ,valueGetter: (params : any ) => {
-      if(params && params.node) {     
-        return  "Editar"
-      } else { return ''}
-    }},
-    { headerName: 'Inicia', width:115, field: 'time', 
-      valueGetter: (params : any ) => {
-        if(params && params.node && params.node.data.time) {
-          return format( fromUnixTime(params.node.data.time.seconds), 'HH:mm a', { locale: esLocale })
-        } else { return ''}
-    } },
-    { headerName: 'Empresa',width:170, field: 'customerName', enableCellChangeFlash:true },
-    { headerName: 'Ruta', width:130,field: 'routeName',  enableCellChangeFlash:true },
-    { headerName: 'Programa / Turno',width:175, field: 'round', valueGetter: (params : any ) => {
-      if(params && params.node) {     
-        return  params.node.data.round + " / " + params.node.data.program
-      } else { return ''}
-    }},
-    { headerName: 'PR', width:210,field: 'driver',  enableCellChangeFlash:true },
-    { headerName: 'Vehículo',width:120, field: 'vehicleName',  enableCellChangeFlash:true },
-    { headerName: 'Inició', width:115, field: 'startedAt',  
-    valueGetter: (params  : any ) => {
-      if(params && params.node && params.node.data.startAt) {
-        if(params.node.data.started){
-        return format( fromUnixTime(params.node.data.startedAt.seconds), 'HH:mm a', { locale: esLocale })
-      } else {
-        return "No"
-      }
-      } else { return ''}
-    }},
-    { headerName: 'Finalizó',width:115, field: 'endedAt',
-    valueGetter: (params: any ) => {
-      if(params && params.node) {
-        if (params.node.data.hasEnded) {
-        return format( fromUnixTime(params.node.data.endedAt.seconds), 'HH:mm a', { locale: esLocale })
-      } else {
-        return "No"
-      }
-      } else { return ''}
-    }}
-   ];;
+  rowFleetData!: any[]; 
 
   columnDefs =  LiveProgramColumnsDef;
-
-  defaultColDef:  ColDef  = {
-   // flex: 1,
-    cellClass: 'align-right',
-    resizable: true,
-  };
   rowSelection:'single' | 'multiple' | undefined = 'multiple';
-
   visible = false;
-
   lat = 37.75;
   lng = -122.41;
   loading = false;
@@ -187,10 +132,8 @@ export class ProgramComponent implements OnInit, OnDestroy {
   pageIndex: any = 1;
   pageSize: any = 50;
   total: any = 1;
-  listOfData: any[] = [];
   sortValue: string | null = null;
   sortKey: string | null = null;
-  filterGender = [{ text: 'male', value: 'male' }, { text: 'female', value: 'female' }];
   searchGenderList: string[] = [];
   filterCustomer: any = [];
   filterRoute: any =[];
@@ -209,6 +152,20 @@ export class ProgramComponent implements OnInit, OnDestroy {
   infoSegment: any  = [];
   accountsService = inject(AccountsService);
   size: NzButtonSize = 'large';
+  checked = false;
+  indeterminate = false;
+
+
+  listOfCurrentPageData: readonly IActivityLogAssing[] = [];
+  setOfCheckedId = new Set<any>();
+  listOfSelection: any = [
+    {
+      text: 'Selecciona todos los Registros',
+      onSelect: () => {
+        this.onAllChecked(true);
+      }
+    },    
+  ];
   
   constructor( 
     private zone: NgZone,
@@ -217,7 +174,7 @@ export class ProgramComponent implements OnInit, OnDestroy {
   ) {
     this.authService.user.subscribe(user => {   
       this.user = user;
-     // console.log(this.user); /idSegment
+   
         if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) { 
           
           this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
@@ -240,35 +197,29 @@ export class ProgramComponent implements OnInit, OnDestroy {
     this.endDate = endOfToday();
   }
 
-  onQuickFilterChanged() {
-   /*  this.gridApi.setQuickFilter(
-      (document.getElementById('quickFilter') as HTMLInputElement).value
-    ); */
-  }
-  onQuickFilterDetail() {
-   /*  this.gridApiDetail.setQuickFilter(
-      (document.getElementById('filterDetail') as HTMLInputElement).value
-    ); */
-  }
   panelChange(change: { date: Date; mode: string }): void {
-    //console.log(change.date, change.mode);
+   
   }
 
   showModalIn(data: any) {
-
     const selectedRows =data ;
-//    console.log(data);
+   
     this.isEditModalVisible = true;   
-    this.signupForm.patchValue({ ...selectedRows });
+   this.signupForm.controls['customerId'].setValue(data.customerId);
+   this.signupForm.controls['customerName'].setValue(data.customerName);
+   this.signupForm.controls['id'].setValue(data.id);
+   this.signupForm.controls['driver'].setValue(data.driver);
+   this.signupForm.controls['driverId'].setValue(data.driverId);
+   this.signupForm.controls['vehicleId'].setValue(data.vehicleId);
+   this.signupForm.controls['vehicleName'].setValue(data.vehicleName);
+     
     // this.arrDrivers // arrVehicle fill 
     this.getInfoAssigments();
-
-
-   // console.log(this.signupForm.value);
+ 
      this.isEditModalVisible = true;
   }
+
   onValueChange(value: Date): void {
-   //console.log(`Current value: ${value}`);
    if (this.date != startOfDay(new Date(value))) {
       // si son diferentes. 
       this.rowDataAsignModal = [];  // clear code before fill
@@ -278,42 +229,7 @@ export class ProgramComponent implements OnInit, OnDestroy {
     this.date = startOfDay(new Date(value));
     this.searchData(true);
   }
-
-  public columnFleetDefsAsign: ColDef[] = [
-    { headerName: 'Empresa', width: 170, field: 'customerName',
-      filter: true, checkboxSelection: true, headerCheckboxSelection: true,
-      headerCheckboxSelectionFilteredOnly: true, sortable: true, enableCellChangeFlash: true },
-    { headerName: 'Ruta', width: 130, field: 'routeName', sortable: true, enableCellChangeFlash: true },
-    { headerName: 'PR', width: 200, field: 'driverName', sortable: true,
-      cellEditor: 'agRichSelectCellEditor',
-      editable: true,
-      cellEditorParams: { values: this.arrDrivers.sort() },
-      enableCellChangeFlash: true },
-    { headerName: 'Vehículo', width: 130, field: 'vehicleName',
-      cellEditor: 'agRichSelectCellEditor',
-      editable: true,
-      cellEditorParams: { values: this.arrVehicle.sort() },
-      sortable: true, enableCellChangeFlash: true },
-    { headerName: 'Inicia', width: 115, field: 'time', sortable: true, filter: true,
-      valueGetter: (params) => {
-        if (params && params.node && params.node.data.time) {
-          return format(fromUnixTime(params.node.data.time.seconds), 'HH:mm a', { locale: esLocale });
-        } else {
-          return "";
-        }
-
-      }
-    },
-    { headerName: 'Programa / Turno', width: 175, field: 'round', valueGetter: (params) => {
-        if (params && params.node) {
-          return params.node.data.round + " / " + params.node.data.program;
-        } else {
-          return "";
-        }
-      }
-    },
-    { headerName: 'Tipo', width: 120, field: 'type', sortable: true, enableCellChangeFlash: true }
-];
+  
      
   onSelectDrivers(vendorID:string) {
   // fill dropdowns
@@ -333,14 +249,14 @@ export class ProgramComponent implements OnInit, OnDestroy {
       }
     
     });
-    this.driversSubscription = this.driversService.getDrivers(vendorID).pipe(
+    this.driversSubscription = this.driversService.getDriversByCustomergetDrivers(vendorID).pipe(
       takeUntil(this.stopSubscription$),
       map((actions:any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id, ...data}
       }))
-    ).subscribe(drivers => {
+    ).subscribe((drivers:any) => {
       for (var x=0; x < drivers.length;x++) {
         if (this.arrDrivers.indexOf(drivers[x].displayName) === -1 && drivers[x].displayName != undefined && drivers[x].displayName != "") {
           this.arrDrivers.push(drivers[x].displayName);  
@@ -373,20 +289,14 @@ export class ProgramComponent implements OnInit, OnDestroy {
       this.createForm();
     }
   }
-  public columnAsign: ColDef = {
-    resizable: true,
-  };
-  public columnProgram: ColDef = {
-    resizable: true,
-  };
 
   getSubscriptions(vendorId: string) {
    
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       this.vendorRoutesSubscription = this.usersService.getBoardingPassesByRoutebyCustomerId(vendorId, this.user.customerId).pipe(
         takeUntil(this.stopSubscriptions$)
-      ).subscribe(data => {
-  
+      ).subscribe(data => {       
+        
         var filterCustomerC: any = [];
        this.filterCustomerRoute = [];
         for (var x = 0; x < data.length; x++) {
@@ -408,15 +318,14 @@ export class ProgramComponent implements OnInit, OnDestroy {
             if (duplicateRecord == undefined) {
               filterCustomerC.push({ customerId: element.customerId, customerName: element.customerName});
             }
-        });
+        });    
         this.filterCustomer = filterCustomerC;
       });
         
     } else {
       this.vendorRoutesSubscription = this.usersService.getBoardingPassesByRoute(vendorId).pipe(
         takeUntil(this.stopSubscriptions$)
-      ).subscribe(data => {
-  
+      ).subscribe(data => {     
         var filterCustomerC: any = [];
        this.filterCustomerRoute = [];
         for (var x = 0; x < data.length; x++) {
@@ -439,6 +348,7 @@ export class ProgramComponent implements OnInit, OnDestroy {
               filterCustomerC.push({ customerId: element.customerId, customerName: element.customerName});
             }
         });
+
         this.filterCustomer = filterCustomerC;
       });
     }    
@@ -545,11 +455,7 @@ export class ProgramComponent implements OnInit, OnDestroy {
   handleCancel() {
     this.isAssignmentsModalVisible = false;
      this.stopSubscriptions$.next(false);
-     this.stopSubscriptions$.complete();
-   /*   (document.getElementById('quickFilter') as HTMLInputElement).value = "";
-     (document.getElementById('filterDetail') as HTMLInputElement).value = "";
-     this.onQuickFilterChanged();     
-    */ 
+     this.stopSubscriptions$.complete();  
     this.regSelected = "(0)";
      this.regFound="";
      this.rowDataAsignModal = [];
@@ -560,29 +466,32 @@ export class ProgramComponent implements OnInit, OnDestroy {
      this.searchData(true);
   }
 
-  handleOk() {
-    var selectedRows = this.gridApi.getSelectedRows();
-    this.rowDataAsignPostProg = [];
-    var numAssignI: number = this.gridApi.length;
-    selectedRows.forEach((x: any) => {
-      let data = x;
+  handleOk() {  
 
+     var selectedRows = this.setOfCheckedId;
+   
+     
+    this.rowDataAsignPostProg = [];
+    var numAssignI: number =  selectedRows.size;
+    selectedRows.forEach((x: any) => {
+      let data = x;     
+   
       data.vendorId = x.vendorId;
       data.customerId = x.customerId;
       data.assignmentId = x.assignmentId;
       data.routeId = x.routeId;
       data.customerName = x.customerName;
-      data.routeName = x.routeName;
-      console.log('full data is: ', data);
+      data.routeName = x.routeName;    
       this.programService.setProgram(data);
     });
 
     this.searchData(true);
-    numAssignI = numAssignI - selectedRows.length;
+    numAssignI = numAssignI - selectedRows.size;
     this.regSelected = "(0)";
     this.rowDataAsignModal = [];
     this.rowDataAsignPostProg = [];
     this.regFound = "";
+    this.setOfCheckedId.clear();
     this.routePath = "";
     this.customerPath = "";
     this.routeNameSelected = "";
@@ -594,40 +503,23 @@ export class ProgramComponent implements OnInit, OnDestroy {
     return format(fromUnixTime(date.seconds), 'HH:mm', { locale: esLocale });
   }
 
-  flyTo(data: GeoJson) {
-   /*  this.map.flyTo({
-      center: data.geometry.coordinates
-    }) */
-  }
-
-  onGridReady(params: GridReadyEvent) {
-    this.gridApiDetail = params.api;
-    this.gridColumnApiDetail = params.columnApi;
-  }
-  onGridReadyP(params: GridReadyEvent) {
-    this.gridApi = params.api;
-    this.gridColumnApi = params.columnApi;
-  }
-
-  onSelectionChanged(params: GridReadyEvent) {
-    const selectedRows = this.gridApi.getSelectedRows();
-   this.regSelected = " ( " + selectedRows.length + " ) ";
-  }
-
-  onSelect(customerSelected:any) {
+  onSelect(customerSelected: any) {
     this.customerPath = customerSelected.customerName;
     this.routePath = this.customerPath;
-    var filterRoute:any =[];
-
+    var filterRoute: any[] = []; 
+    
     this.filterCustomerRoute.forEach((element: any) => {
-      if (element.customerId == customerSelected.customerId){
-      var duplicateRecord = filterRoute.find((y: any) =>
-        y.routeId == element.routeId && y.customerId == element.customerId);
-        if (duplicateRecord == undefined) {
-          filterRoute.push({ routeId: element.routeId, routeName: element.routeName});
+      if (element.customerId === customerSelected.customerId) {
+        var duplicateRecord = filterRoute.find((y: any) =>
+          y.routeId === element.routeId && y.customerId === element.customerId
+        );
+        if (!duplicateRecord) {         
+          
+          filterRoute.push({ routeId: element.routeId, routeName: element.routeName, customerId: element.customerId });
         }
       }
     });
+  
     this.filterRoute = filterRoute;
   }
 
@@ -635,7 +527,8 @@ export class ProgramComponent implements OnInit, OnDestroy {
     this.routePath = this.customerPath + " / " + routeSelected.routeName;
     if( this.routeNameSelected != routeSelected.routeName){
       this.rowDataAsignModal = [];
-    }
+    }  
+    
     this.routeNameSelected =routeSelected.routeName;
     
     this.assignmentSubscription = this.assignmentsService.getActiveAssignmentsRoute(this.vendorID, routeSelected.routeId).pipe(
@@ -649,12 +542,13 @@ export class ProgramComponent implements OnInit, OnDestroy {
       this.routeSelectedRecord = assignments;
     });
   }
-  handleSearch() {
+  handleSearch() {  
     if (this.routeSelectedRecord.length > 0) {
       this.rowDataAsignModal = [];
       let assignedDataModal:any = [];
       this.regFound = "";
-      let counter = 0;
+      let counter = 0;    
+      
        this.routeSelectedRecord.forEach((element: any) => {
         if (element.id.length > 0) {
           this.vehicleAssignmentSubscription = this.routesService.getRouteVehicleAssignments(element.customerId,
@@ -665,19 +559,20 @@ export class ProgramComponent implements OnInit, OnDestroy {
                 const data = a.payload.doc.data() as any;
                 return { id, ...data }
               }))
-            ).subscribe(assignmentsVehiculo => {
-              counter++;
-              assignmentsVehiculo.forEach((vehiculoAssigmentElement: any) => {
+            ).subscribe(assignmentsVehiculo => {            
+              counter++;           
+              assignmentsVehiculo.forEach((vehiculoAssigmentElement: any) => {              
+                
                 if (element.active) {
-                  //search inside the assigned , to now showed
                   var findAssignacion = this.rowDataAsignPostProg.find(x =>
                     x.customerId == element.customerId &&  x.routeName == this.routeNameSelected &&
                     x.driver == vehiculoAssigmentElement.driverName &&
                     x.vehicleName == vehiculoAssigmentElement.vehicleName && x.type == element.type
-                  );
-                  // delete duplicity of data
+                  );               
+                  
                   if (findAssignacion == undefined) {
-                    if (this.rowDataAsignModal.indexOf(vehiculoAssigmentElement.assignmentId) === -1) {
+                    if (this.rowDataAsignModal.indexOf(vehiculoAssigmentElement.assignmentId) === -1) {                    
+                      
                       assignedDataModal.push({
                         assignmentId: vehiculoAssigmentElement.assignmentId,
                         program: element.program, // si
@@ -704,13 +599,15 @@ export class ProgramComponent implements OnInit, OnDestroy {
                     }
                   }
                 }
-              });
+              });          
+              
               if(counter === this.routeSelectedRecord.length) {
+
                 this.rowDataAsignModal = assignedDataModal;
               }
               if (this.rowDataAsignModal != undefined) {  
                 if(this.rowDataAsignModal.length == 0) {
-                  this.regFound= "No se encontraron rutas para programar.";
+                  this.regFound= "No se encontraron operaciones para programar.";
                 }
                 this.numAssing = " (" + this.rowDataAsignModal.length + ") ";
               } 
@@ -722,8 +619,7 @@ export class ProgramComponent implements OnInit, OnDestroy {
 
   handleOKEdit() { // Accept the  edit over the program row
     // Save the edit mode
-    let data = this.signupForm;
-    console.log('full data is: ', data);
+    let data = this.signupForm;  
     this.programService.editProgram( this.vendorID, data);
     // close the modal.
     this.isEditModalVisible = false;
@@ -733,28 +629,19 @@ export class ProgramComponent implements OnInit, OnDestroy {
   }
   createForm() {
     this.signupForm = this.fb.group({
-    id: [],
+    id: [''],
     customerName: new FormControl({value: '', disabled: true}),
     routeName: new FormControl({value: '', disabled: true}),
-    driver: new FormControl({value: '', disabled: true}),
-    vehicleName: new FormControl({value: '', disabled: true}),
+    driver:  [''],
+    vehicleName: [''],
     vehicleId:[''],
     routeId: [''],
-    driverId:[''],
+    driverId:[''],   
     customerId: [''],
     idProgram: ['']
     });
   }
 
-  onSelectionChangedEdit(params: GridReadyEvent) {
-    const selectedRows = this.gridApiDetail.getSelectedRows();
-    console.log(selectedRows);
-    this.isEditModalVisible = true;
-    let recordToPatchValue = { ...selectedRows[0] };
-    this.signupForm.patchValue({ ...recordToPatchValue });
-    // this.arrDrivers // arrVehicle fill 
-    this.getInfoAssigments();
-  }
   vehicleSet(vehicle: any){
     this.signupForm.controls['vehicleName'].setValue(vehicle.name);
     this.signupForm.controls['vehicleId'].setValue(vehicle.id);
@@ -790,6 +677,42 @@ export class ProgramComponent implements OnInit, OnDestroy {
     } else {
       return '';
     }
+  }
+
+  updateCheckedSet(data: any, checked: boolean): void {
+    if (checked) {
+      this.setOfCheckedId.add(data);
+    } else {
+      this.setOfCheckedId.delete(data);
+    }
+  }
+
+  onItemChecked(data: any, checked: boolean): void {
+    this.updateCheckedSet(data, checked);
+    this.refreshCheckedStatus();
+  }
+
+  onAllChecked(value: boolean): void {
+    this.listOfCurrentPageData.forEach(item => this.updateCheckedSet(item.id, value));
+    this.refreshCheckedStatus();
+  }
+  onCurrentPageDataChange($event: readonly IActivityLogAssing[]): void {
+    this.listOfCurrentPageData = $event;
+    this.refreshCheckedStatus();
+  }
+
+  refreshCheckedStatus(): void {
+    this.checked = this.listOfCurrentPageData.every(item => this.setOfCheckedId.has(item.id));
+    this.indeterminate = this.listOfCurrentPageData.some(item => this.setOfCheckedId.has(item.id)) && !this.checked;
+  }
+
+  okDeleteAssign(event:any){  
+    this.programService.deleteProgram(event.id,event.customerId );
+    this.searchData(true);
+  }
+
+  handleCancelDel(){
+
   }
 
 }

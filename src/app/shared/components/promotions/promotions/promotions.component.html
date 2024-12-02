@@ -1,4 +1,4 @@
-<nz-page-header class="site-page-header">
+<nz-page-header class="site-page-header"  style="background-color:#f9fbfd;">
     <!--title-->
     <nz-page-header-title>Promociones</nz-page-header-title>
 
@@ -18,14 +18,8 @@
     <nz-page-header-content>
         <div nz-row>
             <div class="content">
-                <div >
-                    <nz-input-group [nzSuffix]="suffixIconSearch">
-                        <input type="text" nz-input placeholder="Buscar ..." />
-                    </nz-input-group>
-                    <ng-template #suffixIconSearch>
-                        <i nz-icon nzType="search"></i>
-                    </ng-template>
-                </div>
+                <i nz-icon  nzTheme="outline" class="search-icon"></i>
+                <input placeholder="Buscar" #searchBar (keyup)="getItems(searchBar.value)">
             </div>
         </div>
     </nz-page-header-content>
@@ -73,7 +67,7 @@
               </span>
         </td>
         <td>            
-            <a href="{{data.imageUrl}}">Ver Imagen</a>          
+            <a href="{{ data.imageUrl }}" target="_blank">Ver Imagen</a>
         </td>
         <td>
             <a nz-dropdown [nzDropdownMenu]="chatSetting">
@@ -147,11 +141,11 @@
                 <nz-form-item>
                     <nz-form-label>Adjuntar Promoción</nz-form-label>
                     <nz-form-control>
-                        <nz-upload nzAction="https://jsonplaceholder.typicode.com/posts/" nzListType="picture-card"
+                        <nz-upload zAction="/api/posts/"  nzListType="picture-card"
                             [(nzFileList)]="fileList" [nzShowButton]="true" [nzShowUploadList]="showUploadList"
                             [nzPreview]="handlePreview" (nzChange)="handleChange2($event)">
                             <i nz-icon></i>
-                            <div class="ant-upload-text">Upload</div>
+                            <div class="ant-upload-text">Cargar</div>
                         </nz-upload>
                         <nz-modal [nzVisible]="previewVisible" [nzContent]="modalContent" [nzFooter]="null"
                             (nzOnCancel)="previewVisible = false">

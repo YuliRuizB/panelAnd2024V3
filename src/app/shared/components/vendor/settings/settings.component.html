@@ -1,6 +1,6 @@
 <button *ngIf="userCanUpdate" class="media align-items-right m-t-10 m-r-10" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;"
-  (click)="showModal()"><i nz-icon></i>Asignar ruta</button>
-<nz-table #basicTable [nzData]="vendorRoutesList" [nzLoading]="loading" *ngIf="userCanUpdate">
+  (click)="showModal()"><i nz-icon></i>Asignar Operación</button>
+<nz-table #basicTable [nzData]="vendorRoutesList" [nzLoading]="loading" >
   <thead>
     <tr>
       <th style="color: #4F6F57;">Empresa</th>
@@ -8,7 +8,7 @@
       <th style="color: #4F6F57;">Descripción</th>
       <th style="color: #4F6F57;">Activa</th>
       <th style="color: #4F6F57;">Habilitada</th>
-      <th *ngIf="userCanUpdate"></th>
+      <th ></th>
     </tr>
   </thead>
   <tbody>
@@ -20,21 +20,21 @@
       <td [class]="data.permission ? 'text-dark' : 'text-muted font-italic'">{{ data.permission ? 'Si':'No'}}</td>
       <td [class]="data.permission ? 'text-dark' : 'text-muted font-italic'" *ngIf="userCanUpdate">
         <a nz-dropdown [nzDropdownMenu]="menu" nzPlacement="bottomRight">
-          <i nz-icon nzTooltipTitle="Más información" nzTooltipPlacement="topLeft" nz-tooltip></i>
+          <i nz-icon  nzType="ellipsis"  nzTooltipTitle="Más información" nzTooltipPlacement="topLeft" nz-tooltip></i>
         </a>
         <nz-dropdown-menu #menu="nzDropdownMenu">
           <ul nz-menu nzSelectable>
             <li *ngIf="!data.permission" nz-menu-item (click)="toggleActive(data)">
-              <i nz-icon ></i>
+              <i nz-icon nzType="check-circle"></i>
               Habilitar
             </li>
             <li *ngIf="data.permission" nz-menu-item (click)="toggleActive(data)">
-              <i nz-icon ></i>
+              <i nz-icon nzType="pause-circle"></i>
               Deshabilitar
             </li>
             <li nz-menu-divider></li>
             <li nz-menu-item (click)="deletePermission(data)">
-              <i nz-icon nzTheme="twotone" nzTwotoneColor="#de4436" ></i>
+              <i nz-icon nzTheme="twotone" nzTwotoneColor="#de4436" nzType="delete"></i>
               Eliminar
             </li>
           </ul>
@@ -52,17 +52,17 @@
   </div>
 </nz-tabset>
 
-<nz-modal [(nzVisible)]="isModalVisible" nzTitle="Agregar Ruta" (nzOnCancel)="handleCancel()"
-[nzContent]="modalContent">
+<nz-modal [(nzVisible)]="isModalVisible" nzTitle="Agregar Operación" (nzOnCancel)="handleCancel()"
+[nzContent]="modalContent" [nzFooter]="modalFooter">
  
 </nz-modal>
 <ng-template #modalContent>
   <div>
     <nz-form-item>
-      <nz-form-label [nzSpan]="6" nzFor="route">Ruta</nz-form-label>
+      <nz-form-label [nzSpan]="6" nzFor="route">Operación 1</nz-form-label>
       <nz-form-control [nzSpan]="14">
-        <nz-select *ngIf="allRoutesList.length > 0" (ngModel)="selectedRoute" [nzLoading]="loading" nzAllowClear
-          nzPlaceHolder="Selecciona una ruta">
+        <nz-select *ngIf="allRoutesList.length > 0" [(ngModel)]="selectedRoute" [nzLoading]="loading" nzAllowClear
+          nzPlaceHolder="Selecciona una Operación">
           <nz-option-group *ngFor="let c of allRoutesList" [nzLabel]="c.customerName">
             <nz-option *ngFor="let r of c.routes"
               [nzValue]="c.customerId + ',' + c.customerName+ ',' + r.id + ',' + r.name" [nzLabel]="r.name"></nz-option>
@@ -71,9 +71,9 @@
       </nz-form-control>
     </nz-form-item>
   </div>
-
-  <div *nzModalFooter>
+</ng-template>
+  <ng-template #modalFooter>
     <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleCancel()">Cancelar</button>
-    <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleOk()" [nzLoading]="isConfirmLoading">Habilitar Ruta</button>
-  </div>
+    <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleOk()">Habilitar Operación</button>
+ 
 </ng-template>

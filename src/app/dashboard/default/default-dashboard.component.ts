@@ -2,12 +2,10 @@ import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@an
 import * as _ from 'lodash';
 import { Firestore } from 'firebase/firestore'; 
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
-import { toLower, some } from 'lodash';
-import { FormControl, FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { Observable, Subject, Subscription } from 'rxjs';
-import { NzUploadFile, NzUploadModule } from 'ng-zorro-antd/upload';
-import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { filter, finalize, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
+import { FormControl, FormGroup, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Observable, Subject, Subscription, forkJoin, of } from 'rxjs';
+import {  NzModalService } from 'ng-zorro-antd/modal';
+import {  catchError, finalize, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { AngularFireStorage, AngularFireUploadTask } from '@angular/fire/compat/storage';
 import { NzUploadChangeParam } from 'ng-zorro-antd/upload';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -25,6 +23,7 @@ import { DashboardService } from '../../shared/services/admin/dashboard.service'
 import { ProductsService } from '../../shared/services/products.service';
 import { CustomersService } from '../../customers/services/customers.service';
 import { AccountsService } from '../../shared/services/accounts.service';
+
 
 
 export interface IFee {
@@ -113,8 +112,6 @@ export interface IBoardingPass {
   baja?:boolean;
   idBoardingPass?:string;
 }
-
-
 interface IRound {
   round1?: string;
   round2?: string;
@@ -147,9 +144,9 @@ export const months = {
   10: 'Noviembre',
   11: 'Diciembre'
 };
-@Component({
-  templateUrl: './default-dashboard.component.html'//,
-  //styles: ['./default-dashboard.component.css']
+@Component({  
+  templateUrl: './default-dashboard.component.html',
+  styleUrls: ['./default-dashboard.component.css' ] 
 })
 
 export class DefaultDashboardComponent implements OnInit, OnDestroy {
@@ -172,7 +169,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   devicesList: any;
   loadedDevicesList: Array<any> = [];
   usersCollection1: AngularFirestoreCollection<any> | undefined;
-
+  reciboPago: Recibo[] = [];
 
   //Modal MessageCenter
   newMessage = "";
@@ -187,6 +184,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
   sendUser:any; 
   idBoardingPass! : string;
+  isCollapsed = true; 
 
 
   //Modal Bulk table
@@ -302,12 +300,15 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   stopPointsSubscription!: Subscription;
   customerSuscription!: Subscription;
   userSubscription!: Subscription;
+  usersSubscription!: Subscription;
+  userChatMessagesSubscription!: Subscription;
 
   accountId$ = new Subject<string>();
   routeId$ = new Subject<string>();
 
   canUpdatePayment = false;
   canUpdateValidTo = false;
+  jobTypeIdCustomerSelected : any = "";
 
   elementType = 'url';
 
@@ -359,6 +360,13 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   isVisiblePurchasePay:boolean = false;
   accountsService= inject(AccountsService);
   infoSegment: any  =[];
+  requiredFields: boolean = false;
+  productSelected : any = [];
+  switchValueUsers = true;
+  checkOptionsOne: any[] = [];
+  selectedOption: string = ""; // Variable to hold the selected option  
+  userCustomerId: string = "";
+                
 
   constructor(
     private afs: AngularFirestore,
@@ -368,36 +376,38 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     private bucketStorage: AngularFireStorage,
     private msg: NzMessageService
   ) { 
+    
     this.authService.user.subscribe(user => {   
-      this.user = user;
-      //console.log(this.user); //idSegment
-        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) { 
+      this.user = user; 
           
-          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-            takeUntil(this.stopSubscription$),
-            map((a:any) => {
+      if(this.user) {      
+        this.userCustomerId = this.user.customerId;  
+       
+        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+          map((a: any) => {
+            if (a && a.payload) {
               const id = a.payload.id;
-              const data = a.payload.data() as any;
-              return { id, ...data }
-            }),
-            tap(record => {             
-              this.infoSegment = record;  
-              //console.log("dentro del info");          
-             // console.log(this.infoSegment);
-              this.filldata();
-              return record;
-            })
-          ).subscribe()
-        }      
-    });
+              const data = a.payload.data ? a.payload.data() : {}; // Maneja el caso cuando data es undefined
+             // console.log(a);
+              return { id, ...data };
+            } else {
+              console.warn('Unexpected payload structure:', a);
+              return {};
+            }
+          })
+        ).subscribe((record: any) => {        
+          this.infoSegment = record;      
+          this.filldata();
+        }) 
+      }    
+    });   
   }
 
+ 
   filldata(){
-    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual     
-    
+    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual  
       const customerSuscription: Observable<any>  = this.accountId$.pipe(
         switchMap(async (accountId) => this.afs.collection('customers').doc(accountId)));
-
         customerSuscription.subscribe((customers: any) => {
           this.customers = customers;
         });
@@ -406,11 +416,11 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       const customerSuscription: Observable<any>  = this.accountId$.pipe(
         switchMap(accountId => this.afs.collection('customers', ref => ref.where('active', '==', true)).valueChanges({ idField: 'uid' })
         ));  
-
         customerSuscription.subscribe((customers: any) => {
           this.customers = customers;
         });
     }
+
     const routesObservable: Observable<any>  = this.accountId$.pipe(
       switchMap(accountId => this.afs.collection('customers').doc(accountId).collection('routes', ref => ref.where('active', '==', true)).valueChanges({ idField: 'routeId' })
       ));
@@ -428,21 +438,23 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       switchMap(accountId => this.afs.collection('customers').doc(accountId).collection('products', ref => ref.where('active', '==', true)).valueChanges({ idField: 'productId' })
       ));
 
-    const usersObservable: Observable<any>  = this.accountId$.pipe(
-      switchMap(accountId => this.afs.collection('users', ref => ref.where('customerId', '==', accountId).orderBy('studentId')).valueChanges({ idField: 'uid' })
-      ));
+      const usersObservable: Observable<any> = this.accountId$.pipe(
+        switchMap(accountId =>
+          this.afs.collection('users', ref => 
+            ref.where('customerId', '==', accountId)
+               .where('active', '==', true)
+               .orderBy('studentId')
+          ).valueChanges({ idField: 'uid' })
+        )
+      );
 
     const stopPointsObservable: Observable<any>  = this.routeId$.pipe(
       switchMap(routeId => this.afs.collection('customers').doc(this.currentSelectedCustomerId).collection('routes').doc(routeId).collection('stops', ref => ref.orderBy('order', 'asc').where('active', '==', true)).valueChanges({ idField: 'stopPointId' })
       ));
 
-  
-
-        // subscribe to changes
-      productsObservable.subscribe((products: any) => {
+      productsObservable.subscribe((products: any) => {       
         this.products = products;
       });
-
 
       stopPointsObservable.subscribe((stopPoints: any) => {
         this.stopPoints = stopPoints;
@@ -451,9 +463,15 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       usersObservable.subscribe((usersByAccount: any) => {
         this.usersByAccount = usersByAccount;
       })
-    this.getUsersList();
+    
     this.getCustomersList();
+   
 
+  }
+
+  log(value:any): void {
+    //this.selectedOption = value; 
+  this.devicesList = [];
   }
 
   ngOnInit() {      
@@ -517,7 +535,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       typePayment: [''],
       promiseDate: [new Date()],
       baja: [''],
-      fileURL: ['']
+      fileURL: [''],
+      frequencies: ['']
     });
     const currentDate = new Date();
     this.validateForm.controls['promiseDate'].setValue(currentDate);
@@ -575,6 +594,12 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
     if (this.customerSuscription) {
       this.customerSuscription.unsubscribe();
+    }
+    if (this.usersSubscription) {
+      this.usersSubscription.unsubscribe();
+    }
+    if (this.userChatMessagesSubscription) {
+      this.userChatMessagesSubscription.unsubscribe();
     }
 
   }
@@ -636,8 +661,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       this.isBoardingPassSelected = false;
       } else {
         console.error('currentUserSelected or uid is null or undefined');
-      }
-      
+      }   
      
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
@@ -647,15 +671,20 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
   getUserCredentials(userId: string) {
     this.loadingUserCredentials = true;
-    this.customersService.getUserCredentials(userId)
-      .subscribe(userCredentials => {
-
+    
+    this.customersService.getUserCredentials(userId).pipe(
+      tap(userCredentials => {
         this.userCredentials = userCredentials;
-        this.loadingUserCredentials = false;
-      }, err => {
+      }),
+      catchError(err => {
+        console.error('Error fetching user credentials:', err);
         this.userCredentials = null;
+        return of(null); // Return a fallback value to keep the observable chain alive
+      }),
+      finalize(() => {
         this.loadingUserCredentials = false;
-      });
+      })
+    ).subscribe();
   }
 
   currentCredentialsPageDataChange($event: any): void {
@@ -664,9 +693,13 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
 
   refreshCredentialsStatus(): void {
-    this.isCredentialsAllDisplayDataChecked = this.usersByAccount.every((item: { uid: string | number; }) => this.mapOfCredentialsCheckedId[item.uid]);
-    this.isCredentialsIndeterminate =
-      this.usersByAccount.some((item: { uid: string | number; }) => this.mapOfCredentialsCheckedId[item.uid]) && !this.usersByAccount;
+    const allChecked = this.usersByAccount.length > 0 &&
+      this.usersByAccount.every((item:any) => this.mapOfCredentialsCheckedId[item.uid]);
+  
+    const someChecked = this.usersByAccount.some((item:any) => this.mapOfCredentialsCheckedId[item.uid]);
+  
+    this.isCredentialsAllDisplayDataChecked = allChecked;
+    this.isCredentialsIndeterminate = someChecked && !allChecked;
   }
 
   checkCredentialsAllData(value: boolean): void {
@@ -674,19 +707,21 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
 
   checkCredentialsValidBoardingPass(value: boolean): void {
-    this.usersByAccount.forEach((item: { uid: string; }) => {
-      this.customersService.getLatestValidUserPurchases(item.uid).pipe(
+    const requests = this.usersByAccount.map((item: { uid: string }) => {
+      return this.customersService.getLatestValidUserPurchases(item.uid).pipe(
         take(1),
-        map((actions:any) => actions.map((a:any) => {
+        map((actions: any) => actions.map((a: any) => {
           const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data }
+          const data = a.payload.doc.data();
+          return { id, ...data };
         })),
-        tap((boardingPasses:any) => {
+        tap((boardingPasses: any) => {
           this.mapOfCredentialsCheckedId[item.uid] = boardingPasses.length > 0;
         })
-      ).subscribe();
+      );
     });
+  
+    forkJoin(requests).subscribe();
   }
 
 
@@ -716,12 +751,13 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.isProductVisible = true;
   }
 
-
   onProductSelected(event: any, products: any) {
+    this.productSelected = [];
     const recordArray = _.filter(products, p => {
       return p.productId == event;
     });
     const record = recordArray[0];
+    this.productSelected = record;
     this.validateForm.controls['name'].setValue(record.name);
     this.validateForm.controls['description'].setValue(record.description);
     this.validateForm.controls['product_description'].setValue(record.description);
@@ -734,37 +770,42 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.validateForm.controls['realValidTo'].setValue((record.validTo.toDate()).toISOString());
     this.validateForm.controls['isTaskIn'].setValue(record.isTaskIn);
     this.validateForm.controls['isTaskOut'].setValue(record.isTaskOut);
+    this.validateForm.controls['frequencies'].setValue(record.frequencies);
   }
 
+  searchloadUsers(){
+    this.getUsersList();
+  }
   getUsersList() {
-    this.isLoadingUsers = true;   
-    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-      this.usersCollection = this.afs.collection<any>('users', ref => 
-        ref.where('customerId', '==', this.user.customerId).orderBy('displayName'));
-      this.users = this.usersCollection.snapshotChanges().pipe(
-        map((actions:any) => actions.map((a:any) => {
+    
+  //  console.log("getUsersList");
+
+    this.isLoadingUsers = true;
+  
+    let usersCollectionRef: AngularFirestoreCollection<any> = this.afs.collection('users');
+   //console.log( this.selectedOption);
+
+    usersCollectionRef = this.afs.collection('users', ref => 
+       ref.where('customerId', '==', this.selectedOption)      
+      );   
+   
+    this.usersSubscription = usersCollectionRef
+      .snapshotChanges()
+      .pipe(
+        map(actions => actions.map(a => {
           const id = a.payload.doc.id;
           const data = a.payload.doc.data() as any;
-          return { id, ...data }
+          return { id, ...data };
         }))
-      ).subscribe(users => {
+      )
+      .subscribe(users => {
+       // console.log("entro a cargar users");
+       // console.log(users);
         this.loadUsers(users);
-      });
-    } else {  
-      this.usersCollection = this.afs.collection<any>('users', ref => ref.orderBy('displayName'));
-      this.users = this.usersCollection.snapshotChanges().pipe(
-        map((actions:any) => actions.map((a:any) => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data }
-        }))
-      ).subscribe(users => {
-        this.loadUsers(users);
+        this.isCollapsed = false;
       });
   }
   
-  }
-
 
   setUserDisabled(disabled: boolean) {
     if (this.userlevelAccess != "3") {
@@ -773,23 +814,31 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         this.currentUserSelected.disabled = disabled;
       } else {
         console.error('currentUserSelected or uid is null or undefined');
-      }     
-    
+      }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
     }
   }
 
-
-  loadUsers(users: any) {
-    if (this.loadedDevicesList.length <= 1) {
-      this.displayData = users;
-      this.devicesList = users.slice().sort((a: any, b: any) => {
-        return a.displayName.localeCompare(b.displayName);
-      });
-      this.loadedDevicesList = this.devicesList;
-      
-    }
+  loadUsers(users: any[]) {    
+ 
+   // if (this.loadedDevicesList.length <= 1) {
+      const displayNameMap = new Map();
+      const devicesList = [];
+     
+      for (const user of users) {
+        if (user.displayName !== null && user.displayName !== undefined && !displayNameMap.has(user.displayName)) {
+          displayNameMap.set(user.displayName, true);
+          devicesList.push(user);
+        }
+      }     
+      // Sort the filtered users by displayName
+      devicesList.sort((a, b) => a.displayName.localeCompare(b.displayName));  
+      this.devicesList = devicesList;
+      this.loadedDevicesList = devicesList;
+      this.displayData = devicesList;  
+     
+    //}
   }
 
   userSelected(data: { uid: string; studentId: string; paymentId: string; disabled: any; customerId: string; firstName: any; photoURL:any;
@@ -802,6 +851,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.accountId$.next(this.currentUserSelected.customerId);
     this.isUserSelected = true;
     this.isBoardingPassSelected = false;
+    this.requiredFields = false;
+    this.getJobType(data.customerId);
     this.getLatestPurchases(data.uid);
     this.getLastestPurchaseRequest(data.uid);
     this.getUserCredentials(data.uid);
@@ -823,17 +874,60 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  getUserChatMessages(userId: string) {
+  getUserChatMessages(userId: string): void {
     this.loadingChatMessages = true;
-    this.dashboardService.getUserChatMessages(userId, 10)
+    
+    // Cancela la suscripción anterior si existe para evitar memory leaks
+    if (this.userChatMessagesSubscription) {
+      this.userChatMessagesSubscription.unsubscribe();
+    }
+  
+    // Realiza la llamada al servicio para obtener los mensajes de chat
+    this.userChatMessagesSubscription = this.dashboardService.getUserChatMessages(userId, 10)
       .subscribe(userChatMsn => {
         this.userChatMessageData = userChatMsn;
+        this.loadingChatMessages = false; // Marca como cargado una vez se reciben los datos
       });
+  }
+
+
+  getJobType(customerId: any) {
+    //console.log(customerId);
+    this.dashboardService.getJobType(customerId).pipe(
+      takeUntil(this.stopSubscription$),
+      map((actions: any) => {
+      //  console.log('actions:', actions); 
+          return  actions.jobTypeID;
+      })
+    )
+    .subscribe(
+      (customerInfo: any) => {
+        if (customerInfo !== undefined) {
+        if (customerInfo.length > 0) {
+
+          this.dashboardService.getJobTypeInfo(customerInfo).pipe(
+            takeUntil(this.stopSubscription$),
+            map((actions: any) => {
+             // console.log('result:', actions); 
+                return  actions.requiredFields;
+            })
+          )
+          .subscribe(
+            (requiredFields: any) => {
+              //console.log('requiredFields:', requiredFields);     
+              this.requiredFields = requiredFields;
+            });         
+        } 
+      }       
+      },
+      (error: any) => {
+        console.error('Error fetching job type:', error);
+      });    
   }
 
   //#endregion
 
-
+ 
   //#region  Purchases and Payments
   onBulkBoardingPassSelected(customerId: string ) {
     this.accountId$.next(customerId);
@@ -882,7 +976,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       const purchId = this.lastPurchase ? String(this.lastPurchase.id) : undefined;
       
     if (validTo == "") {
-      this.msg.error("Se requiere  seleccionar una fecha de terminación de pase de abordar.");
+      this.msg.error("Se requiere  seleccionar una fecha de terminación de pase.");
     } else {
       if (typePayment == "") {
         //TODO  create document. for file.
@@ -891,7 +985,10 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         if (this.currentUserSelected && this.currentUserSelected.uid) {
           var advanceForm: object;
         var fileinfoURL = this.validateLiqForm.controls['fileURL'].value || "";
-
+        const amountTrips = this.productSelected?.amountTrips || 0;
+        const frequencies = this.productSelected?.frequencies || 0;
+        const weeks = this.productSelected?.weeks || 0;
+        const rangeWeeks = this.productSelected?.rangeWeeks || {};
         const send = {
          
           authorization: "portalAuth",
@@ -933,6 +1030,14 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
             creation_date: "",
             external_id: "",
             clabe: ""
+          },
+          product:{
+            product_id: this.validateLiqForm.controls['product_id'].value,
+            amountTrips: amountTrips,
+            frequencies: frequencies,
+            rangeWeeks: rangeWeeks,
+            weeks:weeks,
+            name: this.productSelected.name
           },
           customerId : this.currentUserSelected.customerId ,
           active: true,
@@ -985,12 +1090,14 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           type: "Servicio",
           fileURL: fileinfoURL
         };
+
+        
          if (this.userlevelAccess != "3") {
           if (purchId !== undefined) {
             this.customersService.saveBoardingPassDetailToUserPurchaseCollection(this.currentUserSelected.uid, purchId, send)
             .then((success) => {
    
-             this.msg.success("El registro se hizo con exito");
+             this.msg.success("El registro se genero correctamente");
              if (this.lastPurchase && this.lastPurchase.realValidTo !== undefined) {
               const validTo = new Date(this.lastPurchase.realValidTo);
               this.lastPurchase.validTo = Timestamp.fromDate(validTo);
@@ -1012,12 +1119,9 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
               this.customersService.createPurchaseCloud(send,this.currentUserSelected, purchId);              
               this.customersService.updateBoardingPassToUserPurchaseCollection(this.currentUserSelected.uid, this.lastPurchase)
                 .then((success) => {
-                  this.msg.success("Se actualizo el pase de abordar");
+                  this.msg.success("Se actualizo el pase");
                   this.canUpdatePayment = false;
                 }).catch((err) => { this.isConfirmLoading = false; });
-
-
-                console.log("333");
               }
             }).catch((err) => { console.log("error"); });
 
@@ -1025,8 +1129,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           //TODO
         } else {
             console.error('lastPurchase id is undefined');
-        }
-         
+        }         
 
         } else {
           this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
@@ -1434,13 +1537,18 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
 
   getItems(searchbar: any) {
-    this.initializeItems();
-    const q = searchbar;
-    if (!q) { return; }
-    const text = toLower(q);
-    this.devicesList = filter(this.devicesList, (object: any) => {
-        return some(object, (string: any) => {
-            return toLower(string).includes(text);
+    const q = searchbar; // Assuming `searchbar` is an input element and you want to extract its value    
+    if (!q) {       
+        // If the search query is empty, reset the devicesList to its original state
+        this.devicesList = this.loadedDevicesList.slice();
+        return; 
+    }
+    const text = q.toLowerCase(); // Using `toLowerCase()` instead of `toLower()` for lowercase conversion   
+    this.devicesList = this.loadedDevicesList.filter((object: any) => {
+        // Check if any property of the object contains the search text
+        return Object.values(object).some((value: any) => {
+            // Convert the property value to lowercase and check if it includes the search text
+            return String(value).toLowerCase().includes(text);
         });
     });
 }
@@ -1497,18 +1605,28 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   getCustomersList() {
 
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-      const customersCollection = this.afs.collection('customers', ref => ref
-        .where('customerId', '==', this.user.customerId).orderBy('name'));
+      console.log( this.userCustomerId);
+      
+      const customersCollection = this.afs.collection('customers').doc(this.userCustomerId);
       customersCollection.snapshotChanges().pipe(
         takeUntil(this.stopSubscription$),
-        map((actions:any) => actions.map((a:any) => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data }
-        })),
-        tap((customers:any) => {
-          this.customersList = customers;
-          return customers;
+        map((action: any) => {
+          const id = action.payload.id;
+          const data = action.payload.data() as any;
+          return { id, ...data };
+        }),
+        tap((customer: any) => {
+          console.log(customer);
+          
+          this.customersList = [customer];  // Asigna un array con un único objeto
+          
+          this.checkOptionsOne = [{
+            value: customer.id,
+            label: customer.name
+          }];
+          console.log(this.checkOptionsOne);
+          
+          return customer;
         })
       ).subscribe();
         
@@ -1523,6 +1641,11 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         })),
         tap((customers:any) => {
           this.customersList = customers;
+          this.checkOptionsOne = customers.map((customer: any) => ({
+            value: customer.id,
+            label: customer.name
+          }));
+       //   console.log(this.checkOptionsOne);
           return customers;
         })
       ).subscribe();
@@ -1554,6 +1677,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       //this.msg.success("result " + resultValidations);
       var advanceForm: object;
       var purchaseRequest: object;
+      var amountTrips : number = 0;
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         const uid: string = this.currentUserSelected.uid;
         this.validateForm.controls['customer_id'].setValue(this.currentUserSelected.customerId);
@@ -1563,6 +1687,20 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         if (paymentSelected == "Anticipo") {
           amount = this.validateForm.controls['amountPayment'].value; //Cantidad a Pagar.
         }
+        //console.log(this.validateForm.value)
+        const frequencies = this.validateForm.controls['frequencies'].value || 0;
+       //console.log( frequencies + '/' + amountTrips  + '/' + frequencies.length);
+        if (frequencies > 0){           
+            amountTrips = Number(frequencies) * 80;          
+        }
+        const weeks = this.productSelected?.weeks || 0;       
+        const rangeWeeksGroup = this.fb.group({});
+
+        const rangeWeeks = this.productSelected?.rangeWeeks || {}; // Provide a default empty object if null or undefined
+  
+          for (const [key, value] of Object.entries(rangeWeeks)) {
+            rangeWeeksGroup.addControl(key, this.fb.control(value));
+          }
         const price = this.validateForm.controls['price'].value;
         const validTo = this.validateForm.controls['validTo'].value || new Date();
         const isCourtesy = this.validateForm.controls['is_courtesy'].value || false;
@@ -1629,6 +1767,14 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
               external_id: "",
               clabe: ""
             },
+            product:{
+              product_id: this.validateForm.controls['product_id'].value,           
+                amountTrips: amountTrips,
+                frequencies: frequencies,
+                rangeWeeks: rangeWeeksGroup.value,
+                weeks:weeks,
+                name: this.productSelected.name
+            },
             customerId: this.currentUserSelected.customerId ,
             active: true,
             category: "permanente",
@@ -1653,9 +1799,10 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
             idBoardingPass: this.currentUserSelected.uid,
             idPurchasteRequest: '',
             is_courtesy: false,
-            typePayment: paymentSelected
-          }
-  
+            typePayment: paymentSelected,
+            amountTrips : amountTrips,
+            currentTrips: 0
+          }         
           if (this.userlevelAccess != "3") {
             advanceForm = {
               active: true,
@@ -1700,12 +1847,12 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
                         this.customersService.saveBoardingPassDetailToUserPurchaseCollection(uid, routes[0].id, send)
                           .then((success) => {
                             this.sendUser = send;
-                            console.log(routes[0].id);
+                            //console.log(routes[0].id);
                             this.idBoardingPass = routes[0].id;
                             this.purchaseActive = true;
                             
                             this.customersService.createPurchaseCloud(this.sendUser,this.currentUserSelected,this.idBoardingPass);
-                            console.log("salio");
+                           console.log(send);
                           }).catch((err) => { console.log("error"); });                
                   }, (error) => {
                     console.log(error);
@@ -1733,7 +1880,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     const newId = this.afs.createId();
     const user = this.afs.collection('users').doc(userID).collection("purchaseRequests").doc(newId).set(purchaseDetail)
       .then(() => {
-        console.log('Purchase Request  successfully written!');
+        console.log('Recibo de compra correctamente generado!');
         return newId;
       })
       .catch((error) => {
@@ -1833,7 +1980,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       let validForm: boolean = true;
   
       if (this.newCustomerIdEditMode != "" && !this.resetClientEditInfo) {
-        this.msg.error("Al cambiar de  Empresa es necesario asignar una ruta y estación acorde a la empresa.");
+        this.msg.error("Al cambiar de  Empresa es necesario asignar una operación y estación acorde a la empresa.");
         validForm = false;
       }
       if (userName == "") {
@@ -1841,7 +1988,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         validForm = false;
       }
       if (studentId == "") {
-        this.msg.error("La Matrícula es un valor requerido, favor de validar, si no se tiene un valor poner 0");
+        this.msg.error("La Identificación es un valor requerido, favor de validar, si no se tiene un valor poner 0");
         validForm = false;
       }
       if (email == "") {
@@ -1853,7 +2000,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         validForm = false;
       }
       if (defaultRoute == "") {
-        this.msg.error(" La ruta es un valor requerido, favor de validar");
+        this.msg.error(" La operación es un valor requerido, favor de validar");
         validForm = false;
       }
   
@@ -1864,7 +2011,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         customerName: customerName,
         defaultRound: defaultRound,
         defaultRoute: defaultRoute,
-        defaultRouteName: defaultRouteName, //ruta
+        defaultRouteName: defaultRouteName, //Operación
         displayName: displayName,
         email: email,
         firstName: firstName,
@@ -1975,17 +2122,11 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
 
 
-  private getBase64(img: File, callback: (img: string) => void): void {
+  private getBase64(file: File, callback: (img: string) => void): void {
     const reader = new FileReader();
-    reader.addEventListener('load', () => {
-        if (reader.result !== null && typeof reader.result === 'string') {
-            callback(reader.result);
-        } else {
-            // Handle the case where reader.result is null or not a string
-            console.error('Invalid result from FileReader');
-        }
-    });
-    reader.readAsDataURL(img);
+    reader.readAsDataURL(file);
+    reader.onload = () => callback(reader.result as string);
+    reader.onerror = error => console.log('Error: ', error);
 }
 
 
@@ -1993,19 +2134,15 @@ handleChange2(event: NzUploadChangeParam): void {
   const status = event.file.status;
   if (status !== 'uploading') {
     const status = event.file.status;     
-    this.fileListInfo = event.file;
-    if (status === 'done') {
-      this.sendMessage('success', `${event.file.name} Archivo cargado satisfactoriamente.`);
-    } else if (status === 'error') {
-      this.sendMessage('error', `${event.file.name} archivo fallido, favor de validar.`);
-    }
+    this.fileListInfo = event.fileList;   
     if (event.file.originFileObj) {
       this.getBase64(event.file.originFileObj, (img: string) => {
         this.fileUrl = img;
-        const fileRef = this.bucketStorage.ref(this.bucketPath);
-
-        this.task = this.bucketStorage.ref(this.bucketPath).putString(img, 'data_url');
-
+        const fileName = event.file.name;
+        const filePath = `${this.bucketPath}/${fileName}`;
+        const fileRef = this.bucketStorage.ref(filePath);
+        this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');         
+        
         // observe percentage changes
         this.uploadPercent = this.task.percentageChanges() as Observable<number>;
 
@@ -2025,6 +2162,11 @@ handleChange2(event: NzUploadChangeParam): void {
             this.downloadURL = fileRef.getDownloadURL();
             this.downloadURL.subscribe(async (url) => {
               this.updateAdvanceURL(url);
+              if (url.length > 0) {
+                this.sendMessage('success', `${event.file.name} Archivo cargado satisfactoriamente.`);
+              } else if (status === 'error') {
+                this.sendMessage('error', `${event.file.name} archivo fallido, favor de validar.`);
+              }
             });
           })
         ).subscribe();
@@ -2108,9 +2250,46 @@ handleChange2(event: NzUploadChangeParam): void {
       console.error(e);
     }
   }
-  generatePurchasePDF(id:any) {
+
+  generatePDFInfo(){
+    try {
+
+      var doc = new jsPDF();
+      html2canvas(document.getElementById("recibo")!).then(canvas => {
+        const contentDataURL = canvas.toDataURL('image/png');
+        let pdf = new jsPDF('p', 'pt', 'a4');
+        var width = pdf.internal.pageSize.getWidth();
+        var height = canvas.height * width / canvas.width;
+        pdf.addImage(contentDataURL, 'PNG', 10, 10, width, height);
+        pdf.save('recibo.pdf');
+      });
+    }
+    catch (e) {
+      console.error(e);
+    }
+  }
+  generatePurchasePDF(data:any) {
+    console.log(data);
+    this.reciboPago.push({
+      amount: data.amount,
+      amountTrips: data.amountTrips,
+      authorization:  data.authorization,
+      creation_date:  data.creation_date,
+      currentTrips: data.currentTrips,
+      description:  data.description,
+      method:  data.method,
+      name:  data.name,
+      price: data.price,
+      routeName:  data.routeName,
+      round:  data.round,
+      stopName:  data.stopName,
+      type:  data.type,
+      typePayment:  data.typePayment,
+      validFrom:  data.validFrom,
+      validTo:  data.validTo
+    });
     this.isVisiblePurchasePay = true;
-    console.log("GenerarPDF");
+ //   console.log("GenerarPDF");
   }
 
   bajaCheck () {
@@ -2126,4 +2305,24 @@ handleChange2(event: NzUploadChangeParam): void {
     }
   }
 
+}
+
+
+interface Recibo {
+  amount: number;
+  amountTrips: number;
+  authorization: string;
+  creation_date: string;
+  currentTrips: number;
+  description: string;
+  method: string;
+  name: string;
+  price: number;
+  routeName: string;
+  round: string;
+  stopName: string;
+  type: string;
+  typePayment: string;
+  validFrom: string;
+  validTo: string;
 }

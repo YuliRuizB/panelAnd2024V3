@@ -14,25 +14,25 @@
         </ng-template>
         <ng-template #ellipsisAction>
           <button nz-button nzNoAnimation nz-dropdown [nzDropdownMenu]="menu" style="border: none; padding: 0; background-color: #4F6F57; color: #f6f3ea;">
-            <i nz-icon nzTheme="outline" style="font-size: 20px; vertical-align: top;"></i>
+            <i nz-icon nzType="ellipsis" nzTheme="outline" style="font-size: 20px; vertical-align: top;"></i>
           </button>
           <nz-dropdown-menu #menu="nzDropdownMenu">
             <ul nz-menu>
               <li nz-menu-item *ngIf="!item.active" (click)="toggleActive(item)">
-                <i nz-icon  theme="outline"></i>
+                <i nz-icon nzType="eye"  theme="outline"></i>
                 <span class="m-l-10">Activar</span>
               </li>
               <li nz-menu-item *ngIf="item.active" (click)="toggleActive(item)">
-                <i nz-icon theme="outline"></i>
+                <i nz-icon nzType="eye" theme="outline"></i>
                 <span class="m-l-10">Desactivar</span>
               </li>
               <li nz-menu-item *ngIf="item.active" (click)="selectProgramDay(item)">
-                <i nz-icon  theme="outline"></i>
+                <i nz-icon   nzType="eye"  theme="outline"></i>
                 <span class="m-l-10">Programar</span>
               </li>
               <li nz-menu-divider></li>
               <li nz-menu-item (click)="deleteAssignment(item)">
-                <i nz-icon  theme="outline"></i>
+                <i nz-icon  nzType="delete" theme="outline"></i>
                 <span class="m-l-10">Eliminar</span>
               </li>
             </ul>

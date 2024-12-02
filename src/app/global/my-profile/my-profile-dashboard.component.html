@@ -1,5 +1,12 @@
-<div style="margin: buttom 15px; margin-top: 15px;">
-    <div style="margin: buttom 15px; margin-top: 15px;" class="site-page-header-ghost-wrapper">
+<div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
+  <div class="site-page-header-ghost-wrapper">
+    <nz-page-header [nzGhost]="false"   style="background-color:#f9fbfd;">
+      <nz-page-header-title  style="margin-left: 350px;">Mi Perfil</nz-page-header-title>
+      <nz-page-header-subtitle >Mi Información de Perfil
+      </nz-page-header-subtitle>
+    </nz-page-header>
+  </div>
+    <div style="margin: buttom 15px; margin-top: 15px;" class="body">
         <nz-layout class="container-fluid p-h-0">
             <form nz-form [formGroup]="validateForm" (ngSubmit)="done()">
                 <nz-form-item style="margin-top: 15px;">
@@ -16,6 +23,13 @@
                       <span>Cambiar imágen</span>
                     </button>
                   </nz-upload>
+
+              <!--     <nz-form-control [nzSm]="14" [nzXs]="24" >
+                    <input nz-input id="idPRepa2" formControlName="idPRepa2" />
+                  </nz-form-control>
+                  <button nz-button (click)="borrar()" style=" background-color: #4F6F57; color: #f6f3ea;" >
+                    <span>Borrar</span>
+                  </button> -->
 
                     </nz-form-control>
                 </nz-form-item>

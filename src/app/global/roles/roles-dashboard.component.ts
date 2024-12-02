@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators';
 import * as _ from 'lodash';
 import { Subscription } from 'rxjs';
 import { RolService } from '../../shared/services/roles.service';
-import { en_US } from 'ng-zorro-antd/i18n';
+import { en_US } from 'ng-zorro-antd/i18n';;
 
 interface formRol {
     uid?: string;
@@ -137,7 +137,7 @@ interface formRol {
     getData(uid:string, formRoles: formRol[]): void {
       const ret: Array<TransferItem & { description: string; icon: string; direction:string, idForm:string}> = [];
       // Call forms getAllForms
-      this.formCollection = this.afs.collection<any>('form', ref => ref.orderBy('name'));
+      this.formCollection = this.afs.collection<any>('form', ref => ref.where('active', '==', "true").orderBy('name'));
       this.forms = this.formCollection.snapshotChanges().pipe(
         map((actions:any) => actions.map((a: any) => {
           const id = a.payload.doc.id;
@@ -145,7 +145,8 @@ interface formRol {
           return { id, ...data }
         }))
       ).subscribe(forms => {
-       // Se va a buscar los roles ya puestos dentro del rol.  
+       // Se va a buscar los roles ya puestos dentro del rol.         
+       
         for (const rolI in forms) {
           const result1 = this.searchInArrayOfObjects(formRoles, forms[rolI]["id"]);
           if (result1 != undefined) {
@@ -179,9 +180,20 @@ interface formRol {
     }
 
     select(ret: any): void {
-      if (this.NameRol == "Master") {
+      this.formRolCollection = this.afs.collection('roles').doc(this.rolSelectedID).collection('forms', ref => ref.where('idForm', "==", ret.list[0]["idForm"]));
+      this.roles = this.formRolCollection.snapshotChanges().pipe(
+        map((actions:any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data }
+        }))
+      ).subscribe(roles => {
+        this.currendUidSelected = roles[0]["uid"];
+      });
+
+     if (this.NameRol == "Master") {
         this.msg.info("El Usuario Master no puede ser modificado");
-        this.disabled= true;
+      //  this.disabled= true;
       } else {
 
         if (ret.list.length >= 2) { 
@@ -192,7 +204,7 @@ interface formRol {
             this.msg.error("La forma Perfiles solo puede ser seleccionada por usuario Master");
           } else {
           console.log('nzSelectChange', ret);
-          this.disabled = false;
+        //  this.disabled = false;
           if (ret.list[0]["direction"] == 'right') {
             this.formRolCollection = this.afs.collection('roles').doc(this.rolSelectedID).collection('forms', ref => ref.where('idForm', "==", ret.list[0]["idForm"]));
             this.roles = this.formRolCollection.snapshotChanges().pipe(
@@ -210,9 +222,19 @@ interface formRol {
       }
     }
    change(ret:any): void {
+    const idchanged = ret.list[0]["key"];
+    const idtitle = ret.list[0]["title"];
+    if (ret.from == 'left' && ret.to == 'right') {
+     // console.log("from left to rigth"); // save record
+      this.rolService.createFormRol(this.rolSelectedID, idchanged, idtitle).then((response) => {
+      }).catch((err) => { console.log("error: " + err); });
+      }
      if (this.NameRol == "Master") {
-       this.disabled = true;
-     } else {
+    //   this.disabled = true;
+    
+      } else {
+  
+    
        if (ret.list.length >= 2) {
          this.msg.error("Solo se puede seleccionar una forma a la vez.");
        }

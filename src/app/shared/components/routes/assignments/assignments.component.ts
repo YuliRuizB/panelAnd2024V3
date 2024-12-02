@@ -274,7 +274,7 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
       this.notification.create(
         'error',
         'Problema con la información',
-        'No están definidos los tiempos entre estación de esta ruta para el turno seleccionado'
+        'No están definidos los tiempos entre estación de esta operación para el turno seleccionado'
       );
       return; // Add return statement here
     }
@@ -282,8 +282,8 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
     if (!this.isEditMode) {
       if (this.userlevelAccess != "3") {     
         const routeIdControl: any = this.programForm.get('routeId');
-        if (routeIdControl) {    
-          this.routesService.setRouteAssignments(this.accountId, routeIdControl, this.programForm.value).then(() => {
+        if (routeIdControl) {
+          this.routesService.setRouteAssignments(this.accountId, routeIdControl.value, this.programForm.value).then(() => {
             this.isCreateVisible = false;
             this.isEditMode = false;
           })

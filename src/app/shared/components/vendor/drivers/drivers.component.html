@@ -2,14 +2,8 @@
   <div class="row align-items-md-center">
     <div class="col-md-6">
       <div class="row">
-        <div class="col-md-5">
-          <nz-input-group [nzPrefix]="searchPrefix">
-            <input type="text" nz-input placeholder="Buscar">
-          </nz-input-group>
-          <ng-template #searchPrefix>
-            <i class="opacity-04" nz-icon nzType="search"></i>
-          </ng-template>
-        </div>
+        <i nz-icon  nzTheme="outline" class="search-icon"></i>
+        <input placeholder="Buscar" #searchBar (keyup)="getItems(searchBar.value)">
       </div>
     </div>
     <div class="col-md-6">
@@ -93,29 +87,29 @@
     <nz-table #listViewTable [nzData]="driversList">
       <thead>
         <tr>
-          <th >Id Empleado</th>
+         <!--  <th >Id Empleado</th> -->
           <th >Nombre(s)</th>
           <th >Apellido(s)</th>
           <th >Usuario</th>
-          <th >Teléfono</th>
+         <!--  <th >Teléfono</th> -->
           <th >Activo</th>
           <th ></th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let item of listViewTable.data">
-          <td>
+         <!--  <td>
             <div class="media align-items-center">
               <nz-avatar nzShape="square" style="background-color: white ;  color: #4F6F57;" [nzSrc]="item.photoURL"></nz-avatar>
               <div class="m-l-10">
                 <h5 class="m-b-0">{{item.displayName}}</h5>
               </div>
             </div>
-          </td>
+          </td> -->
           <td>{{item.firstName}}</td>
           <td>{{ item.lastName }}</td>
           <td>{{ item.email }}</td>
-          <td>{{ item.phone }}</td>
+        <!--   <td>{{ item.phone }}</td> -->
           <td>{{ item.active ? 'Si':'No' }}</td>
 
           <td class="text-right">
@@ -139,9 +133,7 @@
                     Editar
                   </li>
                   <li nz-menu-divider></li>
-                  <li nz-menu-item nz-popconfirm nzPopconfirmTitle="Está seguro de eliminar este registro?"
-                    (nzOnConfirm)="deletePermission(item)" (nzOnCancel)="cancelDelete()" nzPopconfirmPlacement="bottom"
-                    nz-button>
+                  <li nz-menu-item (click)="deletePermission(item)">
                     <i nz-icon nzTheme="twotone" nzTwotoneColor="#de4436" nzType="delete"></i>
                     Eliminar
                   </li>
@@ -230,10 +222,17 @@
       </nz-form-item>
 
       <nz-form-item>
-        <nz-form-label [nzSm]="8" [nzXs]="24" nzRequired nzFor="employeeId">Id Empleado</nz-form-label>
+        <nz-form-label [nzSm]="8" [nzXs]="24" nzRequired nzFor="employeeId">Id Empleado </nz-form-label>
         <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Debe contener entre 7 caracteres.">
           <input type="text" nz-input formControlName="employeeId" id="employeeId" placeholder="Id Empleado"/>
         </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>   
+        <nz-form-label [nzSm]="8" [nzXs]="24">Empresa</nz-form-label>   
+        <nz-select formControlName="customerId" nzAllowClear nzPlaceHolder="Seleccione una Empresa">
+          <nz-option *ngFor="let d of customerList" [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
+        </nz-select>   
       </nz-form-item>
   </form>
 

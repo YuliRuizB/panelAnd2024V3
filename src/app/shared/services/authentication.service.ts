@@ -66,7 +66,6 @@ export class AuthenticationService {
             this.getAccessLevel(result.user.uid);
           }
         });
-        // if (result.user) { this.updateUserData(result.user) };
       }).catch((error) => {
         this.notification.create('error', '¡Oops!, algo salió mal ...', error.message);
       });
@@ -81,12 +80,18 @@ export class AuthenticationService {
         const data = a.payload.data() as any;
         return { id: id, ...data }
       })
-    ).subscribe( (user:any) => {      
-      
-      //const hasRoleAccess = _.includes(['admin','student','user'], user.roles[0]);
+    ).subscribe( (user:any) => {
       const roles = ['admin', 'student', 'user'];
-      const userRoles = ['admin', 'user']; // Aquí deberías obtener los roles del usuario desde tu objeto
-      const hasRoleAccess = user.roles.some((role: string) => roles.includes(role));     
+      const userRoles = ['admin', 'user']; 
+      const hasRoleAccess = user.roles.some((role: string) => roles.includes(role));  
+      if (Array.isArray(user)) {
+        const hasIdSegment = user.some((item:any) => item.hasOwnProperty('idSegment'));
+        if (!hasIdSegment) {
+          //if not contains idSegment add one  JvgynF0jaP7n1S1oC7pX          
+          const userSegRef = this.afs.collection('users').doc(userId);
+          userSegRef.update({ idSegment: 'JvgynF0jaP7n1S1oC7pX' });       
+        } 
+      }
       if(!hasRoleAccess) {
         this.notification.create(
           'warning',
@@ -119,7 +124,6 @@ export class AuthenticationService {
   }
 
   async sendVerificationMail() {
-  
     try {
       const user = await this.afAuth.currentUser;
       
@@ -148,10 +152,7 @@ export class AuthenticationService {
   }
 
   // Returns true when user is looged in and email is verified
-  get isLoggedIn(): boolean {
-    // const user = JSON.parse(localStorage.getItem('user'));
-    // return (user !== null && user.emailVerified !== false) ? true : false;
-    // return (user !== null) ? true : false;
+  get isLoggedIn(): boolean {   
     return (!!this.user);
   }
 
@@ -177,7 +178,7 @@ export class AuthenticationService {
   sign up with username/password and sign in with social auth
   provider in Firestore database using AngularFirestore + AngularFirestoreDocument service */
   setUserData(user : any, form?: any) {
-    console.log(form);
+   // console.log(form);
     const userRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}`);
     const userData = {
       uid: user.uid,
@@ -199,6 +200,7 @@ export class AuthenticationService {
       rolId: form && form.rolId !== undefined ? form.rolId :  '54YNS3xlSLPc6UzNq2HJ',
       roundTrip: form.roundTrip,
       turno: form.turno,
+      idSegment: 'JvgynF0jaP7n1S1oC7pX',
       defaultRouteName: form.defaultRouteName,
       defaultRoute: form.defaultRoute,
       defaultRound: form.defaultRound
@@ -260,16 +262,6 @@ export class AuthenticationService {
     }
   }
 
-  // updateRolesAndPermissions(user) {
-  //   const userRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}`);
-  //   userRef.snapshotChanges().subscribe((data) => {
-  //     const userData = data.payload.data() as User;
-  //     const roles: Role[] = userData && userData.roles ? userData.roles : [];
-  //     const permissions: Permission[] = userData && userData.permissions ? userData.permissions : [];
-  //   },
-  //   (error: any) => console.log('Error: ', error));
-  // }
-
   googleLogin() {
     const provider = new GoogleAuthProvider();
     return this.oAuthLogin(provider);
@@ -293,42 +285,4 @@ export class AuthenticationService {
 function authState(auth: Auth) {
   throw new Error('Function not implemented.');
 }
-// import { Injectable } from '@angular/core';
-// import { HttpClient } from '@angular/common/http';
-// import { BehaviorSubject, Observable } from 'rxjs';
-// import { map } from 'rxjs/operators';
 
-// import { User } from '../interfaces/user.type';
-
-// const USER_AUTH_API_URL = '/api-url';
-
-// @Injectable()
-// export class AuthenticationService {
-//     private currentUserSubject: BehaviorSubject<User>;
-//     public currentUser: Observable<User>;
-
-//     constructor(private http: HttpClient) {
-//         this.currentUserSubject = new BehaviorSubject<User>(JSON.parse(localStorage.getItem('currentUser')));
-//         this.currentUser = this.currentUserSubject.asObservable();
-//     }
-
-//     public get currentUserValue(): User {
-//         return this.currentUserSubject.value;
-//     }
-
-//     login(username: string, password: string) {
-//         return this.http.post<any>(USER_AUTH_API_URL, { username, password })
-//         .pipe(map(user => {
-//             if (user && user.token) {
-//                 localStorage.setItem('currentUser', JSON.stringify(user));
-//                 this.currentUserSubject.next(user);
-//             }
-//             return user;
-//         }));
-//     }
-
-//     logout() {
-//         localStorage.removeItem('currentUser');
-//         this.currentUserSubject.next(null);
-//     }
-// }

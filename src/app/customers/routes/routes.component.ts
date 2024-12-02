@@ -11,6 +11,8 @@ import { RolService } from '../../shared/services/roles.service';
 import { AccountsService } from '../../shared/services/accounts.service';
 import { AuthenticationService } from '../../shared/services/authentication.service';
 import { RoutesService } from '../../shared/services/routes.service';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { CustomersService } from '../services/customers.service';
 
 export interface IRoute {
   id: string;
@@ -22,6 +24,10 @@ export interface IRoute {
   customerName: string;
   customerId: string;
   routeId?: string;
+  initialStart?: string;
+  initialEnd?: string;
+  duplicateCustomerId?: string;
+  vendorId?:string;
 }
 
 @Component({
@@ -40,8 +46,10 @@ export class RoutesComponents implements OnInit, OnDestroy {
   user: any;
   stopSubscription$: Subject<boolean> = new Subject();
   routesList: any = [];
+  routesListLoaded:any = [];
   accountsList: any = [];
   objectForm!: UntypedFormGroup;
+  objectFormDuplicate!: UntypedFormGroup;
 
   confirmModal!: NzModalRef;
   duplicateVisible: boolean = false;
@@ -52,7 +60,11 @@ export class RoutesComponents implements OnInit, OnDestroy {
   infoLoad: any = [];
   userlevelAccess:string | undefined;
   infoSegment: any = []
+  customersService= inject(CustomersService);
+  timeOptions: string[] = [];
+
 ;  constructor(
+  private afs: AngularFirestore,
     private modalService: NzModalService,    
     private messageService: NzMessageService,
     private fb: UntypedFormBuilder,
@@ -62,7 +74,7 @@ export class RoutesComponents implements OnInit, OnDestroy {
       this.user = user;
      // console.log(this.user); /idSegment
         if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) { 
-          
+          console.log(this.user.idSegment);
           this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
             takeUntil(this.stopSubscription$),
             map((a:any) => {
@@ -70,28 +82,30 @@ export class RoutesComponents implements OnInit, OnDestroy {
               const data = a.payload.data() as any;
               return { id, ...data }
             }),
-            tap(record => {             
-              this.infoSegment = record;            
+            tap(record => {          
+              this.infoSegment = record;     
+              this.getSubscriptions();        
               return record;
             })
           ).subscribe();
+          this.authService.user.subscribe(user => {     
+            this.user = user;
+           // console.log(this.user); //idSegment
+            if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {           
+              this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+                  this.infoLoad = item;
+                  this.userlevelAccess = this.infoLoad.optionAccessLavel;                    
+                       
+              });
+          }
+          });
         }      
     });
 
    }
 
   ngOnInit() {
-    this.authService.user.subscribe(user => {
-      this.getSubscriptions();
-      this.user = user;
-     // console.log(this.user); //idSegment
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {           
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-            this.infoLoad = item;
-            this.userlevelAccess = this.infoLoad.optionAccessLavel;                 
-        });
-    }
-    });
+ 
     this.objectForm = this.fb.group({
       active: [false, [Validators.required]],
       description: ['', [Validators.required]],
@@ -100,9 +114,42 @@ export class RoutesComponents implements OnInit, OnDestroy {
       name: ['', [Validators.minLength(5), Validators.maxLength(20), Validators.required]],
       routeId: [''],
       customerId: ['', [Validators.required]],
-      customerName: ['', [Validators.required]]
+      customerName: ['', [Validators.required]],
+      initialStart: [],
+      initialEnd: []
     });
+    this.objectFormDuplicate = this.fb.group({
+      active: [false, [Validators.required]],
+      description: ['', [Validators.required]],
+      imageUrl: [''],
+      kmzUrl: [''],
+      name: ['', [Validators.minLength(5), Validators.maxLength(20), Validators.required]],
+      routeId: [''],
+      customerId: ['', [Validators.required]],
+      customerName: [''],
+      initialStart: [],
+      initialEnd: [],
+      duplicateCustomerId : [],
+      newCustomerId: [],
+      newCustomerName: []
+    });
+
+    this.generateTimeOptions();
   }
+
+
+  generateTimeOptions(): void {
+    const startTime = 7; // 07:00 AM
+    const endTime = 21; // 09:00 PM
+  
+    for (let i = startTime; i <= endTime; i++) {
+      const hour = i % 12 || 12; // Convert 0 to 12
+      const suffix = i < 12 ? 'AM' : 'PM';
+      const timeStr = `${hour.toString().padStart(2, '0')}:${i % 60 === 30 ? '30' : '00'} ${suffix}`;
+      this.timeOptions.push(timeStr);
+    }
+  }
+
 
   ngOnDestroy() {
     this.stopSubscription$.next(false);
@@ -113,11 +160,8 @@ export class RoutesComponents implements OnInit, OnDestroy {
     this.messageService.create(type, message);
 }
 
-  getSubscriptions() {
-    
-
-    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-
+  getSubscriptions() {    
+    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual    
       this.routesService.getAllCustomersRoutesbyCustomer(this.user.customerId).pipe(
         takeUntil(this.stopSubscription$),
         map((actions:any) => actions.map((a:any) => {
@@ -127,6 +171,7 @@ export class RoutesComponents implements OnInit, OnDestroy {
         }))
       ).subscribe((routes: any) => {     
         this.routesList = routes;     
+        this.routesListLoaded = routes;
       });
       this.accountsService.getAccountsByCustomer(this.user.customerId).pipe(
         takeUntil(this.stopSubscription$),
@@ -138,11 +183,12 @@ export class RoutesComponents implements OnInit, OnDestroy {
       ).subscribe((accounts) => {     
         this.accountsList = [accounts];
       });
-    } else {
+    } else {     
       this.routesService.getAllCustomersRoutes().pipe(
         takeUntil(this.stopSubscription$),
-      ).subscribe((routes: IRoute[]) => {     
-        this.routesList = routes;     
+      ).subscribe((routes: any[]) => {     
+        this.routesList = routes;    
+        this.routesListLoaded = routes;        
       });
       this.accountsService.getAccounts().pipe(
         takeUntil(this.stopSubscription$),
@@ -154,8 +200,7 @@ export class RoutesComponents implements OnInit, OnDestroy {
       ).subscribe((accounts) => {     
         this.accountsList = accounts;
       });
-}
-   
+    }   
   }
 
   setCustomerName(event: any) {
@@ -170,7 +215,10 @@ export class RoutesComponents implements OnInit, OnDestroy {
   toggleActive(data: { customerId: string; routeId: string; }) {
     
     this.routesService.toggleActiveRoute(data.customerId, data.routeId, data).then(() => {
-    
+      
+      this.routesService.toggleActiveRouteVendor(data.customerId, data.routeId, data).then(() => {
+        this.sendMessage('sucess', "La ruta se modificó con éxito.");
+      });
     })
       .catch(err => console.log(err));
   }
@@ -187,7 +235,8 @@ export class RoutesComponents implements OnInit, OnDestroy {
   }
 
   duplicate(data: any) {
-    this.duplicateVisible = true;
+    this.duplicateVisible = true;   
+    this.objectFormDuplicate.patchValue({...data});
     this.selectedData = data;
     this.isDuplicateLoading = false;
   }
@@ -197,19 +246,18 @@ export class RoutesComponents implements OnInit, OnDestroy {
       const recordArray = _.filter(this.accountsList, s => {
         return s.id == event;
       });
-      const record = recordArray[0];
-      //.log(record);
+      const record = recordArray[0];    
       this.selectedData.newCustomerName = record.name;
       this.newCustomerName = record.name;
+      this.objectFormDuplicate.controls['newCustomerName'].setValue(record.name);
     }
   }
 
   createDuplicated() {
-    this.selectedData.newCustomerId = this.duplicateCustomerId;
-    //console.log(this.selectedData);
+    this.selectedData.newCustomerId = this.duplicateCustomerId;  
     this.isDuplicateLoading = true;
     if (this.userlevelAccess != "3") {
-      this.routesService.duplicateRouteWithStops(this.selectedData).then( () => {
+      this.routesService.duplicateRouteWithStops(this.objectFormDuplicate.value).then( () => {
         this.isDuplicateLoading = false;
         this.duplicateVisible = false;
       });
@@ -225,25 +273,153 @@ export class RoutesComponents implements OnInit, OnDestroy {
 
 
   addNewRoute(newProjectContent: TemplateRef<{}>) {
+    var advanceForm: object;
     const modal = this.modalService.create({
-      nzTitle: 'Nueva Ruta',
+      nzTitle: 'Nueva Operación',
       nzContent: newProjectContent,
       nzFooter: [
         {
-          label: 'Crear Ruta',
+          label: 'Crear Operación',
           type: 'primary',
           onClick: () => this.modalService.confirm({
             nzTitle: 'Está la información completa?',
             nzOnOk: () => {
              // console.log(this.objectForm.value);
-             // console.log(this.objectForm.valid);
+             // console.log(this.objectForm.valhabiap orid);
               if (this.objectForm.valid) {
-               // console.log(this.objectForm.value);
+               // console.log(this.objectForm.value);          
+                 const formValue = this.objectForm.value;
+                 const initialStart = formValue.initialStart.map((time: any) => ({                 
+                     value: time
+                 }));
+                 
+                 const initialEnd = formValue.initialEnd.map((time: any) => ({                 
+                   value: time
+               }));
                 if (this.userlevelAccess != "3") {
-                  this.routesService.setRoute(this.objectForm.controls['customerId'].value, this.objectForm.value)
-                  .then(() => {
-                    this.modalService.closeAll();
-                  });
+                  const key = this.afs.createId();
+               const routeObj = this.routesService.setRoute2(key, this.objectForm.controls['customerId'].value, this.objectForm.value)
+                  .then(() => {                 
+                  }).catch((err: any) => console.log(err));
+                  this.routesService.getInternalCustomer(this.objectForm.controls['customerId'].value).pipe(
+                    takeUntil(this.stopSubscription$),
+                    map((actions:any) => actions.map((a: any) => {
+                      const id = a.payload.doc.id;
+                      const data = a.payload.doc.data() as any;
+                      return { ...data, id };
+                    })))
+                    .subscribe((user: any) => { 
+                      const name = this.objectForm.controls['name'].value;
+                      const currentDate = new Date();
+                      const validTo = new Date(currentDate.getFullYear() + 3, currentDate.getMonth(), currentDate.getDate());
+                      const validToString = validTo.toISOString();
+                      console.log(name);
+                    var fileinfoURL = "";
+                    const send = {                    
+                      authorization: "portalAuth",
+                      operation_type: "in",
+                      method: "Liquidacion",
+                      transaction_type: "charge",
+                      card:
+                      {
+                        type: '',
+                        brand: '',
+                        address: '',
+                        card_number: '',
+                        holder_name: '',
+                        expiration_year: '',
+                        expiration_month: '',
+                        allows_charges: '',
+                        allows_payouts: '',
+                        bank_name: '',
+                        bank_code: '',
+                        points_card: '',
+                        points_type: '',
+                      },
+                      status:  "completed",
+                      conciliated: false,
+                      creation_date: new Date().toISOString(),          
+                      operation_date: new Date().toISOString(),
+                      description: "Pago a traves de portal",
+                      error_message: "",
+                      order_id: "portalOrder",
+                      currency: "MXN",
+                      amount: 0,
+                      customer:
+                      {
+                        name:"",
+                        last_name: "",
+                        email: "",
+                        phone_number: "",
+                        address: "",
+                        creation_date: "",
+                        external_id: "",
+                        clabe: ""
+                      },
+                      customerId: this.objectForm.controls['customerId'].value ,
+                      active: true,
+                      category: "permanente",
+                      date_created: new Date().toISOString(),
+                      product_description: "Pago a traves de portal proceso interno al crear una ruta",
+                      product_id: "",
+                      name: "Internal",
+                      isTaskIn: 'false',
+                      isTaskOut: 'false',
+                      type: "Servicio",
+                      isOpenpay: false,
+                      paidApp: 'portal',
+                      price: 0,
+                      round: '',
+                      routeId: key,
+                      routeName:name,
+                      stopDescription: '',
+                      stopId: "",
+                      stopName: "Internal",
+                      validFrom: new Date().toISOString(),
+                      validTo: validToString,
+                      idBoardingPass: user[0].id,
+                      idPurchasteRequest: '',
+                      is_courtesy: false,
+                      typePayment: "Liquidacion"
+                    }
+                      advanceForm = {
+                        active: true,
+                        amountPayment: 0,
+                        payment:  "Liquidacion",
+                        status: "completed",
+                        customer_id:  this.objectForm.controls['customerId'].value,
+                        customerId:  this.objectForm.controls['customerId'].value,
+                        creation_date:  new Date().toISOString(),
+                        name: "internal",
+                        price: 0,
+                        operation_date:  new Date().toISOString(),
+                        routeId: key,
+                        routeName:name,
+                        round: '',
+                        stopName: "internal",
+                        stopId: "",
+                        typePayment:  "Liquidacion",
+                        validFrom:  new Date().toISOString(),
+                        validTo: validToString,
+                        idBoardingPass: user[0].uid,
+                        idPurchaseRequest: '',
+                        baja: false,
+                        type: "Servicio",
+                        fileURL: fileinfoURL
+                      };
+                      //console.log(user[0].id);
+                      this.customersService.saveBoardingPassToUserPurchaseCollection(user[0].id, send) 
+                        .then((success) => {                     
+                       this.customersService.saveBoardingPassDetailToUserPurchaseCollection(user[0].id, key, send)
+                          .then((success) => {                          
+                            const userSend: object = user[0];                                 
+                            this.customersService.createPurchaseCloud(send,userSend,user[0].id);                
+                          }).catch((err) => { console.log("error"); });
+                           
+                      }).catch((err) => { console.log(err); });         
+
+                      this.modalService.closeAll();    
+                    });
                 } else {
                   this.sendMessage('error', "El usuario no tiene permisos para agregar datos, favor de contactar al administrador.");
                 }
@@ -257,5 +433,20 @@ export class RoutesComponents implements OnInit, OnDestroy {
       nzWidth: 500
     })
   }
+
+  getItems(searchbar: any) {
+    const q = searchbar; 
+    if (!q) {        
+        this.routesList = this.routesListLoaded.slice();
+        return; 
+    }
+    const text = q.toLowerCase(); 
+    this.routesList = this.routesListLoaded.filter((object: any) => {        
+        return Object.values(object).some((value: any) => {     
+            return String(value).toLowerCase().includes(text);
+        });
+    });
+}
+
 
 }

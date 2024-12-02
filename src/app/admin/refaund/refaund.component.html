@@ -1,0 +1,111 @@
+<div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
+  <div class="site-page-header-ghost-wrapper">
+    <nz-page-header [nzGhost]="false" style="background-color:#f9fbfd;">
+      <nz-page-header-title style="margin-left: 350px;">Reembolso</nz-page-header-title>
+      <nz-page-header-subtitle> Proceso
+      </nz-page-header-subtitle>
+    </nz-page-header>
+  </div>
+  <div class="body">
+    <div style="margin-bottom: 10px;" [formGroup]="dateFilterForm">
+      <div>
+        <label for="selectedOption" style="width: 150px;"> Selecciona un Cliente: </label>
+        <nz-select style="width: 300px; " [(ngModel)]="selectedOption" formControlName="selectedOption"
+          nzPlaceHolder="Selecciona un cliente">
+          <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.name">
+            {{ o.name }}</nz-option>
+        </nz-select>
+      </div>
+      <div>
+        <label style="width: 150px; margin-top: 10px;" for="type"> Status: </label>
+        <nz-select style="width: 350px;" formControlName="status" nzAllowClear
+          nzPlaceHolder="Selecciona un tipo de status">
+          <nz-option nzValue="Abierto" nzLabel="Abierto"></nz-option>
+          <nz-option nzValue="En Proceso" nzLabel="En Proceso"></nz-option>
+          <nz-option nzValue="Cerrado" nzLabel="Cerrado"></nz-option>
+          <nz-option nzValue="Cancelado" nzLabel="Cancelado"></nz-option>
+        </nz-select>
+      </div>
+    </div>
+    <div>
+      <a style="margin-left: 5px; margin-top: 10px; margin-bottom: 10px;" nz-button nzType="primary"
+        (click)="onDateChange()">Cargar</a>
+    </div>
+    <div>
+      <nz-table #basicTable1M nzTitle="Reembolso" [nzData]="mfDataM" [nzLoading]="loadingData" [nzLoadingDelay]="500"
+        ngSkipHydration>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Ruta</th>
+            <th>Tipo de Reembolso</th>
+            <th>Referencia</th>
+            <th>...</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let data of basicTable1M.data">
+            <td> {{ data.status }} </td>
+            <td>{{ data.date }}</td>
+            <td> {{ data.displayName }} </td>
+            <td> {{ data.route.description }} </td>
+            <td> {{ data.typeRefund.name }}
+            </td>
+            <!-- <td> <a (click)="loadUserInfoPanel(data.uidUsuario)">Ver</a> </td> -->
+            <td>
+              <a *ngIf="data.image" [href]="data.image" target="_blank">Ver Comprobante</a>
+            </td>
+            <td>
+              <a
+                (click)="openSeguimientoModal(data.uid, data.userFullData.token,data.userFullData.id, data)">Seguimiento</a>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+    </div>
+  </div>
+</div>
+<nz-modal [(nzVisible)]="isSeguimientoVisible" nzTitle="Seguimiento a Ticket" [nzContent]="modalContent1"
+  (nzOnOk)="handleOk()" [nzFooter]="modalPassFooter1" (nzOnCancel)="closeProgramModal()">
+  <ng-template #modalContent1>
+    <div style="background: #ECECEC;padding:30px;">
+    
+        <nz-card nzTitle="Datos Usuario">
+          <div><strong>Cliente:</strong> {{ modalDataUser.customerName }}</div>
+          <div><strong>Nombre:</strong> {{ modalDataUser.displayName }}</div>
+          <div><strong>Email:</strong> {{ modalDataUser.email }}</div>
+          <div><strong>Telefono:</strong> {{ modalDataUser.phone }}</div>
+          <div><strong>Telefono Alterno:</strong> {{ modalDataUser.phoneAlternative }}</div>
+          <div><strong>Matricula:</strong> {{ modalDataUser.matricula }}</div>
+          <div><strong>Ruta:</strong> {{ modalDataUser.name }}</div>
+          <div><strong>Turno:</strong> {{ modalDataUser.turn }}</div>
+        </nz-card>
+        <nz-card nzTitle="Datos Bancarios">         
+          <div><strong>Banco:</strong> {{ modalDataUser.bankCode }}</div>
+          <div><strong>Tarjeta o Clabe:</strong> {{ modalDataUser.bankCode }}</div>
+          <div><strong>Beneficiario:</strong> {{ modalDataUser.benefit }}</div>
+        </nz-card>
+        <nz-card nzTitle="Seguimiento">
+          <nz-select [(ngModel)]="selectedStatus" nzAllowClear nzPlaceHolder="Seleccione un estado"
+            style="width: 100%; margin-bottom: 15px;">
+            <nz-option nzValue="Abierto" nzLabel="Abierto"></nz-option>
+            <nz-option nzValue="En Proceso" nzLabel="En Proceso"></nz-option>
+            <nz-option nzValue="Cerrado" nzLabel="Cerrado"></nz-option>
+            <nz-option nzValue="Cancelado" nzLabel="Cancelado"></nz-option>
+          </nz-select>
+          <textarea rows="4" nz-input placeholder="Redactar Respuesta" [(ngModel)]="response"
+            style="width: 100%;"> </textarea>
+
+          <div *ngIf="errorMessage" style="color: red; margin-top: 10px;">
+            {{ errorMessage }}
+          </div>
+        </nz-card>     
+    </div>
+  </ng-template>
+  <ng-template #modalPassFooter1>
+    <button nz-button (click)="closeProgramModal()">Cerrar</button>
+    <button nz-button (click)="handleOk()">Enviar</button>
+  </ng-template>
+</nz-modal>

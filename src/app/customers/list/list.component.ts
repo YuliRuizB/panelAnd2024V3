@@ -1,7 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { map, takeUntil, tap } from 'rxjs/operators';
 import { AccountsService } from '../../shared/services/accounts.service';
-import { ColDef } from 'ag-grid-community';
 import { AuthenticationService } from '../../shared/services/authentication.service';
 import { Subject } from 'rxjs';
 
@@ -18,75 +17,7 @@ export class ListComponents implements OnInit {
   user: any;
   infoSegment: any = [];
   accountsList: any;
-  public popupParent;
-  columnDefs: ColDef[] = [
-    { headerName: '#', checkboxSelection: true, suppressSizeToFit: true },
-    { headerName: 'Id', field: 'id', hide: true },
-    { headerName: 'Nombre', field: 'name', enableRowGroup: true },
-    { headerName: 'Recorrido', field: 'description', enableRowGroup: true, filter: 'text' },
-    { headerName: 'Tipo', field: 'routeType', enableRowGroup: true, filter: 'text' },
-    {
-      headerName: 'Clima', field: 'has_ac', enableRowGroup: true, filter: 'text',
-      cellRenderer: function (params: { value: boolean; }) {
-        let color = params.value === true ? 'color--behance' : 'ag-faded';
-        let cellContent: string = '';
-        cellContent = `<i class="material-icons ${color}">ac_unit</i>`;
-        return cellContent;
-      }
-    },
-    {
-      headerName: 'Control de ruta', headerClass: 'centered',
-      /* TODO  children: [
-          {
-            headerName: 'Kmz', field: 'kmzUrl',
-            cellRenderer: function (params: { value: string; }) {
-              let icon = typeof (params.value) != 'undefined' && params.value != 'no route designated' ? 'check_circle' : 'cancel';
-              let color = typeof (params.value) != 'undefined' && params.value != 'no route designated' ? 'color--success' : 'color--dark';
-              let cellContent: string = '';
-              cellContent = `<i class="material-icons ${color}">${icon}</i>`;
-              return cellContent;
-            }
-          },
-          {
-            headerName: 'Geocerca partida', field: 'geofenceBegin',
-            cellRenderer: function (params: { value: any; }) {
-              let icon = typeof (params.value) != 'undefined' && (params.value).length > 0 ? 'check_circle' : 'cancel';
-              let color = typeof (params.value) != 'undefined' && (params.value).length > 0 ? 'color--success' : 'color--dark';
-              let cellContent: string = '';
-              cellContent = `<i class="material-icons ${color}">${icon}</i>`;
-              return cellContent;
-            }
-          },
-          {
-            headerName: 'Geocerca destino', field: 'geofenceEnd',
-            cellRenderer: function (params: { value: any; }) {
-              let icon = typeof (params.value) != 'undefined' && (params.value).length > 0 ? 'check_circle' : 'cancel';
-              let color = typeof (params.value) != 'undefined' && (params.value).length > 0 ? 'color--success' : 'color--dark';
-              let cellContent: string = '';
-              cellContent = `<i class="material-icons ${color}">${icon}</i>`;
-              return cellContent;
-            }
-          },
-          {
-            headerName: 'Activa',
-            field: 'active',
-            cellEditor: 'popupSelect',
-            editable: true,
-            cellRenderer: function (params: { value: any; }) {
-              let icon = typeof (params.value) == 'undefined' ? 'cancel' : params.value ? 'check_circle' : 'cancel';
-              let color = typeof (params.value) == 'undefined' ? 'color-dark' : params.value ? 'color--success' : 'color--dark';
-              let cellContent: string = '';
-              cellContent = `<i class="material-icons ${color}">${icon}</i>`;
-              return cellContent;
-            },
-            cellEditorParams: {
-              values: ['Si', 'No']
-            }
-          }
-        ] */
-    }
-  ];
-
+  public popupParent; 
   constructor() {
     this.popupParent = document.querySelector("body");
     this.authService.user.subscribe(user => {

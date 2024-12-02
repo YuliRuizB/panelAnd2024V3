@@ -1,3 +1,11 @@
+<div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
+  <div class="site-page-header-ghost-wrapper">
+    <nz-page-header [nzGhost]="false"    style="background-color:#f9fbfd;">
+      <nz-page-header-title  style="margin-left: 350px;">Programación</nz-page-header-title>
+      <nz-page-header-subtitle >Programación de operaciones del Sistema
+      </nz-page-header-subtitle>
+    </nz-page-header>
+  </div>
 <div nz-row> 
   <div nz-col nzSpan="9"> 
     <nz-card style="width:100%;" nzTitle="Programación ({{ date | date: 'mediumDate' }} )" [nzExtra]="extraTemplate">
@@ -33,7 +41,7 @@
               <tr>
                 <th>Inicia</th>
                 <th>Empresa</th>
-                <th>Ruta</th>
+                <th>Operación</th>
                 <th>Programa / Turno</th>
                 <th>PR</th>
                 <th>Vehículo</th>
@@ -53,23 +61,25 @@
                 <td>{{ formatStartedAt(data.startedAt) }}</td>        
                 <td>{{ formatEndedAt(data.endedAt) }}</td>          
                 <td>
-                  <a nz-button style="color: #4F6F57; border: none;" [nzSize]="size" nzType="link" (click)="showModalIn(data)">Editar</a>                                
+                  <a nz-button style="color: #4F6F57; border: none;"  nzType="link" (click)="showModalIn(data)">Editar</a>/           
+                  <a nz-popconfirm  style="color: #4F6F57; border: none;"  
+                  nzType="link" 
+                  nzPopconfirmTitle="¿Estás seguro de borrar la asignación?" 
+                  nzCancelText="Cancelar"
+                  nzOkText="Si" nzPopconfirmPlacement="bottom"
+                  nzIcon="edit" (nzOnConfirm)="okDeleteAssign(data)"
+                  (nzOnCancel)="handleCancelDel()">Borrar </a>
                 </td>
               </tr>
             </tbody>
           </nz-table>
-         <!--  <ag-grid-angular #agGrid style="width: 100%; height: 450px;" class="ag-theme-material" [rowData]="rowData"
-            [rowSelection]="rowSelectionEdit" (gridReady)="onGridReady($event)" [columnDefs]="columnFleetDefsProgram"
-            [defaultColDef]="columnProgram" [groupIncludeFooter]="true" (selectionChanged)="onSelectionChangedEdit($event)"
-            [sideBar]="false">
-          </ag-grid-angular> -->
         </div>
 
       </div>
     </nz-card>
   </div>
 </div>
- 
+</div>
 <!-- 
 <nz-modal ([nzVisible])="visible" nzTitle="Alertas" (nzOnClose)="close()"
 [nzContent]="modalContentAlert">
@@ -118,7 +128,7 @@
         <a nz-dropdown [nzDropdownMenu]="menuClient"> Empresa
           <i nz-icon nzType="down"></i>
         </a>
-        <a nz-dropdown [nzDropdownMenu]="menuRoute"> Ruta
+        <a nz-dropdown [nzDropdownMenu]="menuRoute"> Operación
           <i nz-icon nzType="down"></i>
         </a>
         <nz-dropdown-menu #menuClient="nzDropdownMenu">
@@ -133,17 +143,14 @@
         </nz-dropdown-menu>
       </div>
       <div style="margin-left: 33px;"  class="col-">
-        Ruta: {{routePath}}
+        Operación: {{routePath}}
       </div>
       <div style="margin-left: 33px;" class="col-">
         <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"  (click)="handleSearch()"><i nz-icon ></i>
           Buscar</button>
       </div>
     </div>   
-   <!--  <div style="margin-bottom: 5px; margin-left: -10px; " >
-      <div>
-      <input type="text" (input)="onQuickFilterChanged()" id="quickFilter" placeholder="Filtrar por..." />
-    </div> -->
+
     <div>
       Registros seleccionados {{ regSelected }}
     </div>
@@ -151,11 +158,19 @@
       {{ regFound }}
     </div>  
     <div>
-      <nz-table #basicTable [nzData]="rowDataAsignModal" ngSkipHydration >
+      <nz-table #basicTable [nzData]="rowDataAsignModal" nzShowSizeChanger 
+      (nzCurrentPageDataChange)="onCurrentPageDataChange($event)"
+       ngSkipHydration >
         <thead>
           <tr>
+            <th
+            [nzSelections]="listOfSelection"
+            [(nzChecked)]="checked"
+            [nzIndeterminate]="indeterminate"
+            (nzCheckedChange)="onAllChecked($event)"
+          ></th>
             <th>Empresa</th>
-            <th>Ruta</th>
+            <th>Operación</th>
             <th>PR</th>           
             <th>Vehículo</th>
             <th>Inició</th>
@@ -164,7 +179,8 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let data of basicTable.data">    
+          <tr *ngFor="let data of basicTable.data">
+            <td [nzChecked]="setOfCheckedId.has(data.id)" (nzCheckedChange)="onItemChecked(data, $event)"></td>
             <td>{{data.customerName}}</td>
             <td>{{data.routeName}}</td>            
             <td>{{data.driverName}}</td>
@@ -175,12 +191,6 @@
           </tr>
         </tbody>
       </nz-table>
-        <!--       <ag-grid-angular #agGridProg style="width: 100%; height: 450px;" class="ag-theme-material"
-        [columnDefs]="columnFleetDefsAsign" [rowData]="rowDataAsignModal" [rowSelection]="rowSelection"
-        [suppressRowClickSelection]="true"
-        [defaultColDef]="columnAsign" [groupIncludeFooter]="true" (gridReady)="onGridReadyP($event)"
-        (selectionChanged)="onSelectionChanged($event)" [sideBar]="false"[suppressChangeDetection]="false">
-      </ag-grid-angular> -->
     </div>
    <!--  {{this.arrDrivers.sort()}}
     {{this.arrVehicle.sort()}} -->
@@ -204,7 +214,7 @@
         </nz-form-control>
       </nz-form-item>
       <nz-form-item>
-        <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="routeName">Ruta</nz-form-label>
+        <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="routeName">Operación</nz-form-label>
         <nz-form-control [nzSm]="16" [nzXs]="24" >
           <input type="text" nz-input formControlName="routeName" id="routeName"/>
         </nz-form-control>

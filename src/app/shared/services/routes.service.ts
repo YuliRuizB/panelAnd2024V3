@@ -9,6 +9,7 @@ import { IVendor } from '../interfaces/vendor.type';
 import { IRoute } from '../interfaces/route.type';
 import { uniq } from 'lodash';
 import { Route } from '@angular/router';
+import { ConsoleSqlOutline } from '@ant-design/icons-angular/icons';
 
 interface Customer {
   id: string;
@@ -30,8 +31,47 @@ export class RoutesService {
     return routes.snapshotChanges();
   }
 
+  getInternalCustomer(customerId: string) {
+    const routes = this.afs.collection('users', ref => ref
+    .where('customerId', '==', customerId)
+    .where('status','==','internal'));
+    return routes.snapshotChanges();
+  }
+
+  getQuotesByRouteandProgram(customerId: string, routeId:string,transportType:string){
+    const info = this.afs.collection('quotes', ref => ref
+    .where('customerId', '==', customerId)
+    .where('transportType', '==', transportType)
+    .where('routeId', '==', routeId));
+    return info.snapshotChanges();
+
+  }
+
+
+  getQuotesByRouteByBoardingPass(customerId: string, routeId:string,transportType:string){
+    console.log(customerId);
+    
+    const info = this.afs.collectionGroup('boardingPasses', ref => ref
+    .where('customerId', '==', customerId)
+    //.where('quotesData0.transportType', '==', transportType)
+    .where('routeId', '==', routeId));
+    return info.snapshotChanges();
+  }
+
+  getProducts(customerId: string) {
+    const routes =this.afs.collection('customers').doc(customerId).collection('products', ref => 
+      ref.where('active', '==', true));
+    return routes.snapshotChanges();
+  }
+
   setRoute(customerId: string, routeObj: any) {
     const key = this.afs.createId();
+    routeObj.routeId = key;
+    const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(key);
+    return route.set(routeObj);
+  }
+  setRoute2(key:any, customerId: string, routeObj: any) {
+  
     routeObj.routeId = key;
     const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(key);
     return route.set(routeObj);
@@ -41,35 +81,22 @@ export class RoutesService {
     let routeObj = { ...routeSource};
     const key = this.afs.createId();   
     const newRoute = {
-      customerId: routeObj.newCustomerId,
+      customerId: routeObj.duplicateCustomerId,
       customerName: routeObj.newCustomerName,
       active: false,
       description: routeObj.description,
       name: routeObj.name,
-      routeId: key
+      routeId: key,
+      initialStart: routeObj.initialStart
     }
+    console.log(newRoute);
     routeObj.routeId = key;
-    const route = this.afs.collection('customers').doc(routeObj.newCustomerId).collection('routes').doc(key);
-    /* const stops = firebase.firestore().collection('customers').doc(routeSource.customerId).collection('routes').doc(routeSource.routeId).collection('stops');
-    return stops.get().then( querySnapShot => {
-      console.log(querySnapShot.docs);
-      route.set(newRoute).then( () => {
-        if(!querySnapShot.empty) {
-          const newStopsRef = this.afs.collection('customers').doc(routeObj.newCustomerId).collection('routes').doc(key).collection('stops');
-          const docs = querySnapShot.docs;
-          docs.forEach(doc => {
-            const document = doc.data();
-            newStopsRef.add(document);
-          });
-        }
-      })
-    }) */
+    const route = this.afs.collection('customers').doc(routeObj.duplicateCustomerId).collection('routes').doc(key);  
     const stops = this.afs.collection('customers').doc(routeSource.customerId).collection('routes').doc(routeSource.routeId).collection('stops');
-
     return stops.get().toPromise().then((querySnapShot:any) => {    
       return route.set(newRoute).then(() => {
         if (!querySnapShot.empty) {
-          const newStopsRef = this.afs.collection('customers').doc(routeObj.newCustomerId).collection('routes').doc(key).collection('stops');
+          const newStopsRef = this.afs.collection('customers').doc(routeObj.duplicateCustomerId).collection('routes').doc(key).collection('stops');
           const docs = querySnapShot.docs;
           const promises: Promise<DocumentReference<any>>[] = docs.map((doc:any) => {
             const document = doc.data();
@@ -80,6 +107,26 @@ export class RoutesService {
         }
         return Promise.resolve();
       });
+    });
+  }
+
+  toggleActiveRouteVendor(customerId: string, routeId: string, routeObj: any) {
+    const ruteVendor = this.afs.collectionGroup('routesAccess', ref => ref
+      .where('customerId', '==', customerId)
+      .where('routeId', '==', routeId));
+  
+    return ruteVendor.get().toPromise().then(querySnapshot => {
+      if (!querySnapshot) {
+        throw new Error('Query snapshot is undefined.');
+      }
+      const batch = this.afs.firestore.batch();
+      querySnapshot.forEach(doc => {
+        batch.update(doc.ref, { active: !routeObj.active });
+      });
+      return batch.commit();
+    }).catch(error => {
+      console.error('Error updating route vendors: ', error);
+      throw error;
     });
   }
 
@@ -181,20 +228,24 @@ export class RoutesService {
             return of([]);
           } else {
             const routeObservables = customers.map((customer: Customer) =>
-              this.afs.collection('customers').doc(customer.id).collection<Route>('routes').valueChanges().pipe(
-                map((routes: Route[]) => routes.map(route => ({ customerId: customer.id, customerName: customer.name, ...route })))
+              this.afs.collection('customers').doc(customer.id).collection<any>('routes').valueChanges().pipe(
+                map((routes: any[]) => routes.map((route: any) => ({               
+                  ...route 
+                })))
               )
             );
+            console.log(routeObservables);
             return combineLatest([of(customers), combineLatest(routeObservables)]);
           }
         }),
         map(([customers, routes]) => {         
-          return routes ? _.flatten(routes as Route[][]) : [];
+          return routes ? _.flatten(routes as IRoute[][]) : [];
         })
       )
       return this.joined$;
   }
   getAllCustomersRoutesbyCustomer(customerId:string) {
+  //  console.log("1");
     const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes');
       return customerbyRoute.snapshotChanges();
   }
@@ -340,6 +391,9 @@ export class RoutesService {
       round3: object.round3
     };
     //wrappedData.geopoint = new firebase.firestore.GeoPoint(+object.latitude, +object.longitude);
+    console.log(wrappedData);
+    console.log(object.id);
+    console.log("wrappedData");
     wrappedData.geopoint = new GeoPoint(+object.latitude, +object.longitude);   
     const stopPoint = this.afs.collection('customers').doc(accountId).collection('routes').doc(routeId).collection('stops').doc(object.id);
     return stopPoint.update(wrappedData);

@@ -18,7 +18,6 @@ import { ProductsService } from '../../shared/services/products.service';
 import { RolService } from '../../shared/services/roles.service';
 import { AuthenticationService } from '../../shared/services/authentication.service';
 import { DashboardService } from '../../shared/services/admin/dashboard.service';
-import 'ag-grid-enterprise';
 import { CustomersService } from '../services/customers.service';
 import { AccountsService } from '../../shared/services/accounts.service';
 
@@ -240,6 +239,7 @@ export class DashboardComponents implements OnInit, OnDestroy {
 
     // subscribe to changes
     productsObservable.subscribe((products: any) => {
+      console.log(products);
       this.products = products;
     });
 

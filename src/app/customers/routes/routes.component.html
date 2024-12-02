@@ -1,43 +1,60 @@
+<div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
+  <div class="site-page-header-ghost-wrapper">
+    <nz-page-header [nzGhost]="false"   style="background-color:#f9fbfd;">
+      <nz-page-header-title  style="margin-left: 350px;">Operación</nz-page-header-title>
+      <nz-page-header-subtitle >Operaciones del Sistema
+      </nz-page-header-subtitle>
+    </nz-page-header>
+  </div>
+
 <div class="page-header">
   <div class="row align-items-md-center">
     <div class="col-md-6">
-      <div class="row">
-        <div class="col-md-5">
-          <nz-input-group [nzPrefix]="searchPrefix">
-            <input type="text" nz-input placeholder="Buscar ruta">
-          </nz-input-group>
-          <ng-template #searchPrefix>
-            <i class="opacity-04" nz-icon nzType="search"></i>
-          </ng-template>
-        </div>
-      </div>
+      <div style="margin-left: 10px; width: 280px;">
+          <nz-form-control>
+            <nz-input-group [nzSuffix]="suffixIconSearch">
+              <input type="text" #searchInput nz-input placeholder="Selecciona una Operación" (keyup)="getItems(searchInput.value)"/>
+            </nz-input-group>
+            <ng-template #suffixIconSearch>
+              <span nz-icon nzType="search"></span>
+           </ng-template>         
+          </nz-form-control>    
+        </div>                    
     </div>
     <div class="col-md-6">
       <div class="text-md-right m-v-10">
-       <!--  <nz-radio-group class="m-r-10" [(ngModel)]="view">
-          <label nz-radio-button nzValue="cardView" nzTitle="Card View" nzPlacement="bottom" nz-tooltip>
-            <i class="font-size-16" nz-icon nzType="appstore" theme="outline"></i>
-          </label>
-          <label nz-radio-button nzValue="listView" nzTitle="List View" nzPlacement="bottom" nz-tooltip>
-            <i class="font-size-16" nz-icon nzType="ordered-list" theme="outline"></i>
-          </label>
-        </nz-radio-group> -->
         <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;"(click)="addNewRoute(newProjectContent)">
           <i nz-icon nzType="plus"></i>
-          <span>Agregar ruta</span>
+          <span>Agregar Operación</span>
         </button>
         <ng-template #newProjectContent>
           <form [formGroup]="objectForm" nz-form nzLayout="vertical">
             <nz-form-item>
-              <nz-form-label>Nombre de la Ruta</nz-form-label>
+              <nz-form-label>Nombre de la Operación</nz-form-label>
               <nz-form-control>
-                <input type="text" formControlName="name" nz-input placeholder="Escriba el nombre de la ruta">
+                <input type="text" formControlName="name" nz-input placeholder="Escriba el nombre de la Operación">
               </nz-form-control>
             </nz-form-item>
             <nz-form-item>
               <nz-form-label>Descripción</nz-form-label>
               <nz-form-control>
                 <textarea formControlName="description" nz-input></textarea>
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+              <nz-form-label>Horarios Entradas (Opcional)</nz-form-label>
+              <nz-form-control>
+                <nz-select formControlName="initialStart" nzMode="multiple">         
+                    <nz-option *ngFor="let time of timeOptions" [nzValue]="time" [nzLabel]="time"></nz-option>
+                  </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+              <nz-form-label>Horarios Salidas (Opcional)</nz-form-label>
+              <nz-form-control>
+                <nz-select formControlName="initialEnd" nzMode="multiple">         
+                    <nz-option *ngFor="let time of timeOptions" [nzValue]="time" [nzLabel]="time"></nz-option>
+                  </nz-select>
               </nz-form-control>
             </nz-form-item>
             <div class="row">
@@ -126,9 +143,10 @@
         <tr>
           <th>Empresa</th>
           <th>Nombre</th>
-          <th >Descripción</th>
-        <!--   <th >Estaciones</th> -->
-          <th >Status</th>
+          <th>Horario Entradas / Salidas</th>
+          <th >Descripción</th>         
+     
+        
           <th >...</th>
         </tr>
       </thead>
@@ -136,12 +154,15 @@
         <tr *ngFor="let item of listViewTable.data">
           <td>{{item.customerName }}</td>
           <td>{{item.name}}</td>
-          <td>{{item.description}}</td>
-       <!--    <td>{{item.stopCounts}}</td> -->
           <td>
+            <span *ngIf="item.initialStart?.length; else empty">{{ item.initialStart }} /</span> 
+            <span *ngIf="item.initialEnd?.length; else empty">{{ item.initialEnd }}</span>
+            <ng-template #empty></ng-template>
+          </td>
+          <td>{{item.description}}
             <nz-tag class="m-b-0" *ngIf="item.active" [nzColor]="'blue'">Activa</nz-tag>
             <nz-tag class="m-b-0" *ngIf="!item.active" [nzColor]="'cyan'">Inactiva</nz-tag>
-          </td>
+          </td>         
           <td class="text-right">
             <div>
               <a class="text-gray font-size-18" nz-dropdown nzPlacement="bottomRight" nzTrigger="click"
@@ -187,25 +208,44 @@
   </nz-card>
 </div>
 
-<nz-modal [(nzVisible)]="duplicateVisible" nzTitle="Duplicar ruta para la empresa" (nzOnCancel)="handleCancel()"
+<nz-modal [(nzVisible)]="duplicateVisible" nzTitle="Duplicar la operación para la empresa"
+ (nzOnCancel)="handleCancel()"  (nzOnOk)="createDuplicated()"
 [nzContent]="modalContent">
 </nz-modal>
 <ng-template #modalContent>
   <div class="row">
     <div class="col-sm-12">
-      <form nz-form>
+      <form nz-form [formGroup]="objectFormDuplicate" nz-form nzLayout="vertical">
         <nz-form-item>
           <nz-form-label nzFor="customerId">Empresa</nz-form-label>
-          <nz-select [(ngModel)]="duplicateCustomerId" name="duplicateCustomerId" nzAllowClear (ngModelChange)="onCustomerChange($event)" nzPlaceHolder="Selecciona la empresa">
-            <nz-option *ngFor="let o of accountsList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon
+          <nz-select formControlName="duplicateCustomerId" name="duplicateCustomerId" nzAllowClear 
+          (ngModelChange)="onCustomerChange($event)" nzPlaceHolder="Selecciona la empresa">
+            <nz-option *ngFor="let o of accountsList" nzCustomContent [nzLabel]="o.name" 
+            [nzValue]="o.id"><i nz-icon
                ></i> {{ o.name }} <br /> {{ o.description }}</nz-option>
           </nz-select>
         </nz-form-item>
+        <nz-form-item>
+          <nz-form-label>Nombre de la Operación</nz-form-label>
+          <nz-form-control>
+            <input type="text" formControlName="name" nz-input placeholder="Escriba el nombre de la Operación">
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label>Descripción</nz-form-label>
+          <nz-form-control>
+            <textarea formControlName="description" nz-input></textarea>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label>Horario Preliminar (Opcional)</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="initialStart">         
+                <nz-option *ngFor="let time of timeOptions" [nzValue]="time" [nzLabel]="time"></nz-option>
+              </nz-select>
+          </nz-form-control>
+        </nz-form-item>
       </form>
     </div>
-  </div>
-  <div *nzModalFooter>
-    <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;"(click)="handleCancel()">Cancelar</button>
-    <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="createDuplicated()" >Duplicar</button>
-  </div>
+  </div>  
 </ng-template>

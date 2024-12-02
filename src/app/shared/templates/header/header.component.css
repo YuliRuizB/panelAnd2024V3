@@ -1,0 +1,34 @@
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: white;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.logo-container {
+    box-sizing: border-box;
+    width: 280px;
+}
+
+.right-content {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+}
+
+.nav-wrap {
+    box-sizing: border-box;
+    background-color: white;
+    color: #4F6F57;
+    display: flex;
+    align-items: center;
+}

@@ -108,10 +108,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
     
     if (this.userlevelAccess != "3") {
-      const submitForm = this.accountsService.setAccount(this.validateForm.value);
+      const submitForm = this.accountsService.setAccount(this.validateForm.value, this.currentConsecutive);
       submitForm.then( (result) => {
        
-        if (this.currentJobType.length > 0) {        
+        if (this.currentJobType.length > 0) {       
+
           this.accountsService.updateJobType(this.currentJobType, this.currentConsecutive).then(() => {     
            }, err => {
              console.log('err: ', err)
@@ -156,6 +157,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }),
       ).subscribe((accounts) => {
         this.accountsList = [accounts];
+        console.log( this.accountsList);
         this.loading = false;      
       });
     } else {
@@ -167,6 +169,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }))
       ).subscribe((accounts) => {
         this.accountsList = accounts;
+        console.log( this.accountsList);
+        
         this.loading = false;
 
       });
@@ -222,9 +226,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
           let consecutive = searchJob[0].consecutive;
           this.currentJobType = event;
           consecutive = parseInt(consecutive, 10) + 1;
-          consecutive =consecutive.toString().padStart(4, '0');
-          this.currentConsecutive = consecutive;
+          consecutive =consecutive.toString().padStart(4, '0');         
           this.validateForm.controls['custConsecutive'].setValue( searchJob[0].type + consecutive); 
+          this.currentConsecutive =  consecutive;
       } 
     }
 }

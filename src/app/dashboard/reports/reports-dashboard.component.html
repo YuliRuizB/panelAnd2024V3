@@ -1,53 +1,112 @@
-<div style="margin: buttom 15px;">
-    <div class="site-page-header-ghost-wrapper">
-    <nz-page-header [nzGhost]="false">
-        <nz-page-header-title>Reportes</nz-page-header-title>
-        <nz-page-header-subtitle></nz-page-header-subtitle>
-    
+<div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
+  <div class="site-page-header-ghost-wrapper">
+    <nz-page-header [nzGhost]="false" style="background-color:#f9fbfd;">
+      <nz-page-header-title style="margin-left: 350px;">Reportes</nz-page-header-title>
+      <nz-page-header-subtitle>Reportes General
+      </nz-page-header-subtitle>
     </nz-page-header>
-
-    <div class="body">
-      <nz-tabset>
-        <nz-tab nzTitle="Pagos Por Producto / Servicio">
+  </div>
+  <div class="body">
+    <nz-tabset>
+      <nz-tab nzTitle="Pagos Por Producto / Servicio">
+        <div style="margin-bottom: 10px;">
+          <form nz-form nzLayout="horizontal" [formGroup]="validateForm" (ngSubmit)="submitForm()">
+            <nz-select style="width: 650px;" formControlName="customerId" (ngModelChange)="log($event)"
+              nzPlaceHolder="Selecciona un cliente">
+              <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                {{ o.name }}</nz-option>
+            </nz-select>
+            <nz-select style="width: 650px;" formControlName="id" nzAllowClear
+              nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelect($event)">
+              <nz-option *ngFor="let o of products" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                <i nz-icon></i> {{ o.name }} ${{ o.price }}
+              </nz-option>
+            </nz-select>
+            <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+              (click)="submitForm()">Aceptar</button>
+          </form>
+        </div>
+        <div>
+          <nz-table #basicTable [nzData]="rowDataPay" ngSkipHydration>
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Operación</th>
+                <th>Usuarios</th>
+                <th>Monto</th>
+                <th>Activa</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let data of basicTable.data">
+                <td>{{ data.customerName }}</td>
+                <td>{{data.routeName}}</td>
+                <td>{{ customCellRenderer({ data: { passes: data.passes } }) }}</td>
+                <td>{{ customCellRendererMonto({ data: { passes: data.passes } }) }}</td>
+                <td>{{ formatPermission(data.permission) }}</td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
+      </nz-tab>
+      <nz-tab nzTitle="Pagos por Operación">
+        <div style="margin-bottom: 10px;">
+          <form nz-form nzLayout="horizontal" [formGroup]="validateFormO" (ngSubmit)="submitFormO()">
+            <nz-select style="width: 650px;" formControlName="customerId" 
+            nzPlaceHolder="Selecciona un cliente">
+            <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+              {{ o.name }}</nz-option>
+          </nz-select>
+          <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+          (click)="submitFormO()">Aceptar</button>
+          </form>
+        </div>
+        <div>
+          <nz-table #basicTable1 [nzData]="rowData" ngSkipHydration>
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Operación</th>
+                <th>Usuarios</th>
+                <th>Monto</th>
+                <th>Activa</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let data of basicTable1.data">
+                <td>{{ data.customerName }}</td>
+                <td>{{data.routeName}}</td>
+                <td>{{ customCellRenderer({ data: { passes: data.passes } }) }}</td>
+                <td>{{ customCellRendererMonto({ data: { passes: data.passes } }) }}</td>
+                <td>{{ formatPermission(data.permission) }}</td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
+      </nz-tab>
+      <nz-tab nzTitle="Pagos por turno">
+        <div id="turn">
           <div style="margin-bottom: 10px;">
-            <form nz-form nzLayout="horizontal" [formGroup]="validateForm" (ngSubmit)="submitForm()">
-              <nz-select style="width: 650px;" formControlName="id" nzAllowClear
-                nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelect($event)">
-                <div *ngFor="let o of products">
-                  <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon ></i> {{ o.name
-                    }} ${{ o.price }}
-                  </nz-option>
+            <form nz-form nzLayout="horizontal" [formGroup]="validateFormTurn" (ngSubmit)="submitFormTurn()"
+              class="horizontal-form">
+              <div class="form-container">
+                <div class="form-row">
+                  <div class="form-item">
+                    <nz-select style="width: 650px;" formControlName="customerId" (ngModelChange)="log($event)"
+                      nzPlaceHolder="Selecciona un cliente">
+                      <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                        {{ o.name }}
+                      </nz-option>
+                    </nz-select>
+                  </div>
                 </div>
-              </nz-select>
-              <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="submitForm()">Aceptar</button>
-            </form>
-          </div>
-          <div>
-            <ag-grid-angular #agGrid style="width: 100%; height: 500px;" id="myGridPaymentByProduct"
-              class="ag-theme-material" [columnDefs]="columnDefsPagos" [defaultColDef]="defaultColDef" [masterDetail]="true"
-              [detailCellRendererParams]="detailCellRendererParamsPagos" [rowData]="rowDataPay" [sideBar]="sideBar"
-              (firstDataRendered)="onFirstDataRendered($event)" (gridReady)="onGridReady($event)"></ag-grid-angular>
-          </div>
-    
-        </nz-tab>
-        <nz-tab nzTitle="Pagos por ruta">
-          <ag-grid-angular #agGrid1 style="width: 100%; height: 500px;" id="myGridByRoute" class="ag-theme-material"
-            [columnDefs]="columnDefsPagos" [defaultColDef]="defaultColDef" [masterDetail]="true"
-            [detailCellRendererParams]="detailCellRendererParamsPagos" [rowData]="rowData" [sideBar]="sideBar"
-            (firstDataRendered)="onFirstDataRendered($event)" (gridReady)="onGridReady($event)"></ag-grid-angular>
-        </nz-tab>
-        <nz-tab nzTitle="Pagos por turno">
-          <div id="turn">
-            <div style="margin-bottom: 10px;">
-              <form nz-form nzLayout="horizontal" [formGroup]="validateFormTurn" (ngSubmit)="submitFormTurn()"
-                class="horizontal-form">
+
                 <div class="form-row">
                   <div class="form-item">
                     <nz-select style="width: 650px;" formControlName="id" nzAllowClear
                       nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelect($event)">
                       <div *ngFor="let o of products">
-                        <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon ></i> {{
-                          o.name }}
+                        <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon></i> {{ o.name }}
                           ${{ o.price }}
                         </nz-option>
                       </div>
@@ -56,164 +115,339 @@
                   <div class="form-item">
                     <nz-select style="width: 100px;" formControlName="turno" nzAllowClear nzPlaceHolder="Turno">
                       <div *ngFor="let o of shift">
-                        <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon ></i> {{
-                          o.name }}
+                        <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon></i> {{ o.name }}
                         </nz-option>
                       </div>
                     </nz-select>
                   </div>
                   <div class="form-item">
-                    <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="submitFormTurn()">Aceptar</button>
+                    <button nz-button style="background-color: #4F6F57; color: #f6f3ea;"
+                      (click)="submitFormTurn()">Aceptar</button>
                   </div>
                 </div>
+              </div>
+            </form>
+
+
+            <div class="form-row">
+              Usuarios totales: {{TotalUsers}}
+            </div>
+          </div>
+
+          <div>
+            <nz-table #basicTable2 [nzData]="rowDataPayTurn" ngSkipHydration>
+              <thead>
+                <tr>
+                  <th>Empresa</th>
+                  <th>Operación</th>
+                  <th>Usuarios</th>
+                  <th>Monto</th>
+                  <th>Activa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let data of basicTable2.data">
+                  <td>{{ data.customerName }}</td>
+                  <td>{{data.routeName}}</td>
+                  <td>{{ customCellRenderer({ data: { passes: data.passes } }) }}</td>
+                  <td>{{ customCellRendererMonto({ data: { passes: data.passes } }) }}</td>
+                  <td>{{ formatPermission(data.permission) }}</td>
+                </tr>
+              </tbody>
+            </nz-table>
+          </div>
+        </div>
+      </nz-tab>
+      <nz-tab nzTitle="Pases">
+        <div style="margin-bottom: 10px;">
+          <form nz-form nzLayout="horizontal" [formGroup]="validateFormPase" (ngSubmit)="submitFormPase()">
+            <nz-select style="width: 650px;" formControlName="customerId" (ngModelChange)="log($event)"
+              nzPlaceHolder="Selecciona un cliente">
+              <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                {{ o.name }}
+              </nz-option>
+            </nz-select>
+
+            <nz-select style="width: 650px;" formControlName="id" nzAllowClear
+              nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelect($event)">
+              <div *ngFor="let o of products">
+                <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon></i> {{ o.name
+                  }} ${{ o.price }}
+                </nz-option>
+              </div>
+            </nz-select>
+            <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+              (click)="submitForm()">Aceptar</button>
+          </form>
+        </div>
+        <div>
+          <nz-table #basicTable3 [nzData]="usersList" ngSkipHydration>
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Operación</th>
+                <th>Turno</th>
+                <th>Estación</th>
+                <th>Pase</th>
+                <th>Mete</th>
+                <th>Saca</th>
+                <th>Pase Cortesía</th>
+                <th>Válido desde</th>
+                <th>Válido hasta</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let data of basicTable3.data">
+                <td>{{ data.customerName }}</td>
+                <td>{{ data.routeName}}</td>
+                <td>{{ data.round }}</td>
+                <td>{{ data.stopName }}</td>
+                <td>{{ data.name }}</td>
+                <td>{{ formatPermission(data.isTaskIn) }}</td>
+                <td>{{ formatPermission(data.isTaskOut) }}</td>
+                <td>{{ formatPermission(data.is_courtesy) }}</td>
+                <td>{{ formatValidTo(data.validFrom)}}</td>
+                <td>{{ formatValidTo(data.validTo) }}</td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
+      </nz-tab>
+      <nz-tab nzTitle="Anticipos">
+        <div style="margin-bottom: 10px;">
+          <form nz-form nzLayout="horizontal" [formGroup]="validateFormAnticipos" (ngSubmit)="submitFormAnticipos()">
+            <nz-select style="width: 650px;" formControlName="customerId" (ngModelChange)="log($event)"
+              nzPlaceHolder="Selecciona un cliente">
+              <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                {{ o.name }}
+              </nz-option>
+            </nz-select>
+            <nz-select style="width: 650px;" formControlName="id" nzAllowClear
+              nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelect($event)">
+              <div *ngFor="let o of products">
+                <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon></i> {{ o.name
+                  }} ${{ o.price }}
+                </nz-option>
+              </div>
+            </nz-select>
+            <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+              (click)="submitFormAnticipos()">Aceptar</button>
+          </form>
+        </div>
+        <div>
+          <nz-table #basicTable3 [nzData]="usersList" ngSkipHydration>
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Operación</th>
+                <th>Turno</th>
+                <th>Monto Anticipo</th>
+                <th>Promesa de Pago</th>
+                <th>Días vencidos</th>
+                <th>Pase</th>
+                <th>Mete / Saca / Cortesía</th>
+                <th>Válido desde</th>
+                <th>Válido hasta</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let data of basicTable3.data">
+                <td>{{ data.customerName }}</td>
+                <td>{{ data.routeName}}</td>
+                <td>{{ data.round }}</td>
+                <td>{{ data.amountPayment }}</td>
+                <td>{{ formatPromiseDate(data.promiseDate) }}</td>
+                <td>{{ calculateDaysDifference(data.promiseDate) }}</td>
+                <td> {{ data.name }}</td>
+                <td>{{ formatMeteSacaCortesia(data) }}</td>
+                <td>{{ formatValidTo(data.validFrom)}}</td>
+                <td>{{ formatValidTo(data.validTo) }}</td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
+      </nz-tab>
+      <nz-tab nzTitle="Cartera Vencida">
+        <nz-tabset>
+          <nz-tab nzTitle="Cartera General">
+            <div style="margin-bottom: 10px;">
+              <form nz-form nzLayout="horizontal" [formGroup]="validateFormCV" (ngSubmit)="submitFormCV()">
+                <nz-select style="width: 650px;" formControlName="customerId" (ngModelChange)="log($event)"
+                  nzPlaceHolder="Selecciona un cliente">
+                  <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                    {{ o.name }}
+                  </nz-option>
+                </nz-select>
+                <nz-select style="width: 650px;" formControlName="id" nzAllowClear
+                  nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelect($event)">
+                  <div *ngFor="let o of products">
+                    <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon></i> {{ o.name
+                      }} ${{ o.price }}
+                    </nz-option>
+                  </div>
+                </nz-select>
+                <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+                  (click)="submitFormCV()">Aceptar</button>
               </form>
               <div class="form-row">
-                Usuarios totales: {{TotalUsers}}
+                Total monto pendiente pago: {{TotalMPP | currency:'USD'}}
               </div>
             </div>
             <div>
-              <ag-grid-angular #agGrid1 style="width: 100%; height: 500px;" id="myGridPassByTurn" class="ag-theme-material"
-                [columnDefs]="columnDefsPagos" [defaultColDef]="defaultColDef" [masterDetail]="true" [sideBar]="sideBar"
-                [detailCellRendererParams]="detailCellRendererParamsPagos" [rowData]="rowDataPayTurn"
-                (firstDataRendered)="onFirstDataRendered($event)" (gridReady)="onGridReady($event)"></ag-grid-angular>
+              <nz-table #basicTable4 [nzData]="usersListCV" ngSkipHydration>
+                <thead>
+                  <tr>
+                    <th>Empresa</th>
+                    <th>Operación</th>
+                    <th>Turno</th>
+                    <th>Monto Anticipo</th>
+                    <th>Pendiente de Pago</th>
+                    <th>Promesa de Pago</th>
+                    <th>Días vencidos</th>
+                    <th>Pase</th>
+                    <th>Mete / Saca / Cortesía</th>
+                    <th>Válido desde</th>
+                    <th>Válido hasta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let data of basicTable4.data">
+                    <td>{{ data.customerName }}</td>
+                    <td>{{ data.routeName}}</td>
+                    <td>{{ data.round }}</td>
+                    <td>{{ data.amountPayment }}</td>
+                    <td>{{ calculatePendingPayment(data) }}</td>
+                    <td>{{ formatPromiseDate(data.promiseDate) }}</td>
+                    <td>{{ calculateDaysDifference(data.promiseDate) }}</td>
+                    <td> {{ data.name }}</td>
+                    <td>{{ formatMeteSacaCortesia(data) }}</td>
+                    <td>{{ formatValidTo(data.validFrom)}}</td>
+                    <td>{{ formatValidTo(data.validTo) }}</td>
+                  </tr>
+                </tbody>
+              </nz-table>
             </div>
-          </div>
-        </nz-tab>
-        <nz-tab nzTitle="Pases de abordar">
-          <div style="margin-bottom: 10px;">
-            <form nz-form nzLayout="horizontal" [formGroup]="validateFormPase" (ngSubmit)="submitFormPase()">
-              <nz-select style="width: 650px;" formControlName="id" nzAllowClear
-                nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelect($event)">
-                <div *ngFor="let o of products">
-                  <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon ></i> {{ o.name
-                    }} ${{ o.price }}
+          </nz-tab>
+          <nz-tab nzTitle="Cartera Vencida por Operación">
+            <div style="margin-bottom: 10px;">
+              <form nz-form nzLayout="horizontal" [formGroup]="validateFormCVByRoute"
+                (ngSubmit)="submitFormCVByRoute()">
+                <nz-select style="width: 650px;" formControlName="customerId" (ngModelChange)="log($event)"
+                  nzPlaceHolder="Selecciona un cliente">
+                  <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                    {{ o.name }}
                   </nz-option>
-                </div>
-              </nz-select>
-              <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="submitForm()">Aceptar</button>
-            </form>
-          </div>
-          <div>
-            <ag-grid-angular #agGrid2 style="width: 100%; height: 500px;" id="mygridBoardingPass" class="ag-theme-material"
-              [columnDefs]="usersColumnDefs" [defaultColDef]="defaultColDef" [rowData]="usersList"
-              [rowGroupPanelShow]="'always'" [suppressDragLeaveHidesColumns]="true"
-              [suppressMakeColumnVisibleAfterUnGroup]="true"  [enableRangeSelection]="true"
-              [animateRows]="true" (firstDataRendered)="onFirstDataRendered($event)"
-              (gridReady)="onGridReady($event)"></ag-grid-angular>
-          </div>
-        </nz-tab>
-        <nz-tab nzTitle="Anticipos">
-          <div style="margin-bottom: 10px;">
-            <form nz-form nzLayout="horizontal" [formGroup]="validateFormAnticipos" (ngSubmit)="submitFormAnticipos()">
-              <nz-select style="width: 650px;" formControlName="id" nzAllowClear
-                nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelect($event)">
-                <div *ngFor="let o of products">
-                  <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon ></i> {{ o.name
-                    }} ${{ o.price }}
-                  </nz-option>
-                </div>
-              </nz-select>
-              <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="submitFormAnticipos()">Aceptar</button>
-            </form>
-          </div>
-          <div>
-            <ag-grid-angular #agGrid2 style="width: 100%; height: 500px;" id="myGridAnticipos" class="ag-theme-material"
-              [columnDefs]="usersColumnDefsAnticipo" [defaultColDef]="defaultColDef" [rowData]="usersListA"
-              [rowGroupPanelShow]="'always'" [suppressDragLeaveHidesColumns]="true"
-              [suppressMakeColumnVisibleAfterUnGroup]="true" [animateRows]="true"
-              [rowSelection]="rowSelection" [suppressRowClickSelection]="true"
-              (firstDataRendered)="onFirstDataRendered($event)" (gridReady)="onGridReady($event)"
-              (rowClicked)="onRowClicked($event)"></ag-grid-angular>
-          </div>
-        </nz-tab>
-        <nz-tab nzTitle="Cartera Vencida">
-          <nz-tabset>
-          <nz-tab nzTitle="Cartera General">
-          <div style="margin-bottom: 10px;">
-            <form nz-form nzLayout="horizontal" [formGroup]="validateFormCV" (ngSubmit)="submitFormCV()">
-              <nz-select style="width: 650px;" formControlName="id" nzAllowClear
-                nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelect($event)">
-                <div *ngFor="let o of products">
-                  <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon ></i> {{ o.name
-                    }} ${{ o.price }}
-                  </nz-option>
-                </div>
-              </nz-select>
-              <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="submitFormCV()">Aceptar</button>
-            </form>
-            <div class="form-row">
-              Total monto pendiente pago: {{TotalMPP  | currency:'USD'}}
-            </div>
-          </div>
-          <div>
-            <ag-grid-angular #agGrid2 style="width: 100%; height: 500px;" id="myCarteraVencidaGrid"
-              class="ag-theme-material" [columnDefs]="usersColumnDefsCV" [defaultColDef]="defaultColDef"
-              [rowData]="usersListCV" [rowGroupPanelShow]="'always'" [suppressDragLeaveHidesColumns]="true"
-              [suppressMakeColumnVisibleAfterUnGroup]="true"  [animateRows]="true"
-              [rowSelection]="rowSelection" [suppressRowClickSelection]="true" 
-              (firstDataRendered)="onFirstDataRendered($event)" (gridReady)="onGridReady($event)"
-              (rowClicked)="onRowClickedCV($event)"></ag-grid-angular>
-          </div>
-         </nz-tab>
-         <nz-tab nzTitle="Cartera Vendia por Ruta">
-          <div style="margin-bottom: 10px;">
-            <form nz-form nzLayout="horizontal" [formGroup]="validateFormCVByRoute" (ngSubmit)="submitFormCVByRoute()">
-              <nz-select style="width: 650px;" formControlName="id" nzAllowClear
-                nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelectByRoute($event)">
-                <div *ngFor="let o of products">
-                  <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon ></i> {{ o.name
-                    }} ${{ o.price }}
-                  </nz-option>
-                </div>
-              </nz-select>
-              <nz-select style="width: 450px;" formControlName="routeId" nzAllowClear
-              nzPlaceHolder="Seleccionar la ruta " (ngModelChange)="onRouteSelectByRoute($event)">
-              <div *ngFor="let o of routes">               
-                <nz-option nzCustomContent [nzLabel]="o.routeName" [nzValue]="o.routeId"><i nz-icon ></i> {{ o.routeName
-                  }}
-                </nz-option>
+                </nz-select>
+                <nz-select style="width: 650px;" formControlName="id" nzAllowClear
+                  nzPlaceHolder="Seleccionar producto / servicio" (ngModelChange)="onProductSelectByRoute($event)">
+                  <div *ngFor="let o of products">
+                    <nz-option nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon></i> {{ o.name
+                      }} ${{ o.price }}
+                    </nz-option>
+                  </div>
+                </nz-select>
+                <nz-select style="width: 450px;" formControlName="routeId" nzAllowClear
+                  nzPlaceHolder="Seleccionar la Operación " (ngModelChange)="onRouteSelectByRoute($event)">
+                  <div *ngFor="let o of routes">
+                    <nz-option nzCustomContent [nzLabel]="o.routeName" [nzValue]="o.routeId"><i nz-icon></i> {{
+                      o.routeName
+                      }}
+                    </nz-option>
+                  </div>
+                </nz-select>
+                <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+                  (click)="submitFormCVByRoute()">Aceptar</button>
+              </form>
+              <div class="form-row">
+                Total monto pendiente pago: {{TotalMPByRoute | currency:'USD'}}
               </div>
-            </nz-select>         
-              <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="submitFormCVByRoute()">Aceptar</button>
-            </form>
-            <div class="form-row">
-              Total monto pendiente pago: {{TotalMPByRoute  | currency:'USD'}}
             </div>
-          </div>
-          <div>
-            <ag-grid-angular #agGrid2 style="width: 100%; height: 500px;" id="myCarteraVencidaByRGrid"
-              class="ag-theme-material" [columnDefs]="usersColumnDefsCV" [defaultColDef]="defaultColDef"
-              [rowData]="usersListCVByR" [rowGroupPanelShow]="'always'" [suppressDragLeaveHidesColumns]="true"
-              [suppressMakeColumnVisibleAfterUnGroup]="true" [animateRows]="true"
-              [rowSelection]="rowSelection" [suppressRowClickSelection]="true" 
-              (firstDataRendered)="onFirstDataRendered($event)" (gridReady)="onGridReady($event)"
-              (rowClicked)="onRowClickedCV($event)"></ag-grid-angular>
-          </div>
-          <div style="margin-top: 10px; margin-bottom: 10 px;">
-               <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="detalleCVbyR()">Mostrar Detalle</button>             
-          </div>
-       
-          <div style="margin-top: 10px;">
-            <ag-grid-angular #agGrid3 style="width: 100%; height: 500px;" id="myCarteraVencidaByRDetalleGrid"
-            class="ag-theme-material" [columnDefs]="usersColumnDefsCVDetalle" [defaultColDef]="defaultColDef"
-            [rowData]="FusersListCVByRDetalle" [rowSelection]="rowSelection" [suppressRowClickSelection]="true" 
-           (gridReady)="onGridReadyD($event)"></ag-grid-angular>       
-          </div>
-         </nz-tab>
+            <div>
+              <nz-table #basicTable5 [nzData]="usersListCVByR" ngSkipHydration>
+                <thead>
+                  <tr>
+                    <th>Empresa</th>
+                    <th>Operación</th>
+                    <th>Turno</th>
+                    <th>Monto Anticipo</th>
+                    <th>Pendiente de Pago</th>
+                    <th>Promesa de Pago</th>
+                    <th>Días vencidos</th>
+                    <th>Pase</th>
+                    <th>Mete / Saca / Cortesía</th>
+                    <th>Válido desde</th>
+                    <th>Válido hasta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let data of basicTable5.data">
+                    <td>{{ data.customerName }}</td>
+                    <td>{{ data.routeName}}</td>
+                    <td>{{ data.round }}</td>
+                    <td>{{ data.amountPayment }}</td>
+                    <td>{{ calculatePendingPayment(data) }}</td>
+                    <td>{{ formatPromiseDate(data.promiseDate) }}</td>
+                    <td>{{ calculateDaysDifference(data.promiseDate) }}</td>
+                    <td> {{ data.name }}</td>
+                    <td>{{ formatMeteSacaCortesia(data) }}</td>
+                    <td>{{ formatValidTo(data.validFrom)}}</td>
+                    <td>{{ formatValidTo(data.validTo) }}</td>
+                  </tr>
+                </tbody>
+              </nz-table>
+            </div>
+            <div style="margin-top: 10px; margin-bottom: 10 px;">
+              <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="detalleCVbyR()">Mostrar
+                Detalle</button>
+            </div>
+
+            <div style="margin-top: 10px;">
+              <nz-table #basicTable6 [nzData]="FusersListCVByRDetalle" ngSkipHydration>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Identificación</th>
+                    <th>Telefono</th>
+                    <th>Correo</th>
+                    <th>Monto Anticipo</th>
+                    <th>Pendiente de Pago</th>
+                    <th>Promesa de Pago</th>
+                    <th>Días vencidos</th>
+
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let data of basicTable6.data">
+                    <td>{{ data.customerName }}</td>
+                    <td>{{ data.routeName}}</td>
+                    <td>{{ data.round }}</td>
+                    <td>{{ data.amountPayment }}</td>
+                    <td>{{ calculatePendingPayment(data) }}</td>
+                    <td>{{ formatPromiseDate(data.promiseDate) }}</td>
+                    <td>{{ calculateDaysDifference(data.promiseDate) }}</td>
+                    <td> {{ data.name }}</td>
+                    <td>{{ formatMeteSacaCortesia(data) }}</td>
+                    <td>{{ formatValidTo(data.validFrom)}}</td>
+                    <td>{{ formatValidTo(data.validTo) }}</td>
+                  </tr>
+                </tbody>
+              </nz-table>
+            </div>
+          </nz-tab>
         </nz-tabset>
-        </nz-tab>
-      </nz-tabset>
-    </div>
+      </nz-tab>
+    </nz-tabset>
+  </div>
 </div>
 
-<nz-modal [(nzVisible)]="isModalVisible" nzTitle="Datos Pase de Abordar - Anticipo" [nzContent]="modalcontent"
-  nzWidth="500px" (nzOnCancel)="handleCancel()" [nzFooter]="modalFooter">
-  
+<nz-modal [(nzVisible)]="isModalVisible" nzTitle="Datos Pase - Anticipo" [nzContent]="modalcontent" nzWidth="500px"
+  (nzOnCancel)="handleCancel()" [nzFooter]="modalFooter">
+
   <ng-template #modalFooter>
-    <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleOK()">Aceptar</button>  
+    <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleOK()">Aceptar</button>
   </ng-template>
 </nz-modal>
-<ng-template #modalcontent> 
+<ng-template #modalcontent>
   <div>
     <form nz-form [formGroup]="signupForm">
       <nz-form-item>
@@ -225,7 +459,7 @@
         <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupForm.get('defaultRound')!.value }}</nz-form-control>
       </nz-form-item>
       <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Ruta:</nz-form-label>
+        <nz-form-label [nzSm]="6" [nzXs]="24">Operación:</nz-form-label>
         <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupForm.get('defaultRouteName')!.value }}</nz-form-control>
       </nz-form-item>
       <nz-form-item>
@@ -247,60 +481,60 @@
       <nz-form-item>
         <nz-form-label [nzSm]="6" [nzXs]="24">Teléfono:</nz-form-label>
         <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupForm.get('phone')!.value }}</nz-form-control>
-      </nz-form-item>   
+      </nz-form-item>
       <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Matricula:</nz-form-label>
+        <nz-form-label [nzSm]="6" [nzXs]="24">Identificación:</nz-form-label>
         <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupForm.get('studentId')!.value }}</nz-form-control>
-      </nz-form-item>        
+      </nz-form-item>
     </form>
   </div>
 </ng-template>
 
-<nz-modal [(nzVisible)]="isModalVisibleCV" nzTitle="Datos Pase de Abordar  - Cartera Vencida" [nzContent]="modalcontentCV"
+<nz-modal [(nzVisible)]="isModalVisibleCV" nzTitle="Datos Pase  - Cartera Vencida" [nzContent]="modalcontentCV"
   nzWidth="500px" (nzOnCancel)="handleCancel()" [nzFooter]="modalFooter">
   <ng-template #modalcontentCV>
-  <div>
-    <form nz-form [formGroup]="signupFormCV">
-      <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Empresa:</nz-form-label>
-        <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('customerName')!.value }}</nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Turno:</nz-form-label>
-        <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('defaultRound')!.value }}</nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Ruta:</nz-form-label>
-        <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('defaultRouteName')!.value }}</nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Display:</nz-form-label>
-        <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('displayName')!.value }}</nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Correo:</nz-form-label>
-        <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('email')!.value }}</nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Nombre:</nz-form-label>
-        <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('firstName')!.value }}</nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Apellidos:</nz-form-label>
-        <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('lastName')!.value }}</nz-form-control>
-      </nz-form-item>
-      <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Teléfono:</nz-form-label>
-        <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('phone')!.value }}</nz-form-control>
-      </nz-form-item>   
-      <nz-form-item>
-        <nz-form-label [nzSm]="6" [nzXs]="24">Matricula:</nz-form-label>
-        <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('studentId')!.value }}</nz-form-control>
-      </nz-form-item>        
-    </form>
-  </div>
-</ng-template>
+    <div>
+      <form nz-form [formGroup]="signupFormCV">
+        <nz-form-item>
+          <nz-form-label [nzSm]="6" [nzXs]="24">Empresa:</nz-form-label>
+          <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('customerName')!.value }}</nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSm]="6" [nzXs]="24">Turno:</nz-form-label>
+          <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('defaultRound')!.value }}</nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSm]="6" [nzXs]="24">Operación:</nz-form-label>
+          <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('defaultRouteName')!.value }}</nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSm]="6" [nzXs]="24">Display:</nz-form-label>
+          <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('displayName')!.value }}</nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSm]="6" [nzXs]="24">Correo:</nz-form-label>
+          <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('email')!.value }}</nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSm]="6" [nzXs]="24">Nombre:</nz-form-label>
+          <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('firstName')!.value }}</nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSm]="6" [nzXs]="24">Apellidos:</nz-form-label>
+          <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('lastName')!.value }}</nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSm]="6" [nzXs]="24">Teléfono:</nz-form-label>
+          <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('phone')!.value }}</nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-label [nzSm]="6" [nzXs]="24">Identificación:</nz-form-label>
+          <nz-form-control [nzSm]="14" [nzXs]="24">{{ signupFormCV.get('studentId')!.value }}</nz-form-control>
+        </nz-form-item>
+      </form>
+    </div>
+  </ng-template>
   <ng-template #modalFooter>
-    <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleOK()">Aceptar</button>  
+    <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleOK()">Aceptar</button>
   </ng-template>
 </nz-modal>

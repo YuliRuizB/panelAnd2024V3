@@ -4,6 +4,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { switchMap } from 'rxjs/operators';
 import { Observable, BehaviorSubject, combineLatest} from 'rxjs';
 import { IActivityLog } from './classes';
+import { startOfToday } from 'date-fns';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,7 @@ export class LogisticsService {
   activityLogCollection: AngularFirestoreCollection<IActivityLog[]>;
   activity: Observable<IActivityLog> | undefined;
   collection = 'activityLog';
+  collectionU = 'users';
   
 
   constructor(
@@ -41,8 +43,12 @@ export class LogisticsService {
   }
 
   getliveBusses(customerId: string , routeId: string   ) {
-    this.afs.collection('customers').doc(customerId).collection('live',
-     ref => ref.where('routeId','==', routeId).where('startAt','>=', startOfToday()).limit(5));
+    const date: any = startOfToday();
+
+    return this.afs.collection('customers').doc(customerId).collection('program',
+     ref => ref.where('routeId','==', routeId)
+     .where('isLive', '==' , true)
+     .where('startAt','>=', date).limit(5)).snapshotChanges();
   }
 
   getMarkers(start: Date, end: Date) {
@@ -77,9 +83,21 @@ export class LogisticsService {
       .orderBy('created','desc')
     ).snapshotChanges();
   }
+  getUsersByCustomer(start: Date, end: Date , customerId:string) { 
+    
+    return this.afs.collection(this.collectionU, (ref) => ref
+      .where('customerId', '==',customerId )
+      .where('dateCreateUserFormat', '>', start)
+      .where('dateCreateUserFormat', '<', end)
+      .orderBy('dateCreateUserFormat','desc')
+    ).snapshotChanges();
+  }
 
-}
-function startOfToday(): any {
-  throw new Error('Function not implemented.');
+  getUsersByCustomerTot( customerId:string) {    
+    return this.afs.collection(this.collectionU, (ref) => ref
+      .where('customerId', '==',customerId )    
+    ).snapshotChanges();
+  }
+
 }
 

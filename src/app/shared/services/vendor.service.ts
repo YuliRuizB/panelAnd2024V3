@@ -25,6 +25,15 @@ export class VendorService {
     return vendorRoutes.snapshotChanges();
   }
 
+  getVendorRoutesAccessByCustomer(customerId: string) {
+    const routesAssignments = this.afs.collectionGroup('routesAccess', ref => 
+      ref.where('customerId','==',customerId)
+        .orderBy('customerName','asc')
+      );
+      return routesAssignments.snapshotChanges();
+  }
+
+
   createVendor(vendor: any) {
     this.message.loading('Guardando ...');
     const newVendorRef = this.afs.collection('vendors');
@@ -75,5 +84,13 @@ export class VendorService {
       this.message.error('Hubo un error: ', err);
       console.log(err)
     })
+  }
+
+  toggleVendorActive( vendorId: string, active: boolean) {
+    const docId = vendorId;
+    const accountRef = this.afs.collection('vendors').doc(docId);
+    const batch = this.afs.firestore.batch();
+    batch.set(accountRef.ref, { active: !active}, { merge: true});
+    return batch.commit();
   }
 }

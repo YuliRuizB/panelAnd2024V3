@@ -1,17 +1,17 @@
 <nz-layout  nzTheme="light">
-    <nz-header  nzTheme="light" >            
+    <nz-header  nzTheme="light"  style=" border: 1px solid #ccc !important;">            
         <app-header></app-header>
     </nz-header>
     <nz-layout>
-        <nz-sider nzWidth="300px" nzTheme="light">
+        <nz-sider nzWidth="270px" nzTheme="light" style=" border: 1px solid #ccc !important;">
             <app-sidenav></app-sidenav>
         </nz-sider>
-        <nz-layout class="inner-layout"  nzTheme="light">
-            <div class="page-container" style="background-color: white ;  color: #4F6F57;">
-                <div class="main-content">
+        <nz-layout class="inner-layout"  nzTheme="light"  style=" border: 1px solid #ccc !important;">
+            <div class="page-container" style="background-color: #f9fbfd ;  color: #4F6F57;">
+                <div class="main-content" >
                     <div class="main-content-header" *ngIf="contentHeaderDisplay !== 'none'"
-                        style="background-color: white ;  color: #4F6F57;">
-                        <h4 class="page-title" *ngIf="breadcrumbs$ | async; let breadcrumbs">
+                        style="background-color: #f9fbfd !important;  color: #4F6F57;">
+                      <!--   <h4 class="page-title" *ngIf="breadcrumbs$ | async; let breadcrumbs">
                             {{(breadcrumbs[breadcrumbs.length - 1].label)}}</h4>
                         <nz-breadcrumb nzSeparator=">">
                             <i class="m-r-5 text-gray" ></i>                           
@@ -20,8 +20,8 @@
                                     {{ breadcrumb.label }}
                                 </a>
                             </nz-breadcrumb-item>
-                        </nz-breadcrumb>
-                    </div>
+                        </nz-breadcrumb> -->
+                    </div> 
                     <router-outlet></router-outlet>
                 </div>
                 <app-footer></app-footer>

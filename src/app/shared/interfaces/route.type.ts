@@ -10,6 +10,7 @@ export interface IRoute {
     customerName: string;
     customerId: string;
     routeId?: string;
+    vendorId:string;
 }
 
 export interface IStopPoint {

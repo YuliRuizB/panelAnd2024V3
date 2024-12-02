@@ -27,6 +27,21 @@ export class AccountsService {
   return accounts.snapshotChanges();
   
   }
+  getStopsByCustomer(customerId: string, route:any ) {
+    const accounts = this.afs.collection('customers').doc(customerId)
+      .collection('routes').doc(route).collection('stops', 
+      ref => ref.orderBy('order', 'asc').where('active', '==', true));
+    return accounts.snapshotChanges();
+  }
+
+  getUsersByCustomer(accountid:string){
+    const users = this.afs.collection<any>('users', ref => 
+      ref.where('customerId', '==', accountid)  
+  //  .where('occupation','!=', 'internal')    
+    .where('rolId','!=', '')
+      .orderBy('displayName'));  
+      return users.snapshotChanges();    
+  }
 
 
   getSegmentLevel(segmentId: string) {  
@@ -54,7 +69,20 @@ export class AccountsService {
     return account.update(updatedAccount);
   }
 
-  setAccount(account: any) {
+
+  updateAvatarAccount(accountId: string, url: any) {
+
+    const accRef = this.afs.collection('customers').doc(accountId);
+    accRef.update({imageUrl : url }).then( () => {
+    }).catch( (err) => {
+      console.log(err)
+    })
+  }
+
+
+  setAccount(account: any,cusCons :string) {
+    
+    
     const docId = this.afs.createId();  
     const last_updated = serverTimestamp();
     const newAccountRef = this.afs.collection('customers').doc(docId);
@@ -63,13 +91,14 @@ export class AccountsService {
     const batch = this.afs.firestore.batch();
     this.createUserForAccount(account, docId)
     batch.set(newAccountRef.ref, account);
-    batch.set(newPublicAccountRef.ref, { name: account.name, active: false });
+    batch.set(newPublicAccountRef.ref, { name: account.name, active: false , custConsecutive: account.custConsecutive});
     //batch.set(stats.ref, { currentAccounts: increment(1), last_updated }, {merge: true});
 
     return batch.commit();
   }
 
   createUserForAccount(data: any, docId:any){
+    const newdocId = this.afs.createId(); 
     const userData = {    
       email: "internal",
       displayName: data.name,
@@ -88,9 +117,10 @@ export class AccountsService {
 			roundTrip: null,
 			defaultRoute: null,
 			phoneNumber: null,
-			status: "internal",			
+			status: "internal",		
+      uid: newdocId
     }
-    const newdocId = this.afs.createId();  
+     
     const newAccountRef = this.afs.collection('users').doc(newdocId);   
     const batch = this.afs.firestore.batch();
     batch.set(newAccountRef.ref, userData);
@@ -129,6 +159,34 @@ export class AccountsService {
       const batch = this.afs.firestore.batch(); 
       batch.delete(accountRef.ref);
       batch.commit();
+    });
+  }
+
+  getUserAccountDeleteByData(defaultRoute: string) {
+    console.log("Entro");
+    this.usersCollection = this.afs.collection<any>('users', ref => 
+      ref.where('customerId', '==', '2SneRDolNMtXg4DIuIfN')
+         .where('defaultRoute', '==', defaultRoute)
+         .orderBy('displayName')
+    );  
+    this.userSubscription = this.usersCollection.snapshotChanges().pipe(
+      map((actions: any) => actions.map((a: { payload: { doc: { id: any; data: () => any; }; }; }) => {
+        const id = a.payload.doc.id;
+        const data = a.payload.doc.data() as any;
+        return { id, ...data };
+      }))
+    ).subscribe(users => {
+      console.log(users);
+      
+      // Eliminar cada usuario individualmente
+      users.forEach((user: any) => {
+        const accountRef = this.afs.collection('user').doc(user['uid']);
+        accountRef.delete().then(() => {
+          console.log(`Usuario ${user['uid']} eliminado.`);
+        }).catch(error => {
+          console.error(`Error al eliminar el usuario ${user['uid']}: `, error);
+        });
+      });
     });
   }
 

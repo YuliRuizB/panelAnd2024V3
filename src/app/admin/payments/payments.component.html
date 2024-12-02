@@ -1,1 +1,368 @@
-<p>payments works!</p>
+<div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
+  <div class="site-page-header-ghost-wrapper">
+    <nz-page-header [nzGhost]="false"   style="background-color:#f9fbfd;">
+      <nz-page-header-title  style="margin-left: 350px;">Validaciones</nz-page-header-title>
+      <nz-page-header-subtitle >Listado de validaciones por aprobar
+      </nz-page-header-subtitle>
+    </nz-page-header>
+  </div>
+  <div class="body">
+      <nz-tabset>
+          <nz-tab nzTitle="Usuarios">     
+          <div class="chat-list">                          
+            <div class="chat-user-tool">
+              <a nz-button  nzType="primary" (click)="fillData()">Cargar Usuarios</a>     
+              <i nz-icon  nzTheme="outline" class="search-icon p-r-10 font-size-20"></i>
+              <input placeholder="Buscar" #searchBar (keyup)="getItems(searchBar.value)">
+            </div>
+            <div>
+              <nz-table #basicTable [nzData]="dataUsuarios" ngSkipHydration >
+                <thead>
+                  <tr>
+                    <th>Empresa</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Estatus</th>
+                    <th>...</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let data of basicTable.data">    
+                    <td>{{ data.customerName }}</td>
+                    <td>{{data.firstName}} {{data.lastName}}</td>
+                    <td>{{ data.email }}</td>
+                    <td>{{ data.status }}</td>
+                    <td>
+                      <a nz-button style="color: #4F6F57; border: none;" [nzSize]="size" nzType="link" (click)="showModalIn(data)">Editar</a>                                
+                    </td>
+                  </tr>
+                </tbody>
+              </nz-table>                 
+            </div>
+          </div>
+          </nz-tab>
+          <nz-tab nzTitle="Ejecutores">
+          <div class="chat-list">         
+            <div class="chat-user-tool">
+                  <a nz-button  nzType="primary" (click)="fillDataE()">Cargar Ejecutores</a> 
+                  <i nz-icon  nzTheme="outline" class="search-icon p-r-10 font-size-20"></i>
+                  <input placeholder="Buscar" #searchBarE (keyup)="getItemsE(searchBarE.value)">
+            </div>
+            <div>
+                <nz-table #basicTable11 [nzData]="dataEjecutores" ngSkipHydration >
+                    <thead>
+                        <tr>
+                          <th>Empresa</th>
+                          <th>Nombre</th>
+                          <th>Cliente</th>
+                          <th>Estatus</th>
+                          <th>...</th> 
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let data of basicTable11.data">    
+                          <td>{{ data.customerName }}</td>
+                          <td>{{data.firstName}} {{data.lastName}}</td>
+                          <td>{{ data.vendorName }}</td>
+                          <td>{{ data.status }}</td>
+                          <td>
+                            <a nz-button style="color: #4F6F57; border: none;" [nzSize]="size" nzType="link" (click)="showModalInE(data)">Editar</a>                                
+                          </td>
+                        </tr>
+                      </tbody>
+                </nz-table>                 
+            </div>
+          </div>
+          </nz-tab>
+          <nz-tab nzTitle="Comprobantes">
+            <div class="chat-list"> 
+              <div class="chat-user-tool">
+                <a nz-button  nzType="primary" (click)="fillDataT()">Cargar Comprobantes</a> 
+                <i nz-icon  nzTheme="outline" class="search-icon p-r-10 font-size-20"></i>
+                <input placeholder="Buscar" #searchBarE (keyup)="getItemsT(searchBarE.value)">
+              </div>
+              <div>
+                <nz-table #basicTable2 [nzData]="dataTransfer" ngSkipHydration >
+                  <thead>
+                      <tr>
+                        <th>Empresa</th>
+                        <th>Producto</th>
+                        <th>Costo Producto</th>
+                        <th>Estatus</th>                    
+                        <th>Comprobante</th>
+                        <th>...</th> 
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let data of basicTable2.data">    
+                        <td>{{ data.customerName }}</td>
+                        <td>{{ data.product.description }}</td>
+                        <td>{{ data.product.price }}</td> 
+                        <td>{{ data.status }}</td>
+                        <td>
+                        <a href="{{data.url}}"  target="_blank">Ver Comprobante</a>                           
+                        </td>
+                        <td>
+                          <a nz-dropdown [nzDropdownMenu]="chatSetting">
+                            <i nz-icon nzType="ellipsis" nzTheme="outline"></i>
+                          </a>
+                          <nz-dropdown-menu #chatSetting="nzDropdownMenu">
+                            <ul nz-menu>
+                              <li nz-menu-item (click)="openModal(data.userId)">Ver Detalle</li>
+                              <li nz-menu-item (click)="validarPago(data.uid)">Validar Pago</li>
+                              <li nz-menu-item (click)="rechazarPago(data)">Rechazar Pago</li>
+                              <li *ngIf="readytoGenerateBoardinPass" nz-menu-item (click)="generarPase(data.userId, data.uid)">Generar Pase</li>
+                            </ul>
+                          </nz-dropdown-menu>
+                       </td>                       
+                      </tr>
+                    </tbody>
+              </nz-table>  
+              </div>
+            </div>
+          </nz-tab>
+      </nz-tabset>
+  </div>  
+</div>
+
+<nz-modal [(nzVisible)]="isVisible1" [nzTitle]="modalTitle" [nzContent]="modalContent"
+[nzFooter]="modalPassFooter" (nzOnCancel)="handleCancel()">
+<ng-template #modalTitle>
+  Nuevo pase
+</ng-template>
+
+<ng-template #modalContent>
+  <form nz-form nzLayout="horizontal" [formGroup]="validateForm" (ngSubmit)="submitForm()">
+    <nz-form-item>
+      <nz-form-label  style="width: 100px;">Empresa</nz-form-label>   
+      <nz-select  style="width: 320px;" formControlName="customerId" 
+      nzAllowClear (ngModelChange)="onCustomerSelected($event)"
+      nzPlaceHolder="Seleccione una Empresa">
+        <nz-option *ngFor="let d of customers" [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
+      </nz-select>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label  style="width: 100px;">Servicio</nz-form-label>
+      <nz-select style="width: 320px;" formControlName="product_id" nzAllowClear
+        nzPlaceHolder="Seleccionar producto / servicio"  
+         (ngModelChange)="onProductSelected($event,products)">
+        <div *ngFor="let o of products">
+          <nz-option  nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+            <i nz-icon></i> 
+            {{ o.name }} 
+            <ng-container *ngIf="o.frequencies">({{ o.frequencies }})</ng-container> 
+            ${{ o.price }}
+          </nz-option>
+        </div>
+      </nz-select>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label  style="width: 100px;">Operación</nz-form-label>
+      <nz-select style="width: 320px;" formControlName="routeId" nzAllowClear
+        nzPlaceHolder="Selecciona la Operación" (ngModelChange)="onRouteSelected($event, routes)">
+        <nz-option *ngFor="let o of routes" nzCustomContent [nzLabel]="o.name" [nzValue]="o.routeId"><i
+            nz-icon></i> {{ o.name }}</nz-option>
+      </nz-select>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label style="width: 100px;">Estaciones</nz-form-label>
+      <nz-select style="width: 320px;" formControlName="stopId" nzAllowClear
+        nzPlaceHolder="Selecciona la estación">
+        <nz-option *ngFor="let o of stopPoints" nzCustomContent [nzLabel]="o.name"
+          [nzValue]="o.stopPointId"><i nz-icon></i> {{ o.name }} <br /> {{ o.description }}
+        </nz-option>
+      </nz-select>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label  style="width: 100px;">Turno</nz-form-label>
+      <nz-select style="width: 320px;" formControlName="round" nzAllowClear
+        nzPlaceHolder="Selecciona Turno">
+        <nz-option nzValue="Día" nzLabel="Día"></nz-option>
+        <nz-option nzValue="Tarde" nzLabel="Tarde"></nz-option>
+        <nz-option nzValue="Noche" nzLabel="Noche"></nz-option>
+      </nz-select>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label  style="width: 100px;">Tipo de Pago</nz-form-label>
+      <nz-select style="width: 320px;" formControlName="payment" nzAllowClear
+        (ngModelChange)="changePayment($event)" nzPlaceHolder="Selecciona un tipo de Pago">
+        <nz-option nzValue="Mensualidad" nzLabel="Mensualidad"></nz-option>
+        <nz-option nzValue="Anticipo" nzLabel="Anticipo"></nz-option>
+        <nz-option nzValue="Liquidacion" nzLabel="Liquidación"></nz-option>
+      </nz-select>
+    </nz-form-item>
+    <nz-form-item>
+      <div class="row">
+        <div class="col-md-7">
+          <nz-form-label>Cantidad a pagar </nz-form-label>
+          <nz-input-number  formControlName="amountPayment" [nzMin]="50" [nzMax]="5000" [nzStep]="1"
+            [nzFormatter]="formatterDollar" [nzParser]="parserDollar"
+            (ngModelChange)="onAmountChange($event)"></nz-input-number>
+        </div>
+        <div class="col-md-5"  *ngIf="isAnticipo">
+          <nz-form-item>
+            <nz-form-label>Fecha Compromiso </nz-form-label>
+            <nz-date-picker  style="width: 150px;" formControlName="promiseDate"></nz-date-picker>
+          </nz-form-item>
+        </div>
+      </div>
+    </nz-form-item>
+    <div class="row">
+      <div class="col-md-7">
+        <nz-form-item>
+          <nz-form-label>Total a pagar</nz-form-label>
+          <nz-input-number [disabled]="false" formControlName="amount" [nzMin]="50" [nzMax]="5000"
+            [nzStep]="1" [nzFormatter]="formatterDollar" [nzParser]="parserDollar"
+            (ngModelChange)="onAmountChange($event)"></nz-input-number>
+        </nz-form-item>
+      </div>
+      <div class="col-md-5">
+        <nz-form-item>
+          <nz-form-label>¿Es cortesía?</nz-form-label>
+          <nz-switch formControlName="is_courtesy" (ngModelChange)="onCourtesyChange($event)"
+            nzCheckedChildren="Si" nzUnCheckedChildren="No"></nz-switch>
+        </nz-form-item>
+      </div>
+    </div>
+    <nz-form-item>
+      <nz-form-label style="width: 120px;">Tipo de Referencia</nz-form-label>
+      <nz-select style="width: 300px;" formControlName="typePayment" nzAllowClear
+        nzPlaceHolder="Selecciona una Referencia" >
+        <nz-option nzValue="Transferencia" nzLabel="Transferencia"></nz-option>
+        <nz-option nzValue="Efectivo" nzLabel="Efectivo"></nz-option>
+        <nz-option nzValue="Sistema" nzLabel="Pago por Sistema"></nz-option>
+      </nz-select>
+    </nz-form-item>   
+    <nz-form-item>
+      <nz-form-control>
+        <label nz-checkbox formControlName="active">Activar pase</label>
+      </nz-form-control>
+    </nz-form-item>
+    <div class="row">
+      <div class="col-md-6">
+        <nz-form-item>
+          <nz-form-label>Válido desde</nz-form-label>
+          <nz-date-picker formControlName="validFrom"></nz-date-picker>
+        </nz-form-item>
+      </div>
+      <div class="col-md-6">
+        <nz-form-item>
+          <nz-form-label>Válido hasta</nz-form-label>
+          <nz-date-picker (ngModelChange)="onChangeValidTo($event)" [nzDisabledDate]="disabledDate"
+            formControlName="validTo"></nz-date-picker>
+        </nz-form-item>
+      </div>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #modalPassFooter>
+  <button nz-button 
+    (click)="handleCancel()">Cancelar</button>
+  <button nz-button  (click)="submitForm()"
+    [nzLoading]="isConfirmLoading">Generar Pase</button>
+
+</ng-template>
+</nz-modal>
+
+<nz-modal [(nzVisible)]="isViewInfo" nzTitle="Detalle Pago "
+nzWidth="500px" (nzOnCancel)="handleCancelView()" [nzFooter]="modalFooterEdit1" [nzContent]="modalContent3">
+<ng-template #modalContent3>
+<div>
+  <form nz-form [formGroup]="viewDetalle">       
+    <nz-form-item>
+      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Cliente</nz-form-label>
+      <nz-form-control [nzSm]="16" [nzXs]="24" >       
+        <input id="customerName" formControlName="customerName">
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Operacion</nz-form-label>
+      <nz-form-control [nzSm]="16" [nzXs]="24" >       
+        <input id="defaultRouteName" formControlName="defaultRouteName">    
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Horario</nz-form-label>
+      <nz-form-control [nzSm]="16" [nzXs]="24" >       
+        <input id="defaultRound" formControlName="defaultRound">    
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Telefono</nz-form-label>
+      <nz-form-control [nzSm]="16" [nzXs]="24" >        
+        <input id="phoneNumber" formControlName="phoneNumber">
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Correo</nz-form-label>
+      <nz-form-control [nzSm]="16" [nzXs]="24" >
+        <input id="email" formControlName="email">
+      </nz-form-control>
+    </nz-form-item>
+    <nz-form-item>
+      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Identificacion</nz-form-label>
+      <nz-form-control [nzSm]="16" [nzXs]="24" >      
+        <input id="email" formControlName="studentId">      
+      </nz-form-control>
+    </nz-form-item>
+
+  </form>
+</div>
+</ng-template>
+<ng-template #modalFooterEdit1>
+  <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleCancelView()" >Aceptar</button> 
+</ng-template>
+</nz-modal>
+
+<nz-modal [(nzVisible)]="isEditModal" nzTitle="Editar Usuarios "
+nzWidth="500px" (nzOnCancel)="handleCancelEdit()" [nzFooter]="modalFooterEdit" [nzContent]="modalContent2">
+<ng-template #modalContent2>
+<div>
+  <form nz-form [formGroup]="signupForm">   
+    <nz-form-item>
+      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Estatus</nz-form-label>
+      <nz-form-control [nzSm]="16" [nzXs]="24" >
+        <nz-select  formControlName="status">
+            <nz-option nzValue="active" nzLabel="Activo"></nz-option>           
+          </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+  </form>
+</div>
+</ng-template>
+<ng-template #modalFooterEdit>
+  <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleOKEdit()" >Aceptar</button>
+  <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleCancelEdit()">Cancelar</button>
+</ng-template>
+</nz-modal>
+
+
+<nz-modal [(nzVisible)]="isEditModalE" nzTitle="Editar Ejecutores"
+nzWidth="500px" (nzOnCancel)="handleCancelEditE()" [nzFooter]="modalFooterEditE" [nzContent]="modalContent112">
+<ng-template #modalContent112>
+<div>
+  <form nz-form [formGroup]="signupFormE">   
+     <nz-form-item>
+      <nz-form-label [nzSpan]="4" nzFor="label">Empresa </nz-form-label>
+      <nz-select formControlName="customerId" [nzMaxTagCount]="3" style="width: 250px;"
+         nzPlaceHolder="Selecciona una empresa">
+          <nz-option *ngFor="let customer of listOfCustomer" [nzLabel]="customer.name" [nzValue]="customer.id">
+          </nz-option>
+      </nz-select>
+    </nz-form-item> 
+    <nz-form-item>
+      <nz-form-label [nzSm]="4" nzFor="status">Estatus</nz-form-label>      
+        <nz-select  formControlName="status"  [nzMaxTagCount]="3" style="width: 250px;"  nzPlaceHolder="Selecciona un status">
+            <nz-option nzValue="accept" nzLabel="Aceptado"></nz-option>
+            <nz-option nzValue="reject" nzLabel="Rechazado"></nz-option>   
+          </nz-select>      
+    </nz-form-item>
+  </form>
+</div>
+</ng-template>
+<ng-template #modalFooterEditE>
+  <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleOKEditE()" >Aceptar</button>
+  <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleCancelEditE()">Cancelar</button>
+</ng-template>
+</nz-modal>

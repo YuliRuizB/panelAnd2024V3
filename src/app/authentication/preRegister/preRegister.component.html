@@ -64,7 +64,7 @@
                 <nz-form-item>
                     <nz-form-label [nzSpan]="8" nzFor="studentId" nzRequired>
                       <span>
-                        Matrícula
+                        Identificación
                       </span>
                     </nz-form-label>
                     <nz-form-control nzHasFeedback [nzSpan]="16" [nzErrorTip]="combineTplStudentId">
@@ -72,7 +72,7 @@
                         name="studentId" minlength="7" maxlength="7" required />
                       <ng-template #combineTplStudentId let-control>
                         <ng-container *ngIf="control.hasError('maxlength')">
-                          Número de matrícula es de 7 dígitos
+                          Número de Identificación es de 7 dígitos
                         </ng-container>
                         <ng-container *ngIf="control.hasError('minlength')">al menos son 7 dígitos
                         </ng-container>
@@ -92,9 +92,9 @@
                     </nz-form-control>
                   </nz-form-item>
                   <nz-form-item>
-                    <nz-form-label  [nzSpan]="8" >Ruta</nz-form-label>
+                    <nz-form-label  [nzSpan]="8" >Operación</nz-form-label>
                     <nz-form-control [nzSm]="14" [nzXs]="24">
-                      <nz-select formControlName="defaultRoute" nzAllowClear nzPlaceHolder="Selecciona la ruta"
+                      <nz-select formControlName="defaultRoute" nzAllowClear nzPlaceHolder="Selecciona la Operación"
                       (ngModelChange)="onRouteEditUserSelected($event, userRoutes)">
                         <nz-option *ngFor="let o of userRoutes" nzCustomContent [nzLabel]="o.name" [nzValue]="o.routeId"><i
                             nz-icon ></i> {{ o.name }}</nz-option>

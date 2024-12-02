@@ -1,4 +1,4 @@
-<nz-page-header nzBackIcon class="page-header">
+<nz-page-header nzBackIcon class="page-header"  style="background-color:#f9fbfd;">
   <nz-page-header-title>{{ record.name }}</nz-page-header-title>
   <nz-page-header-subtitle>Detalles del vehículo</nz-page-header-subtitle>
   <nz-page-header-content>
@@ -107,15 +107,8 @@
                   <input type="number" nz-input formControlName="doors" placeholder="Puertas">
                 </nz-form-control>
               </nz-form-item>
-            </div>
-            <div class="col-md-3">
-              <nz-form-item>
-                <nz-form-label>Aire Acondicionado</nz-form-label>
-                <nz-form-control>
-                  <nz-switch formControlName="ac" nzCheckedChildren="Si" nzUnCheckedChildren="No"></nz-switch>
-                </nz-form-control>
-              </nz-form-item>
-            </div>
+           </div>
+           
           </div>
         </nz-card>
         <ng-template #basicTpl>

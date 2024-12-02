@@ -7,6 +7,7 @@ import { RolService } from "../../shared/services/roles.service";
 import { AuthenticationService } from "../../shared/services/authentication.service";
 import { UsersService } from "../../shared/services/users.service";
 import { AngularFireStorage, AngularFireUploadTask } from "@angular/fire/compat/storage";
+import { AccountsService } from "../../shared/services/accounts.service";
 
 @Component({
     templateUrl: './my-profile-dashboard.component.html',
@@ -17,6 +18,7 @@ export class MyProfileComponent implements OnInit {
     userService= inject(UsersService);
     authService = inject(AuthenticationService);
    rolService = inject(RolService);
+   accountService = inject(AccountsService);
    //AngularFireModule = inject(AngularFireModule);
 
     user: any;
@@ -25,7 +27,7 @@ export class MyProfileComponent implements OnInit {
     validateForm: UntypedFormGroup;
     avatarUrl: string = "http://themenate.com/applicator/dist/assets/images/avatars/thumb-13.jpg";
     uploading: boolean = false;
-    bucketPath: string = 'vendors/';
+    bucketPath: string = 'profile/';
     userlevelAccess?:string;
     userForm: any = [];
     // Upload Task 
@@ -59,7 +61,8 @@ export class MyProfileComponent implements OnInit {
             emailVerified:  new FormControl({value: '', disabled: true}),
             userRol:  new FormControl({value: '', disabled: true}),
             customerName:  new FormControl({value: '', disabled: true}),
-            photoURL: ['']
+            photoURL: [''],
+            idPRepa2: []
         });
 
 
@@ -81,24 +84,29 @@ export class MyProfileComponent implements OnInit {
 
     }
 
+    borrar(){
+        console.log(this.validateForm.controls["idPRepa2"].value);
+        var valueDAta =this.validateForm.controls["idPRepa2"].value;
+
+        this.accountService.getUserAccountDeleteByData(valueDAta);
+        console.log("paso");
+        
+    }
+
     done(): void {
         if (this.validateForm.valid) {
 
             let userData = {
                 displayName: this.validateForm.controls["displayName"].value,
                 firstName: this.validateForm.controls["firstName"].value,
-                lastName: this.validateForm.controls["lastName"].value,
-             /*    address: {
-                    addressLine: this.validateForm.controls["address"].value,
-                    city: this.validateForm.controls["city"].value,
-                    postCode: this.validateForm.controls["postCode"].value,
-                    state: this.validateForm.controls["state"].value
-                }, */
+                lastName: this.validateForm.controls["lastName"].value,          
                 phoneNumber: this.validateForm.controls["phoneNumber"].value
             };
             if (this.userlevelAccess != "3") {
+              //  console.log(this.user.uid);
+               // console.log(userData);
                  this.userService.updateUserCollection(this.user.uid, userData).then(response => {
-                    console.log(response);
+                 //   console.log(response);
                     this.sendMessage('success', "Se actualizó con exito!");
                 }).catch(err => {
                     console.log(err);
@@ -111,7 +119,7 @@ export class MyProfileComponent implements OnInit {
     }
 
     fillInfo() {
-        console.log(this.user);
+        //console.log(this.user);
         //assing value
         if (this.user) {
             this.validateForm.controls['photoURL'].setValue(this.user.photoURL);
@@ -167,10 +175,13 @@ export class MyProfileComponent implements OnInit {
         this.getBase64(info.file.originFileObj, (img: string) => {
             this.avatarUrl = img;
             console.log(img);
-            const fileRef = this.bucketStorage.ref(this.bucketPath);
-
-            this.task = this.bucketStorage.ref(this.bucketPath).putString(img, 'data_url');
-
+               // Extract the original file name
+          const fileName = info.file.name;
+          const filePath = `${this.bucketPath}/${fileName}`;
+          
+          const fileRef = this.bucketStorage.ref(filePath);
+          this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');
+    
             // observe percentage changes
             this.uploadPercent = this.task.percentageChanges() as Observable<number>;
     
@@ -190,6 +201,7 @@ export class MyProfileComponent implements OnInit {
                     this.downloadURL = fileRef.getDownloadURL();
                     this.downloadURL.subscribe(async (url) => {
                         this.updatePhotoURL(url);
+                        this.sendMessage("sucess","Se actualizó con éxito la imagen de perfil");
                     });
                 })
             ).subscribe(); 
@@ -204,8 +216,8 @@ export class MyProfileComponent implements OnInit {
 
     async updatePhotoURL(url: any) {
 
-        console.log("started updatePhotoURL with url: ", url);
-        console.log(this.user.id);
+      //  console.log("started updatePhotoURL with url: ", url);
+        //console.log(this.user.id);
         this.validateForm.controls['photoURL'].patchValue(url);
         if (this.userlevelAccess != "3") {
            this.userService.updateUserAvatar(this.user.uid, url);

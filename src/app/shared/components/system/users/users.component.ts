@@ -2,15 +2,11 @@ import { Component, OnInit, OnDestroy, Input, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { columnDefs, rowGroupPanelShow } from '../../../../customers/classes/customers';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { GridOptions } from 'ag-grid-community';
-
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzUploadChangeParam, NzUploadModule } from 'ng-zorro-antd/upload';
-
 import { NgxCsvParser } from 'ngx-csv-parser';
 import { NgxCSVParserError } from 'ngx-csv-parser';
 import { map } from 'rxjs/operators';
-
 import { ReactiveFormsModule, UntypedFormBuilder, UntypedFormControl, UntypedFormGroup, Validators } from '@angular/forms';
 import { CustomersService } from '../../../../customers/services/customers.service';
 
@@ -29,7 +25,6 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
   usersList: any = [];
   columnDefs = columnDefs;
   rowGroupPanelShow = rowGroupPanelShow;
-  gridOptions: GridOptions = this.getGridOptions();
   popupParent: any;
 
   //Modal
@@ -123,7 +118,7 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
 
   }
 
-  getGridOptions(): GridOptions {
+ /*  getGridOptions(): GridOptions {
     return {
       columnDefs: columnDefs,
       context: {
@@ -147,7 +142,7 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
       enableRangeSelection: true,
       paginationPageSize: 20,
     };
-  }
+  } */
 
   getContextMenuItems(params: any) {
     var result = [

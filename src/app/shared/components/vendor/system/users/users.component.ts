@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy, Input, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { columnDefs, rowGroupPanelShow } from '../../../../../customers/classes/customers';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { GridOptions } from 'ag-grid-community';
 
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzUploadChangeParam } from 'ng-zorro-antd/upload';
@@ -30,9 +29,6 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
   usersList: any = [];
   columnDefs = columnDefs;
   rowGroupPanelShow = rowGroupPanelShow;
-  
-  gridOptions: GridOptions = this.getGridOptions();
-
   popupParent: any;
 
   //Modal
@@ -71,32 +67,7 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
     this.popupParent = document.querySelector("body");
   }
 
-  getGridOptions(): GridOptions {
-    return {
-      columnDefs: columnDefs,
-      context: {
-        thisComponent: this
-      },
-      rowData: null,
-      rowSelection: 'single',
-      pagination: true,
-      defaultColDef: {
-        sortable: true,
-        filter: true,
-        // Add more default column properties as needed
-      },
-      statusBar: {
-        statusPanels: [
-          { statusPanel: 'agFilteredRowCountComponent' },
-          { statusPanel: 'agSelectedRowCountComponent' },
-          { statusPanel: 'agAggregationComponent' }
-        ]
-      },
-      enableRangeSelection: true,
-      paginationPageSize: 20,
-    };
-  }
-
+  
   sendMessage(type: string, message: string): void {
     this.msg.create(type, message);
   }

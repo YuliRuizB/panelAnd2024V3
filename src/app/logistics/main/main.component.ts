@@ -1,6 +1,4 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone, inject } from '@angular/core'
-import { ThemeConstantService } from '../../shared/services/theme-constant.service';
-
 import { LogisticsService } from '../services.service';
 import { IActivityLog } from '../classes';
 import { GeoJson, FeatureCollection } from '../map';
@@ -8,12 +6,9 @@ import { map, takeUntil, tap } from 'rxjs/operators';
 import { startOfToday, endOfToday, format, fromUnixTime } from 'date-fns';
 import esLocale from 'date-fns/locale/es';
 import * as _ from 'lodash';
-import { ColDef } from 'ag-grid-community';
-import { environment } from '../../environments/enviroment.prod';
 import { AuthenticationService } from '../../shared/services/authentication.service';
 import { AccountsService } from '../../shared/services/accounts.service';
 import { Subject } from 'rxjs';
-
 
 
 @Component({
@@ -38,7 +33,7 @@ export class LogisticsMainComponent implements OnInit {
   chartData: any;
   gridApi: any;
   gridColumnApi: any;
-
+/* 
   ColumnDefs : ColDef[] = [
     { headerName: 'Fecha', field: 'created', cellRenderer: (params: any ) => { 
       if (params && params.value) {
@@ -46,17 +41,17 @@ export class LogisticsMainComponent implements OnInit {
       } else { return ''}
     }},
     { headerName: 'Alumno', field: 'studentName', sortable: true },
-    { headerName: 'Matrícula', field: 'studentId', sortable: true, enableValue: true, allowedAggFuncs: ['count'] },
+    { headerName: 'Identificación', field: 'studentId', sortable: true, enableValue: true, allowedAggFuncs: ['count'] },
     { headerName: 'Ingreso con', field: 'studentId', sortable: true, enableValue: true, allowedAggFuncs: ['count'] },
     { headerName: 'Evento', field: 'event', sortable: true, enableRowGroup: true },
     { headerName: 'Tipo', field: 'type', sortable: true, enableRowGroup: true },
     { headerName: 'Descripción', field: 'description', sortable: true },
-    { headerName: 'Ruta', field: 'route', enableRowGroup: true },
+    { headerName: 'Operación', field: 'route', enableRowGroup: true },
     { headerName: 'Turno', field: 'round', enableRowGroup: true },
     { headerName: 'Programa', field: 'program', enableRowGroup: true },
     { headerName: 'Vehículo', field: 'vehicle', enableRowGroup: true },
     { headerName: '¿Subió?', field: 'allowedOnBoard', enableRowGroup: true }
-  ];
+  ]; */
   map: any;
   authService= inject(AuthenticationService);
   infoSegment: any = [];

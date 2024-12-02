@@ -2,8 +2,10 @@
   <form nz-form nzLayout="vertical" [formGroup]="objectForm" (ngSubmit)="onSubmit()">
     <nz-card nzType="inner" nzTitle="Información Básica" [nzExtra]="basicTpl" [nzLoading]="loading">
       <div class="media align-items-center">
-        <nz-avatar [nzSize]="80" nzIcon="user" style="background-color: white ;  color: #4F6F57;" [nzText]="record.name" nzSize="large"
-          nzSrc="http://themenate.com/applicator/dist/assets/images/avatars/thumb-13.jpg"></nz-avatar>
+        <nz-avatar [nzSize]="80" nzIcon="user" 
+        style="background-color: white ;  color: #4F6F57;" 
+        [nzSrc]="record.imageUrl" nzSize="large"
+          nzSrc=""></nz-avatar>
         <div class="m-l-20 m-r-20">
           <h5 class="m-b-5 font-size-18" *ngIf="!!record">{{ record.name }}</h5>
           <p class="opacity-07 font-size-13 m-b-0">
@@ -12,9 +14,9 @@
             {{ record.address3 }}
           </p>
         </div>
-        <nz-upload nzName="avatar" [nzShowUploadList]="false" (nzChange)="handleChange()">
+        <nz-upload nzName="imageUrl" [nzShowUploadList]="false" (nzChange)="handleChange($event)">
           <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" nzGhost>
-            <span>Cambiar imágen</span>
+            <span>Cambiar imágen </span>
           </button>
         </nz-upload>
       </div>
@@ -68,7 +70,7 @@
         </div>        
       </div>   
       <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <nz-form-item>
             <nz-form-label nzFor="phoneNumber">Teléfono</nz-form-label>
             <nz-form-control>
@@ -76,7 +78,7 @@
             </nz-form-control>
           </nz-form-item>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <nz-form-item>
             <nz-form-label nzFor="website">Sitio Web</nz-form-label>
             <nz-form-control>
@@ -84,11 +86,23 @@
             </nz-form-control>
           </nz-form-item>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <nz-form-item>
             <nz-form-label nzFor="primaryContact">Persona Contacto</nz-form-label>
             <nz-form-control>
               <input nz-input formControlName="primaryContact" placeholder="Contacto principal">
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div class="col-md-3">
+          <nz-form-item>
+            <nz-form-label nzFor="responsableUser">Responsable</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="responsableUser"   nzAllowClear
+              nzPlaceHolder="Selecciona Usuario Responsable">
+              <nz-option *ngFor="let o of usersList" nzCustomContent [nzLabel]="o.displayName"
+                [nzValue]="o.uid"><i nz-icon></i> {{ o.displayName }}</nz-option>
+            </nz-select>
             </nz-form-control>
           </nz-form-item>
         </div>
@@ -222,9 +236,9 @@
           <nz-form-item>
             <nz-form-label nzFor="forceRound" nzRequired>
               <span>
-                Obligatorio subir en la ruta definida
+                Obligatorio subir en la operación definida
                 <i nz-icon nz-tooltip
-                  nzTooltipTitle="¿Es obligatorio que el usuario suba exclusivamente en la ruta seleccionada?"
+                  nzTooltipTitle="¿Es obligatorio que el usuario suba exclusivamente en la operación seleccionada?"
                   nzType="question-circle" nzTheme="outline"></i>
               </span>
             </nz-form-label>

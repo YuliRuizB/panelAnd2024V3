@@ -52,7 +52,7 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
         headerName: 'Empresa', field: 'customerName',
         cellRenderer: 'agGroupCellRenderer', sortable: true
       },
-      { headerName: 'Ruta', sortable: true, field: 'routeName' },
+      { headerName: 'Operación', sortable: true, field: 'routeName' },
       { headerName: 'Usuarios Mete', field: 'customerName', cellRenderer: (params: any) => {
         const passes = params.data.passes;
         const isTaskIn = _.filter(passes, (p) => {
@@ -77,7 +77,7 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
         cellRenderer: 'agGroupCellRenderer', sortable: true
       },
       { headerName: 'Empresa', sortable: true, field: 'customerName' },
-      { headerName: 'Ruta', sortable: true, field: 'routeName'},
+      { headerName: 'Operación', sortable: true, field: 'routeName'},
       { headerName: 'Programa / Turno', Field: 'round'},
       { headerName: 'PR', sortable: true, field: 'driver'},
       { headerName: 'Vehículo', sortable: true, field: 'vehicleName'},
@@ -87,10 +87,10 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
 
     this.usersColumnDefs = [
       { headerName: 'Empresa', field: 'customerName', enableRowGroup: true },
-      { headerName: 'Ruta', field: 'routeName', enableRowGroup: true },
+      { headerName: 'Operación', field: 'routeName', enableRowGroup: true },
       { headerName: 'Turno', field: 'round', enableRowGroup: true },
       { headerName: 'Estación', field: 'stopName', enableRowGroup: true },
-      { headerName: 'Pase de abordar', field: 'name' },
+      { headerName: 'Pase', field: 'name' },
       { headerName: 'Mete', field: 'isTaskIn', cellRenderer: (params: any) => {
         return !!params.value ? 'Si' : 'No'
       }},
@@ -124,7 +124,7 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
     this.detailCellRendererParams = {
       detailGridOptions: {
         columnDefs: [
-          { headerName: 'Pase de abordar', field: 'name' },
+          { headerName: 'Pase', field: 'name' },
           { headerName: 'Mete', field: 'isTaskIn', cellRenderer: (params: any) => {
             return !!params.value ? 'Si' : 'No'
           }},

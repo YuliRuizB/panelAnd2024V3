@@ -26,11 +26,45 @@ export class ProductsService {
     return batch.commit();
   }
 
+  updateProduct(accountId: string, productId:string, product: Product) {  
+    const updateProductRef = this.afs.collection('customers').doc(accountId).collection('products').doc(productId);
+    return updateProductRef.update(product);
+  }
+
   deleteProduct(accountId: string, productId: string) {
+    
     const productRef = this.afs.collection('customers').doc(accountId).collection('products').doc(productId);
     const batch = this.afs.firestore.batch();
-    batch.delete(productRef.ref);
+    batch.update(productRef.ref, { active: false, disable: true });
     return batch.commit();
+  }
+
+  
+  toggleBoardingPass(productId: string, active: boolean){
+    const productRef = this.afs.collectionGroup('boardingPasses', ref => ref.where('product_id','==', productId));  
+  
+    productRef.get().subscribe(querySnapshot => {
+      const batch = this.afs.firestore.batch();
+      
+      querySnapshot.forEach(doc => {
+        batch.update(doc.ref, { active: !active });
+      });
+
+      return batch.commit();
+    });
+  }
+  togglePurchaseRequests( productId: string, active: boolean){
+    const productRef = this.afs.collectionGroup('purchaseRequests', ref => ref.where('product_id','==', productId));  
+  
+    productRef.get().subscribe(querySnapshot => {
+      const batch = this.afs.firestore.batch();
+      
+      querySnapshot.forEach(doc => {
+        batch.update(doc.ref, { active: !active });
+      });
+
+      return batch.commit();
+    });
   }
 
   toggleProductActive(accountId: string, productId: string, active: boolean) {

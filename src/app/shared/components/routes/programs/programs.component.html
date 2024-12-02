@@ -1,5 +1,5 @@
 <div class="site-page-header-ghost-wrapper">
-  <nz-page-header>
+  <nz-page-header  style="background-color:#f9fbfd;">
     <nz-page-header-extra>
       <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="showCreateModal()">Agregar asignación</button>
     </nz-page-header-extra>
@@ -94,7 +94,7 @@
       </div>
       <div class="col-md-6 col-sm-12">
         <nz-form-item>
-          <nz-form-label>Clientes</nz-form-label>
+          <nz-form-label>División</nz-form-label>
           <nz-form-control>
             <nz-select formControlName="vendorId" nzAllowClear nzPlaceHolder="Selecciona la estación" (ngModelChange)="onVendorSelected($event, 'vendorName')">
               <nz-option *ngFor="let o of vendorsList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon ></i> {{ o.name }} <br/> {{ o.description }}</nz-option>
@@ -137,14 +137,14 @@
             </nz-form-control>
         </nz-form-item>
       </div>
-      <div class="col-md-4 col-sm-12">
+     <!--  <div class="col-md-4 col-sm-12">
         <nz-form-item>
           <nz-form-label>Aire acondicionado</nz-form-label>
           <nz-form-control>
             <nz-switch formControlName="acRequired" nzCheckedChildren="Si" nzUnCheckedChildren="No"></nz-switch>
           </nz-form-control>
         </nz-form-item>
-      </div>
+      </div> -->
     </div>
     <nz-form-item>
       <nz-form-label nzFor="days">Días</nz-form-label>

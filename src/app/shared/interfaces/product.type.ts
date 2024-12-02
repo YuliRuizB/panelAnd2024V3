@@ -17,6 +17,7 @@ export interface Product {
     timesSold?: number;
     member? : string;
     avatar?: string;
+    imageUrl?:string;
 }
 
 export const columnDefs = [

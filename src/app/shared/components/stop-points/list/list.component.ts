@@ -2,17 +2,19 @@ import { Component, OnInit, Input, OnDestroy, inject, ViewChild, ElementRef } fr
 import { Subscription, Subject } from 'rxjs';
 import { IStopPoint } from '../../../interfaces/route.type';
 import { map, takeUntil, tap } from 'rxjs/operators';
-import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedStopPointsNewComponent } from '../new/new.component';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
-import { SharedStopPointsEditComponent } from '../edit/edit.component';
+
 import { RolService } from '../../../services/roles.service';
 import { UsersService } from '../../../services/users.service';
 import { AuthenticationService } from '../../../services/authentication.service';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { RoutesService } from '../../../services/routes.service';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+
 
 @Component({
   selector: 'app-shared-stoppoints-list',
@@ -42,12 +44,16 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   pdfDescription:string= "";
   stopId:string = "";
   userId:string = "";
+  isEditVisible:boolean = false;
   accountsSubscription?: Subscription;
   stopSubscriptions$: Subject<boolean> = new Subject();
   usersCollection: AngularFirestoreCollection<any> | undefined;
   userSubscription: Subscription | undefined;
+  stopPoint: any;
+  validateForm!: UntypedFormGroup;
 
   constructor(
+    private fb: UntypedFormBuilder,
     public modalService: NzModalService,
     public message: NzMessageService,      
     private afs: AngularFirestore
@@ -184,36 +190,39 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   }
 
   showModalEdit(data: any) {
-    let modal = this.modalService.create({
-      nzTitle: 'Editar ' + data.description,
-      nzContent: SharedStopPointsEditComponent,
-     /*  nzComponentParams: {
-        stopPoint: data TODO
-      }, */
-      nzOkText: 'Guardar',
-      nzCancelText: 'Cancelar',
-      nzOkLoading: this.isEditing,
-      nzOnOk: () => new Promise(async (resolve) => {
-        this.isEditing = true;
-        const updated = modal.getContentComponent().validateForm.value;
-        updated.id = data.id;
-        await this.routesService.updateStopPoint(this.accountId, this.routeId, updated).then(() => {
-          resolve;
-          this.isEditing = false;
-          modal.destroy();
-          this.message.success('¡Listo!');
-        }).catch(err => {
-          this.isEditing = false;
-          this.message.error('Ocurrió un error: ', err);
-          resolve;
-        })
-      }),
-      nzOnCancel: () => console.log('cancel')
+    this.isEditVisible = true;
+    this.stopPoint = data;
+    this.validateForm = this.fb.group({
+      id:[this.stopPoint.id],
+      active: [this.stopPoint.active],
+      name: [this.stopPoint.name, [Validators.required]],
+      description: [this.stopPoint.description, [Validators.required]],
+      latitude: [this.stopPoint.geopoint.latitude, [Validators.required]],
+      longitude: [this.stopPoint.geopoint.longitude, [Validators.required]],
+      imageUrl: [this.stopPoint.imageUrl, [Validators.required]],
+      kmzUrl: [this.stopPoint.kmzUrl, [Validators.required]],
+      order: [this.stopPoint.order, [Validators.required]],
+      round1: [this.stopPoint.round1, [Validators.required]],
+      round2: [this.stopPoint.round2, [Validators.required]],
+      round3: [this.stopPoint.round3, [Validators.required]],
+      round1MinutesSinceStart: [this.stopPoint.round1MinutesSinceStart, [Validators.required]],
+      round2MinutesSinceStart: [this.stopPoint.round2MinutesSinceStart, [Validators.required]],
+      round3MinutesSinceStart: [this.stopPoint.round3MinutesSinceStart, [Validators.required]]
     });
+  }
 
-    // modal.afterOpen.subscribe(() => console.log('[afterOpen] emitted!'));
-    // modal.afterClose.subscribe(result => console.log('[afterClose] The result is:', result));
-
+  handleOkEdit(){
+    console.log(this.validateForm.value);
+      this.routesService.updateStopPoint(this.accountId, this.routeId, this.validateForm.value).then(() => {    
+        this.isEditVisible = false;      
+        this.message.success('¡Listo!');
+      }).catch(err => {
+        this.isEditVisible = false;
+        this.message.error('Ocurrió un error: ', err);      
+    });
+  }
+  handleCancelEdit(){
+    this.isEditVisible = false;
   }
 
   showModalCreate() {

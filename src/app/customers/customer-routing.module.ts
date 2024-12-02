@@ -24,7 +24,7 @@ const routes: Routes = [
         data: {  title: 'Recibir pago' }
   }, */
   { path: 'routes',  component: RoutesComponents,
-      data: {  title: 'Rutas'   }
+      data: {  title: 'Operación'   }
   },
    {  path: 'routes/edit/:accountId/:routeId',
     component: RouteEditComponent,

@@ -108,11 +108,44 @@
           <nz-option *ngFor="let o of routes" nzCustomContent [nzLabel]="o.name" [nzValue]="o.routeId"
            ><i nz-icon></i> {{ o.name }}</nz-option>
         </nz-select>
-          <!-- Submit Button -->
+           <!-- Submit Button -->
           <button nz- button style=" background-color: #4F6F57; color: #f6f3ea;" type="submit">Aceptar</button>
         </form>
       </div>
     </nz-card>
+    <nz-card [nzTitle]="cardTitle">
+      <table class="details-table">
+        <tr>
+          <td><strong>Descripción:</strong></td>
+          <td>{{ descriptionRoute }}</td>
+          <td><strong>Conductor:</strong></td>
+          <td>{{ driverName }}</td>
+          <td><strong>Turno:</strong></td>
+          <td>{{ round }}</td>
+        </tr>
+        <tr>
+          <td><strong>Hora de Confirmación:</strong></td>
+          <td>{{ transformToHoursAndMinutes(driverConfirmationAt) }}</td>
+          <td><strong>Hora de Inicio:</strong></td>
+          <td>{{ transformToHoursAndMinutes(startAt) }}</td>
+          <td><strong>Online:</strong></td>
+          <td>
+            <i 
+              nz-icon 
+              [nzType]="isActiveRoute() ? 'check-circle' : 'close-circle'" 
+              [ngClass]="isActiveRoute() ? 'active-icon' : 'inactive-icon'"
+            ></i>
+            <span>{{ isActiveRoute() ? 'Active' : 'Inactive' }}</span>
+          </td>          
+        </tr> 
+        <tr>
+          <td><strong>Vehículo:</strong></td>
+          <td>{{ vehicleName }}</td>
+          <td colspan="4"></td>
+        </tr>
+      </table>
+    </nz-card>
+    
     <nz-card>
       <div class="map" #map id="map" class="match-parent">
         <google-map 

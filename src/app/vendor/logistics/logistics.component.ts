@@ -15,6 +15,7 @@ import { AuthenticationService } from '../../shared/services/authentication.serv
 import { RoutesService } from '../../shared/services/routes.service';
 import { IStopPoint } from '../../shared/interfaces/route.type';
 import { GoogleMap, MapPolyline, MapMarker } from '@angular/google-maps';
+import { log } from 'node:console';
 class GeoPoint {
   constructor(public _lat: number, public _long: number) { }
 }
@@ -108,6 +109,14 @@ export class LogisticsComponent implements OnInit {
   sumN: string = "0";
   sumTotalUsers : number = 0;
   sumTotalUsersRange : number = 0;
+  cardTitle: string = '';
+  descriptionRoute: string = "";
+  driverName: string= "";
+  driverConfirmationAt: | Date | undefined | null = null;
+  startAt :| Date | undefined | null = null;
+  activeRoute : string = "False" ;
+  round : string = "";
+  vehicleName : string = "";
 
 
   logisticsService = inject(LogisticsService);
@@ -127,7 +136,8 @@ export class LogisticsComponent implements OnInit {
     this.endDateA = endOfToday();
     this.startDateAct = startOfToday()
     this.endDateAct = endOfToday();
-
+    this.driverConfirmationAt = new Date();
+    this.startAt = startOfToday();
 
     this.dateRangeForm = this.fb.group({
       startDate: [startOfToday()], // Default to the start of today
@@ -167,8 +177,7 @@ export class LogisticsComponent implements OnInit {
     }
 
     this.authService.user.subscribe(user => {
-      this.user = user;
-        console.log(this.user); //idSegment
+      this.user = user;      
       if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
 
         this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
@@ -188,13 +197,7 @@ export class LogisticsComponent implements OnInit {
 
   }
 
-  moveMap(event: google.maps.MapMouseEvent) {
-
-    if (event.latLng) {
-      console.log(event.latLng.toJSON());
-    //  this.markerPositions.push(event.latLng.toJSON());
-      //this.center = event.latLng.toJSON();
-    }
+  moveMap(event: google.maps.MapMouseEvent) {  
   }
 
   move(event: google.maps.MapMouseEvent) {
@@ -228,6 +231,15 @@ export class LogisticsComponent implements OnInit {
   }
 
   onDateRangeChangeMap(): void {
+
+    if ( this.dateRangeFormMap.get('routeId')!.value != undefined) {
+      const recordArray = _.filter(this.routes, r => {
+        return r.id ==  this.dateRangeFormMap.get('routeId')!.value;
+      });
+      const record = recordArray[0];
+      this.cardTitle = record.name;
+      this.descriptionRoute = record.description      
+    }
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       this.markers = this.logisticsService.getliveBusses(this.dateRangeFormMap.get('customerId')!.value, this.dateRangeFormMap.get('routeId')!.value);
       this.markers.pipe(
@@ -239,16 +251,27 @@ export class LogisticsComponent implements OnInit {
           });
         })
       ).subscribe((markers: any) => {
-        if (markers && markers.length > 0 && markers[0].geopoint) {
-          //   console.log(markers[0]);
+        if (markers && markers.length > 0 && markers[0].geopoint) {        
+          this.driverName = markers[0].driver;          
+          this.driverConfirmationAt = markers[0].driverConfirmationAt;
+          this.startAt = markers[0].startAt;
+          this.activeRoute = markers[0].active;
+          this.round = markers[0].round;
+          this.vehicleName = markers[0].vehicleName;
           this.addGeoPointToMarkerPositions(markers[0].geopoint);
-        } else {
-          // Clear markerPositions if markers is empty or markers[0].geopoint is not available
+        } else {        
           this.notification.create('warning', 'Información', 'No hay operaciones activas en este momento.');
+          this.driverName = "";          
+          this.driverConfirmationAt = null;
+          this.startAt = null;
+          this.activeRoute = "False";
+          this.round ="";
+          this.vehicleName = "";
+          this.descriptionRoute = "";
           this.markerPositions = [];
         }
       })
-    } else {
+    } else {      
       this.markers = this.logisticsService.getliveBusses(this.dateRangeFormMap.get('customerId')!.value, this.dateRangeFormMap.get('routeId')!.value);
       this.markers.pipe(
         map((actions: any) => {
@@ -256,24 +279,57 @@ export class LogisticsComponent implements OnInit {
             const data = a.payload.doc.data() as any;
             const id = a.payload.doc.id;
             const arrayLatLng = (a.payload.doc.data().geopoint);
-
             return { id, arrayLatLng, ...data }
           });
         })
-      ).subscribe((markers: any) => {
-        if (markers && markers.length > 0 && markers[0].geopoint) {       
+      ).subscribe((markers: any) => {       
+        if (markers && markers.length > 0 && markers[0].geopoint) {  
+          this.driverName = markers[0].driver;          
+          this.driverConfirmationAt = markers[0].driverConfirmationAt;
+          this.startAt = markers[0].startAt;
+          this.activeRoute = markers[0].active;
+          this.round = markers[0].round;
+          this.vehicleName = markers[0].vehicleName;
+
           this.addGeoPointToMarkerPositions(markers[0].geopoint);
-        } else {
-          // Clear markerPositions if markers is empty or markers[0].geopoint is not available
+        } else {          
           this.notification.create('warning', 'Información', 'No hay operaciones activas en este momento.');
+          this.markerPositions = [];
+          this.driverName = "";          
+          this.driverConfirmationAt = null;
+          this.startAt = null;
+          this.activeRoute = "False";
+          this.round ="";
+          this.vehicleName = "";
+          this.descriptionRoute = "";
           this.markerPositions = [];
         }
       })
     }
   }
-
-  addGeoPointToMarkerPositions(geoPoint: GeoPoint) {
-    //  console.log( geoPoint._lat);
+  transformToHoursAndMinutes(timestamp: { seconds: number; nanoseconds: number } | Date | undefined | null): string {
+    if (!timestamp) {
+      return 'NA'; // Return 'NA' if the timestamp is null or undefined
+    }
+  
+    let date: Date;
+  
+    if (timestamp instanceof Date) {
+      // If it's a Date object, use it directly
+      date = timestamp;
+    } else {
+      // If it's a Firestore-like timestamp, convert it
+      date = new Date(timestamp.seconds * 1000);
+    }
+  
+    // Extract hours and minutes
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+  
+    // Format the time with leading zeros for minutes
+    return `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
+  }
+  addGeoPointToMarkerPositions(geoPoint: GeoPoint) {     
     this.markerPositions = [];
     if (geoPoint?._lat !== undefined && geoPoint?._long !== undefined) {
       this.markerPositions.push({ lat: geoPoint._lat, lng: geoPoint._long });
@@ -281,12 +337,18 @@ export class LogisticsComponent implements OnInit {
       console.error('Invalid GeoPoint object:', geoPoint);
     }
   }
+  isActiveRoute(): boolean {
+    // Convertir 'activeRoute' a un valor booleano
+    if (typeof this.activeRoute === 'string') {
+      return this.activeRoute.toLowerCase() === 'true';  // Si es una cadena, la convierte en booleano
+    }
+    return !!this.activeRoute;  // Si ya es booleano, se asegura de que sea true o false
+  }
 
   onDateRangeChangeAct(): void {    
     this.startDateAct = this.dateRangeFormAct.get('startDate')!.value;
     this.endDateAct = this.dateRangeFormAct.get('endDate')!.value;
     this.customerIdSelected = this.dateRangeFormAct.get('customerId')!.value;
-    console.log(this.startDateAct + "-" + this.endDateAct + "-" + this.customerIdSelected)
     if (this.startDateAct && this.endDateAct && this.customerIdSelected) {
       this.logisticsService.getChartDatabyCustomer(this.startDate, this.endDate, this.customerIdSelected).pipe(
         map((actions: any) => {
@@ -364,11 +426,7 @@ export class LogisticsComponent implements OnInit {
   }
 
   getAccountsMaps() {
-    console.log(this.infoSegment);
-    
     if (this.infoSegment !== null && this.infoSegment !== undefined && this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 3) {
-      console.log("enter");
-      
       this.accountsService.getAccounts().pipe(
         takeUntil(this.stopSubscription$),
         map((actions: any) => actions.map((a: any) => {
@@ -381,8 +439,6 @@ export class LogisticsComponent implements OnInit {
       });
     }
     else {
-      console.log("part2");
-      
       if (this.user && this.user.customerId) {
         this.accountsService.getAccount(this.user.customerId).pipe(
           takeUntil(this.stopSubscription$),
@@ -500,8 +556,7 @@ export class LogisticsComponent implements OnInit {
             return data;
           });
         })
-      ).subscribe((result: IActivityLog[]) => {
-        console.log(result);
+      ).subscribe((result: IActivityLog[]) => {        
         this.rowData = result;
         this.activityList = this.rowData.slice(0, 5);
         this.chartData = _.map(this.rowData, (x: any) => {
@@ -524,7 +579,6 @@ export class LogisticsComponent implements OnInit {
           });
         })
       ).subscribe((result: IActivityLog[]) => {
-        console.log(result);
         this.rowData = result;
         this.activityList = this.rowData.slice(0, 5);
         this.chartData = _.map(this.rowData, (x: any) => { // Correct usage of _.map()
@@ -534,7 +588,6 @@ export class LogisticsComponent implements OnInit {
 
       this.liveService.getLiveProgram()
         .subscribe((result: any[]) => {
-          //   console.log(result);
           this.rowFleetData = result;
         });
 
@@ -554,6 +607,7 @@ export class LogisticsComponent implements OnInit {
         return r.id == event;
       });
       const record = recordArray[0];
+      this.cardTitle =  "";
       if (this.fillCustomer == false) {
         this.fillCustomer = true;
         this.dateRangeFormMap.controls['customerName'].setValue(record.name);

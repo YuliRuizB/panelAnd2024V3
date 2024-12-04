@@ -3,3 +3,26 @@
     height: 600px !important;
     background-color: #f6f6f4;
   }
+
+  .details-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  
+  .details-table td {
+    padding: 4px 8px;
+    vertical-align: top;
+  }
+  
+  .details-table td strong {
+    font-weight: bold;
+  }
+
+  .active-icon {
+    color: green; /* Color para el estado activo */
+  }
+  
+  .inactive-icon {
+    color: red; /* Color para el estado inactivo */
+  }

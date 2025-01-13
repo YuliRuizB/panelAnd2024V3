@@ -3,7 +3,7 @@ import {  NzModalRef } from 'ng-zorro-antd/modal';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { takeUntil, map, tap } from 'rxjs/operators';
 import { UntypedFormGroup, UntypedFormBuilder, Validators } from '@angular/forms';
 import * as _ from 'lodash';
@@ -62,6 +62,8 @@ export class RoutesComponents implements OnInit, OnDestroy {
   infoSegment: any = []
   customersService= inject(CustomersService);
   timeOptions: string[] = [];
+  routesListSingle: any[] = [];
+  routesSubscription!: Subscription;
 
 ;  constructor(
   private afs: AngularFirestore,
@@ -71,10 +73,8 @@ export class RoutesComponents implements OnInit, OnDestroy {
     private modal: NzModalModule
   ) {
     this.authService.user.subscribe(user => {   
-      this.user = user;
-     // console.log(this.user); /idSegment
-        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) { 
-          console.log(this.user.idSegment);
+      this.user = user;    
+        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {           
           this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
             takeUntil(this.stopSubscription$),
             map((a:any) => {
@@ -89,8 +89,7 @@ export class RoutesComponents implements OnInit, OnDestroy {
             })
           ).subscribe();
           this.authService.user.subscribe(user => {     
-            this.user = user;
-           // console.log(this.user); //idSegment
+            this.user = user;          
             if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {           
               this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
                   this.infoLoad = item;
@@ -154,6 +153,9 @@ export class RoutesComponents implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.stopSubscription$.next(false);
     this.stopSubscription$.complete();
+    if(this.routesSubscription) {
+      this.routesSubscription.unsubscribe();
+    }
   }
 
   sendMessage(type: string, message: string): void {
@@ -212,23 +214,54 @@ export class RoutesComponents implements OnInit, OnDestroy {
     this.objectForm.controls['customerName'].setValue(record.name);
   }
 
-  toggleActive(data: { customerId: string; routeId: string; }) {
-    
+  toggleActive(data: any) {
+    if (data.active === false){
+      this.routesSubscription = this.routesService.getCustomersRoutesbyCustomer(data.customerId, data.routeId).pipe(
+        takeUntil(this.stopSubscription$),
+        map((actions: any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data };
+        }))
+      ).subscribe({
+        next: (stopPoints: any) => {
+          const coordinatesArray = stopPoints.map((stopPoint: any) => {
+            return {
+              latitude: stopPoint.latitude,
+              longitude: stopPoint.longitude
+            };
+          });
+          this.routesService.getDirectionsWithStops(coordinatesArray).subscribe({
+            next: async (response: any) => {
+              this.routesService.setPolyline(response, data.customerId, data.routeId).then(() => {
+              }).catch((error: any) => {
+                this.sendMessage("error", error);
+              });
+            },
+            error: (e: any) => {
+              console.error(e);
+            },
+          });
+        },
+        error: (err: any) => {
+          this.sendMessage("error", err);
+        }
+      });
+    }
     this.routesService.toggleActiveRoute(data.customerId, data.routeId, data).then(() => {
       
       this.routesService.toggleActiveRouteVendor(data.customerId, data.routeId, data).then(() => {
         this.sendMessage('sucess', "La ruta se modificó con éxito.");
       });
     })
-      .catch(err => console.log(err));
+      .catch(err => this.sendMessage('error',err))
   }
 
   deleteRoute(data: { customerId: string; routeId: string; }) {
     if (this.userlevelAccess == "1") {
-      this.routesService.deleteRoute(data.customerId, data.routeId).then(() => {
-        console.log('done');
+      this.routesService.deleteRoute(data.customerId, data.routeId).then(() => {       
       })
-        .catch(err => console.log(err));
+        .catch(err => this.sendMessage('error',err));
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }   
@@ -283,11 +316,8 @@ export class RoutesComponents implements OnInit, OnDestroy {
           type: 'primary',
           onClick: () => this.modalService.confirm({
             nzTitle: 'Está la información completa?',
-            nzOnOk: () => {
-             // console.log(this.objectForm.value);
-             // console.log(this.objectForm.valhabiap orid);
-              if (this.objectForm.valid) {
-               // console.log(this.objectForm.value);          
+            nzOnOk: () => {           
+              if (this.objectForm.valid) {               
                  const formValue = this.objectForm.value;
                  const initialStart = formValue.initialStart.map((time: any) => ({                 
                      value: time
@@ -300,7 +330,7 @@ export class RoutesComponents implements OnInit, OnDestroy {
                   const key = this.afs.createId();
                const routeObj = this.routesService.setRoute2(key, this.objectForm.controls['customerId'].value, this.objectForm.value)
                   .then(() => {                 
-                  }).catch((err: any) => console.log(err));
+                  }).catch((err: any) => this.sendMessage('error',err));
                   this.routesService.getInternalCustomer(this.objectForm.controls['customerId'].value).pipe(
                     takeUntil(this.stopSubscription$),
                     map((actions:any) => actions.map((a: any) => {
@@ -312,8 +342,7 @@ export class RoutesComponents implements OnInit, OnDestroy {
                       const name = this.objectForm.controls['name'].value;
                       const currentDate = new Date();
                       const validTo = new Date(currentDate.getFullYear() + 3, currentDate.getMonth(), currentDate.getDate());
-                      const validToString = validTo.toISOString();
-                      console.log(name);
+                      const validToString = validTo.toISOString();                     
                     var fileinfoURL = "";
                     const send = {                    
                       authorization: "portalAuth",
@@ -406,17 +435,16 @@ export class RoutesComponents implements OnInit, OnDestroy {
                         baja: false,
                         type: "Servicio",
                         fileURL: fileinfoURL
-                      };
-                      //console.log(user[0].id);
+                      };                      
                       this.customersService.saveBoardingPassToUserPurchaseCollection(user[0].id, send) 
                         .then((success) => {                     
                        this.customersService.saveBoardingPassDetailToUserPurchaseCollection(user[0].id, key, send)
                           .then((success) => {                          
                             const userSend: object = user[0];                                 
                             this.customersService.createPurchaseCloud(send,userSend,user[0].id);                
-                          }).catch((err) => { console.log("error"); });
+                          }).catch((err) => { this.sendMessage('error',err);});
                            
-                      }).catch((err) => { console.log(err); });         
+                      }).catch((err) => { this.sendMessage('error',err);});         
 
                       this.modalService.closeAll();    
                     });

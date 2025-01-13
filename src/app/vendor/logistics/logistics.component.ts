@@ -135,9 +135,9 @@ export class LogisticsComponent implements OnInit {
     this.startDateA = startOfToday()
     this.endDateA = endOfToday();
     this.startDateAct = startOfToday()
-    this.endDateAct = endOfToday();
-    this.driverConfirmationAt = new Date();
+    this.endDateAct = endOfToday();    
     this.startAt = startOfToday();
+    this.driverConfirmationAt = null;
 
     this.dateRangeForm = this.fb.group({
       startDate: [startOfToday()], // Default to the start of today

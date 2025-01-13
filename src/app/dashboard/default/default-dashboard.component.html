@@ -21,6 +21,14 @@
                 <ng-template #suffixIconSearch>
                   <span nz-icon nzType="search"></span>
                 </ng-template>
+
+                <nz-input-group [nzSuffix]="suffixIconSearch" style="flex-grow: 1;">
+                  <input type="text" #searchInputEmail nz-input placeholder="Buscar por Correo" (keyup.enter)="getItemsByEmail(searchInputEmail.value)" />
+                </nz-input-group>
+                <ng-template #suffixIconSearch>
+                  <span nz-icon nzType="search"></span>
+                </ng-template>
+
                 <button class="m-r-10" nz-button nzType="primary" (click)="searchloadUsers()">Cargar Usuarios</button>
               </div>
               

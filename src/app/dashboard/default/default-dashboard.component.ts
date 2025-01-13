@@ -23,101 +23,7 @@ import { DashboardService } from '../../shared/services/admin/dashboard.service'
 import { ProductsService } from '../../shared/services/products.service';
 import { CustomersService } from '../../customers/services/customers.service';
 import { AccountsService } from '../../shared/services/accounts.service';
-
-
-
-export interface IFee {
-  amount: number;
-  currency: number;
-  tax: number;
-}
-
-export interface IPaymentMethod {
-  barcode_url: string;
-  reference: string;
-  type: string;
-}
-export interface ICard {
-  address: string;
-  allows_charge: boolean;
-  allows_payouts: boolean;
-  bank_code: string;
-  bank_name: string;
-  brand: string;
-  card_number: string;
-  expiration_month: number;
-  expiration_year: number;
-  holder_name: string;
-  points_card?: boolean;
-  points_type?: string;
-  type: string;
-}
-
-export interface ICustomer {
-  address: string;
-  clabe: string;
-  creation_date: Date;
-  email: string;
-  external_id: string;
-  last_name: string;
-  name: string;
-  phone_number: string;
-}
-export interface IBoardingPass {
-  active: boolean;
-  amount: number;
-  authorization: number;
-  card?: ICard;
-  category: string;
-  conciliated: boolean;
-  creation_date: Date;
-  promiseDate: Date;
-  currency: string;
-  customer_id?: string;
-  customer?: ICustomer;
-  date_created: Timestamp;
-  due_date?: Date;
-  description: string;
-  error_message: string;
-  fee?: IFee;
-  is_courtesy?: boolean;
-  method: string;
-  name: string;
-  operation_date: Date;
-  operation_type: string;
-  order_id: string;
-  payment_method?: IPaymentMethod;
-  price: number;
-  product_description: string;
-  product_id: string;
-  round: string;
-  routeId: string;
-  routeName: string;
-  status: string;
-  stopDescription: string;
-  stopId: string;
-  stopName: string;
-  transaction_type: string;
-  validFrom: Timestamp;
-  validTo: Timestamp;
-  realValidTo?: Date;
-  isTaskIn: boolean;
-  isTaskOut: boolean;
-  isOpenpay?: boolean;
-  paidApp?: string;
-  id?: string;
-  amountPayment?:string;
-  typePayment?:string;
-  payment?:string; 
-  baja?:boolean;
-  idBoardingPass?:string;
-}
-interface IRound {
-  round1?: string;
-  round2?: string;
-  round3?: string;
-  round4?: string;
-}
+import { IBoardingPass, IFee, IRound, Recibo } from '../../shared/interfaces/dashboard.type';
 
 export interface IStopPoint {
   id: string;
@@ -130,6 +36,7 @@ export interface IStopPoint {
   rounds: IRound;
 
 }
+
 export const months = {
   0: 'Enero',
   1: 'Febrero',
@@ -170,13 +77,9 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   loadedDevicesList: Array<any> = [];
   usersCollection1: AngularFirestoreCollection<any> | undefined;
   reciboPago: Recibo[] = [];
-
-  //Modal MessageCenter
   newMessage = "";
   userChatMessageData: any;
   loadingChatMessages = false;
-
-  // modal Bulk create boardingPasses
   current = 0;
   isDone: boolean = false;
   isCreatingBoardingPasses: boolean = false;
@@ -185,9 +88,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   sendUser:any; 
   idBoardingPass! : string;
   isCollapsed = true; 
-
-
-  //Modal Bulk table
   listOfSelection = [
     {
       text: 'Seleccionar todas las páginas',
@@ -224,13 +124,11 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   isIndeterminate = false;
   listOfDisplayData = [];
   mapOfCheckedId: { [key: string]: boolean } = {};
-
   isCredentialsAllDisplayDataChecked = false;
   isCredentialsIndeterminate = false;
   listOfCredentialsDisplayData = [];
   listOfCredentialsAllData = [];
   mapOfCredentialsCheckedId: { [key: string]: boolean } = {};
-
   isContentOpen = false;
   isUserSelected = false;
   isLoadingUsers = false;
@@ -258,7 +156,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   latestBoardingPassesCollection: AngularFirestoreCollection<any> | undefined;
   latestBoardingPasses: any;
   loadingLatestBoardingPasses: boolean | undefined;
-
   latestUserPurchasesCollection: AngularFirestoreCollection<any> | undefined;
   latestPurchases: null | undefined;
   latestPurRequest: null | undefined;
@@ -267,16 +164,12 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   loadingUserCredentials = false;
   loadingLatestPurchases = false;
   loadinglatestPurRequest = false;
-
   isVisible = false;
   isProductVisible = false;
   isEditUserVisible = false;
   isModalCredentialVisible = false;
   isConfirmLoading = false;
   productSelectedValue: string = "";
-
-
-
   validateForm!: UntypedFormGroup;
   credentialForm!: UntypedFormGroup;
   validateEditForm!: UntypedFormGroup;
@@ -294,7 +187,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   resetClientEditInfo: boolean = false;
   newRouteIdEditeMode: string = "";
   newStepIdEditeMode: string = "";
-
   routesSubscription!: Subscription;
   productsSubscription!: Subscription;
   stopPointsSubscription!: Subscription;
@@ -302,28 +194,21 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   userSubscription!: Subscription;
   usersSubscription!: Subscription;
   userChatMessagesSubscription!: Subscription;
-
   accountId$ = new Subject<string>();
   routeId$ = new Subject<string>();
-
   canUpdatePayment = false;
   canUpdateValidTo = false;
   jobTypeIdCustomerSelected : any = "";
-
   elementType = 'url';
-
   customersList: any[] = [];
   stopSubscription$: Subject<any> = new Subject();
-
   isVisibleBulk: boolean = false;
   isLoadingBulk: boolean = false;
   isConfirmLoadingBulk: boolean = false;
-
   isVisibleBulkCredentials: boolean = false;
   isLoadingBulkCredentials: boolean = false;
   isConfirmLoadingBulkCredentials: boolean = false;
   isConfirmPagoLoading: boolean = false;
-
   formatterPercent = (value: number) => `${value} %`;
   parserPercent = (value: string) => value.replace(' %', '');
   formatterDollar = (value: number) => `$ ${value}`;
@@ -336,9 +221,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   paymentSelected: string = "";
   isAnticipo: boolean = false;
   fileListInfo: any = [];
-  // disabledDate: any;
   disabledDate = (current: Date): boolean => false;
-
   fileUrl: string = "http://themenate.com/applicator/dist/assets/images/avatars/thumb-13.jpg";
   autosave: boolean = true;
   uploading: boolean = false;
@@ -364,7 +247,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   productSelected : any = [];
   switchValueUsers = true;
   checkOptionsOne: any[] = [];
-  selectedOption: string = ""; // Variable to hold the selected option  
+  selectedOption: string = ""; 
   userCustomerId: string = "";
                 
 
@@ -378,8 +261,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   ) { 
     
     this.authService.user.subscribe(user => {   
-      this.user = user; 
-          
+      this.user = user;          
       if(this.user) {      
         this.userCustomerId = this.user.customerId;  
        
@@ -387,11 +269,10 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           map((a: any) => {
             if (a && a.payload) {
               const id = a.payload.id;
-              const data = a.payload.data ? a.payload.data() : {}; // Maneja el caso cuando data es undefined
-             // console.log(a);
+              const data = a.payload.data ? a.payload.data() : {};
               return { id, ...data };
-            } else {
-              console.warn('Unexpected payload structure:', a);
+            } else {              
+              this.sendMessage('error', a);              
               return {};
             }
           })
@@ -402,7 +283,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       }    
     });   
   }
-
  
   filldata(){
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual  
@@ -429,7 +309,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     routesObservable.subscribe((routes: any) => {
       this.routes = routes;
     });
-
     const routeEditUserObservable: Observable<any>  = this.accountId$.pipe(
       switchMap(accountId => this.afs.collection('customers').doc(accountId).collection('products', ref => ref.where('active', '==', true)).valueChanges({ idField: 'productId' })
       ));
@@ -451,31 +330,23 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     const stopPointsObservable: Observable<any>  = this.routeId$.pipe(
       switchMap(routeId => this.afs.collection('customers').doc(this.currentSelectedCustomerId).collection('routes').doc(routeId).collection('stops', ref => ref.orderBy('order', 'asc').where('active', '==', true)).valueChanges({ idField: 'stopPointId' })
       ));
-
       productsObservable.subscribe((products: any) => {       
         this.products = products;
       });
-
       stopPointsObservable.subscribe((stopPoints: any) => {
         this.stopPoints = stopPoints;
       });
-
       usersObservable.subscribe((usersByAccount: any) => {
         this.usersByAccount = usersByAccount;
-      })
-    
+      })    
     this.getCustomersList();
-   
-
   }
 
   log(value:any): void {
-    //this.selectedOption = value; 
   this.devicesList = [];
   }
 
   ngOnInit() {      
-
     this.credentialForm = this.fb.group({
       active: [true, [Validators.required]],
       validFrom: [new Date(), [Validators.required]],
@@ -601,7 +472,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     if (this.userChatMessagesSubscription) {
       this.userChatMessagesSubscription.unsubscribe();
     }
-
   }
 
   //#region  Credenciales
@@ -629,11 +499,9 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         });
         this.isCreatingCredentials = false;
         this.isDone = true;
-        } else {
-          console.error('currentUserSelected or uid is null or undefined');
-        }
-        
-       
+        } else {       
+          this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
+        }       
       } else {
         this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
       }
@@ -646,9 +514,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         this.customersService.activateCredential(this.currentUserSelected.uid, credentialId, paid);
         this.currentUserSelected.paymentId = credentialId;
       } else {
-        console.error('currentUserSelected or uid is null or undefined');
-      }     
-    
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
+      }        
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
     }
@@ -659,10 +526,9 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         this.customersService.deleteCredential(this.currentUserSelected.uid, credentialId);
       this.isBoardingPassSelected = false;
-      } else {
-        console.error('currentUserSelected or uid is null or undefined');
-      }   
-     
+      } else {        
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
+      }        
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
@@ -670,14 +536,13 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
 
   getUserCredentials(userId: string) {
-    this.loadingUserCredentials = true;
-    
+    this.loadingUserCredentials = true;    
     this.customersService.getUserCredentials(userId).pipe(
       tap(userCredentials => {
         this.userCredentials = userCredentials;
       }),
-      catchError(err => {
-        console.error('Error fetching user credentials:', err);
+      catchError(err => {        
+        this.sendMessage('error', err);
         this.userCredentials = null;
         return of(null); // Return a fallback value to keep the observable chain alive
       }),
@@ -695,10 +560,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   refreshCredentialsStatus(): void {
     const allChecked = this.usersByAccount.length > 0 &&
       this.usersByAccount.every((item:any) => this.mapOfCredentialsCheckedId[item.uid]);
-  
-    const someChecked = this.usersByAccount.some((item:any) => this.mapOfCredentialsCheckedId[item.uid]);
-  
-    this.isCredentialsAllDisplayDataChecked = allChecked;
+      const someChecked = this.usersByAccount.some((item:any) => this.mapOfCredentialsCheckedId[item.uid]);
+      this.isCredentialsAllDisplayDataChecked = allChecked;
     this.isCredentialsIndeterminate = someChecked && !allChecked;
   }
 
@@ -720,22 +583,18 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         })
       );
     });
-  
-    forkJoin(requests).subscribe();
+      forkJoin(requests).subscribe();
   }
-
 
   createMultipleCredentials() {
     this.current++;
     const validFrom = this.credentialForm.controls['validFrom'].value || new Date();
     const validTo = this.credentialForm.controls['validTo'].value || new Date();
     const active = this.credentialForm.controls['active'].value || false;
-
     if (this.userlevelAccess != "3") {
       this.isCreatingCredentials = true;
       this.selectedUsersForCredentials.forEach((user:any) => {
         this.customersService.createCredential(user.uid, user.studentId, validFrom, validTo, active).then((response: any) => {
-
         });
       });
       this.isCreatingCredentials = false;
@@ -777,43 +636,34 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.getUsersList();
   }
   getUsersList() {
-    
-  //  console.log("getUsersList");
-
     this.isLoadingUsers = true;
-  
-    let usersCollectionRef: AngularFirestoreCollection<any> = this.afs.collection('users');
-   //console.log( this.selectedOption);
-
-    usersCollectionRef = this.afs.collection('users', ref => 
-       ref.where('customerId', '==', this.selectedOption)      
-      );   
-   
-    this.usersSubscription = usersCollectionRef
-      .snapshotChanges()
-      .pipe(
-        map(actions => actions.map(a => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data };
-        }))
-      )
-      .subscribe(users => {
-       // console.log("entro a cargar users");
-       // console.log(users);
-        this.loadUsers(users);
-        this.isCollapsed = false;
+    this.afs
+    .collection('users', (ref) =>
+      ref.where('customerId', '==', this.selectedOption)
+    )
+    .ref.get() 
+    .then((snapshot) => {
+      const users: any[] = [];
+      snapshot.forEach((doc) => {
+        users.push(doc.data());
+      });              
+      this.loadUsers(users);
+      this.isCollapsed = false; 
+      this.isLoadingUsers = false;
+    })
+      .catch((error: any) => {
+        console.error('Error al obtener usuarios:', error); 
+        this.isLoadingUsers = false; 
       });
   }
   
-
   setUserDisabled(disabled: boolean) {
     if (this.userlevelAccess != "3") {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         this.customersService.setUserDisabled(this.currentUserSelected.uid, disabled);
         this.currentUserSelected.disabled = disabled;
-      } else {
-        console.error('currentUserSelected or uid is null or undefined');
+      } else {        
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');        
       }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
@@ -821,24 +671,18 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadUsers(users: any[]) {    
- 
-   // if (this.loadedDevicesList.length <= 1) {
       const displayNameMap = new Map();
-      const devicesList = [];
-     
+      const devicesList = [];     
       for (const user of users) {
         if (user.displayName !== null && user.displayName !== undefined && !displayNameMap.has(user.displayName)) {
           displayNameMap.set(user.displayName, true);
           devicesList.push(user);
         }
-      }     
-      // Sort the filtered users by displayName
+      }      
       devicesList.sort((a, b) => a.displayName.localeCompare(b.displayName));  
       this.devicesList = devicesList;
       this.loadedDevicesList = devicesList;
-      this.displayData = devicesList;  
-     
-    //}
+      this.displayData = devicesList;
   }
 
   userSelected(data: { uid: string; studentId: string; paymentId: string; disabled: any; customerId: string; firstName: any; photoURL:any;
@@ -847,7 +691,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
      displayName: any; userName: any; customerName: any; defaultRound: any; defaultRouteName: any; defaultStopName: any; defaultStopId: any; } ) {   
     this.currentUserSelected = data;
     this.currentSelectedCustomerId = this.currentUserSelected.customerId;
-
     this.accountId$.next(this.currentUserSelected.customerId);
     this.isUserSelected = true;
     this.isBoardingPassSelected = false;
@@ -859,15 +702,14 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.getUserChatMessages(data.uid);
     this.lastPurchase = undefined;
     this.productsReference = null;
-
   }
 
   copyDataToUserCollection() {
     if (this.userlevelAccess != "3") {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         this.customersService.saveOldBoardingPassToUserCollection(this.currentUserSelected.paymentId);
-      } else {
-        console.error('currentUserSelected or uid is null or undefined');
+      } else {  
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');  
       }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
@@ -877,56 +719,51 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   getUserChatMessages(userId: string): void {
     this.loadingChatMessages = true;
     
-    // Cancela la suscripción anterior si existe para evitar memory leaks
     if (this.userChatMessagesSubscription) {
       this.userChatMessagesSubscription.unsubscribe();
     }
-  
-    // Realiza la llamada al servicio para obtener los mensajes de chat
     this.userChatMessagesSubscription = this.dashboardService.getUserChatMessages(userId, 10)
       .subscribe(userChatMsn => {
         this.userChatMessageData = userChatMsn;
-        this.loadingChatMessages = false; // Marca como cargado una vez se reciben los datos
+        this.loadingChatMessages = false; 
       });
   }
 
-
   getJobType(customerId: any) {
-    //console.log(customerId);
     this.dashboardService.getJobType(customerId).pipe(
       takeUntil(this.stopSubscription$),
       map((actions: any) => {
-      //  console.log('actions:', actions); 
-          return  actions.jobTypeID;
+          return actions.jobTypeID;
       })
     )
-    .subscribe(
-      (customerInfo: any) => {
+    .subscribe({
+      next: (customerInfo: any) => {
         if (customerInfo !== undefined) {
-        if (customerInfo.length > 0) {
-
-          this.dashboardService.getJobTypeInfo(customerInfo).pipe(
-            takeUntil(this.stopSubscription$),
-            map((actions: any) => {
-             // console.log('result:', actions); 
-                return  actions.requiredFields;
-            })
-          )
-          .subscribe(
-            (requiredFields: any) => {
-              //console.log('requiredFields:', requiredFields);     
-              this.requiredFields = requiredFields;
-            });         
-        } 
-      }       
+          if (customerInfo.length > 0) {
+            this.dashboardService.getJobTypeInfo(customerInfo).pipe(
+              takeUntil(this.stopSubscription$),
+              map((actions: any) => {
+                  return actions.requiredFields;
+              })
+            )
+            .subscribe({
+              next: (requiredFields: any) => {    
+                this.requiredFields = requiredFields;
+              },
+              error: (error: any) => {
+                this.sendMessage('error', error);
+              }
+            });
+          } 
+        }
       },
-      (error: any) => {
-        console.error('Error fetching job type:', error);
-      });    
+      error: (error: any) => {        
+        this.sendMessage('error', error);
+      }
+    });
   }
 
   //#endregion
-
  
   //#region  Purchases and Payments
   onBulkBoardingPassSelected(customerId: string ) {
@@ -949,26 +786,21 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
   onCanUpdatePayment() {
     this.canUpdatePayment = true;
-
-    //Send info to liquidacion 
     if (this.lastPurchase !== undefined) {
       var amountPayment = Number(this.lastPurchase.amountPayment);
       var amount = Number(this.lastPurchase.amount);
       this.validateLiqForm.controls['productSelected'].setValue(this.lastPurchase.name);
       this.validateLiqForm.controls['alreadyPayment'].setValue(amountPayment);
-      this.validateLiqForm.controls['amount'].setValue(amount);
-  
+      this.validateLiqForm.controls['amount'].setValue(amount);  
       this.validateLiqForm.controls['completeAmount'].setValue(amount - amountPayment);
       this.validateLiqForm.controls['validFrom'].setValue(this.lastPurchase.validFrom.toDate());
       this.productSelectedValue = this.lastPurchase.name;
-  } else {
-      console.error('lastPurchase is undefined');
+  } else {      
+      this.sendMessage('error', 'lastPurchase is undefined');
   }   
   }
 
-  createLiquidacion() {
-    // this.msg.info("Creacion de Complemento de Pago");
-
+  createLiquidacion() {   
     const validTo = this.validateLiqForm.controls['validTo'].value || new Date();
     const typePayment = this.validateLiqForm.controls['typePayment'].value;
   
@@ -1095,8 +927,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
          if (this.userlevelAccess != "3") {
           if (purchId !== undefined) {
             this.customersService.saveBoardingPassDetailToUserPurchaseCollection(this.currentUserSelected.uid, purchId, send)
-            .then((success) => {
-   
+            .then((success) => {   
              this.msg.success("El registro se genero correctamente");
              if (this.lastPurchase && this.lastPurchase.realValidTo !== undefined) {
               const validTo = new Date(this.lastPurchase.realValidTo);
@@ -1123,26 +954,27 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
                   this.canUpdatePayment = false;
                 }).catch((err) => { this.isConfirmLoading = false; });
               }
-            }).catch((err) => { console.log("error"); });
+            }).catch((err) => { this.sendMessage('error', err);
+             });
 
           // reflect information on fields..
           //TODO
-        } else {
-            console.error('lastPurchase id is undefined');
+        } else {            
+            this.sendMessage('error', 'lastPurchase is undefined');
         }         
 
         } else {
           this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
         } 
-        } else {
-          console.error('currentUserSelected or uid is null or undefined');
+        } else {          
+          this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
         }
         
        
       }
     }
-  } else {
-      console.error('lastPurchase is undefined');
+  } else {      
+      this.sendMessage('error', 'lastPurchase is undefined');
   }
 
   }
@@ -1150,7 +982,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   onPaymentUpdated(event: number) {
     if (this.lastPurchase !== undefined) {
     if (+this.lastPurchase.price === event) {
-
       this.lastPurchase.status = 'completed';
       this.lastPurchase.amount = event;
       this.lastPurchase.active = true;
@@ -1170,7 +1001,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         }).catch((err) => { this.isConfirmLoading = false; });
       this.canUpdatePayment = false;
       } else {
-        console.error('currentUserSelected or uid is null or undefined');
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
       }      
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
@@ -1190,16 +1021,15 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       this.lastPurchase = undefined;
       this.productsReference = null;
     });
-
-    // Search for the Route defaul defaultRoute defaultRouteName , 
+ 
   }
 
   activatePurchase(purchaseId: string, paid: boolean) {
     if (this.currentUserSelected && this.currentUserSelected.uid) {       
     this.customersService.activatePurchase(this.currentUserSelected.uid, purchaseId, paid);
     this.currentUserSelected.paymentId = purchaseId;
-    } else {
-      console.error('currentUserSelected or uid is null or undefined');
+    } else {      
+      this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
     } 
   }
 
@@ -1209,65 +1039,71 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.isBoardingPassSelected = false;
 
     this.userService.updateUserPreRegister(this.currentUserSelected.uid, this.currentUserSelected.status);
-    } else {
-      console.error('currentUserSelected or uid is null or undefined');
+    } else {      
+      this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
     }
   }
   getLatestPurchases(userId: string) {
     this.loadingLatestPurchases = true;
     this.customersService.getLatestUserPurchases(userId, 10).pipe(
-      map((actions:any) => actions.map((a:any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IBoardingPass;
         return { id, ...data };
       }))
     )
-      .subscribe(latestPurchases => {
-
-        this.latestPurchases = latestPurchases;      
-        this.loadingLatestPurchases = false;
-      }, err => {
-        this.latestPurchases = null;
-        this.loadingLatestPurchases = false;
+      .subscribe({
+        next: (latestPurchases) => {
+          this.latestPurchases = latestPurchases;
+          this.loadingLatestPurchases = false;
+        },
+        error: (err) => {
+          this.latestPurchases = null;
+          this.loadingLatestPurchases = false;
+        }
       });
   }
 
-  getLastestPurchaseRequest(userId: string){
+  getLastestPurchaseRequest(userId: string) {
     this.loadinglatestPurRequest = true;
     this.customersService.getLatestUserPurchasesRequest(userId, 10).pipe(
-      map((actions:any) => actions.map((a:any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IBoardingPass;
         return { id, ...data };
       }))
     )
-      .subscribe(latestPurchasesR => {
-
-        this.latestPurRequest = latestPurchasesR;      
-        this.loadinglatestPurRequest = false;
-      }, err => {
-        this.latestPurRequest = null;
-        this.loadinglatestPurRequest = false;
+      .subscribe({
+        next: (latestPurchasesR) => {
+          this.latestPurRequest = latestPurchasesR;
+          this.loadinglatestPurRequest = false;
+        },
+        error: (err) => {
+          this.latestPurRequest = null;
+          this.loadinglatestPurRequest = false;
+        }
       });
   }
 
-  getLatestPurchaseDetail(userId: string, purchaseId: string ) {
+  getLatestPurchaseDetail(userId: string, purchaseId: string) {
     this.customersService.getLatestUserPurchaseDetail(userId, 10, purchaseId).pipe(
-      map((actions:any) => actions.map((a:any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IBoardingPass;
         return { id, ...data };
       }))
     )
-      .subscribe(lastestPurchaseDetail => {
-        this.lastestPurchaseDetail = lastestPurchaseDetail;
-      }, err => {
-        this.lastestPurchaseDetail = null;
+      .subscribe({
+        next: (lastestPurchaseDetail) => {
+          this.lastestPurchaseDetail = lastestPurchaseDetail;
+        },
+        error: (err) => {
+          this.lastestPurchaseDetail = null;
+        }
       });
   }
 
   reassingBoardingPass(id: any, set: any) {
-
     if (this.userlevelAccess != "3") {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         if (this.lastPurchase !== undefined) {
@@ -1279,11 +1115,9 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           oldBoardingPassRef.delete();
         });
       }
-      } else {
-        console.error('currentUserSelected or uid is null or undefined');
+      } else {        
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
       }
-      
-     
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
@@ -1299,8 +1133,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     }).catch((error) => {
       this.sendMessage('error: ', error);
     });
-    } else {
-      console.error('currentUserSelected or uid is null or undefined');
+    } else {      
+      this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
     }    
   }
   boardingPassSelected(purchase: IBoardingPass) {
@@ -1311,7 +1145,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-
   createMultipleBoardingPasses() {
     this.isCreatingBoardingPasses = true;
     setTimeout(() => {
@@ -1319,14 +1152,11 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       this.isDone = true;
     }, 2000);
   }
-
-
   //#endregion
 
   //#region Multiple Methods
   showModal(): void {
     this.isVisible = true;
-
   }
 
   showModalEditUser(currentUserSelected: { firstName: any; lastName: any; displayName: any; userName: any;
@@ -1352,7 +1182,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.validateEditForm.controls['defaultRouteName'].setValue(currentUserSelected.defaultRouteName);
     this.validateEditForm.controls['defaultStopId'].setValue(currentUserSelected.defaultStopId);
     this.validateEditForm.controls['defaultStopName'].setValue(currentUserSelected.defaultStopName);
-
   }
 
   fillCustomerRouteEditUser(customerID: string) {
@@ -1369,7 +1198,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
 
   fillStopsEditUser(customerId: string, routeId: string) {
-
     this.routesService.getRouteStopPoints(customerId, routeId).pipe(
       takeUntil(this.stopSubscription$),
       map((actions:any) => actions.map((a:any) => {
@@ -1406,15 +1234,13 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       uid: this.currentUserSelected.uid//'RgNnO7ElJgdThoKh8rUvrpb2EhH2'
     }
     this.dashboardService.setMessage(notifMessage, this.currentUserSelected.uid);
-
     this.dashboardService.setChatMessage(dataMessage)
       .then(() => {
         this.newMessage = "";
       });
     } else {
-      console.error('currentUserSelected or uid is null or undefined');
-    }
-    
+      this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
+    }    
   }
 
   onRouteEditUserSelected(event: string , routes: any) {
@@ -1426,8 +1252,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         this.validateEditForm.controls['defaultRouteName'].setValue(record.name);
         const oldCustomer = this.currentUserSelected.customerId;
-        const oldRoute = this.currentUserSelected.defaultRoute;
-  
+        const oldRoute = this.currentUserSelected.defaultRoute;  
         if (oldCustomer != this.newCustomerIdEditMode && oldRoute != record.routeId) {
           this.newRouteIdEditeMode = record.routeId;
           this.fillStopsEditUser(this.newCustomerIdEditMode, record.routeId);
@@ -1435,8 +1260,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         else {
           this.newRouteIdEditeMode = oldRoute;
         }
-      } else {
-        console.error('currentUserSelected or uid is null or undefined');
+      } else {        
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
       }
     }
   }
@@ -1453,14 +1278,11 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
   onStopPointEditUserSelected(event: string , stopPointsList: any) {
     if (event != null && event != '') {
-
       const recordArray = _.filter(stopPointsList, s => {
         return s.id == event;
       });
-
       const record1 = recordArray[0];
       this.validateEditForm.controls['defaultStopName'].setValue(record1.name);
-
       if (this.newCustomerIdEditMode != "") {
         this.resetClientEditInfo = true;
       }
@@ -1477,7 +1299,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
 
   onCustomerSelected(event: any, customers: any) {
-
     this.resetClientEditInfo = false;
     if (event != null) {
       const recordArray = _.filter(customers, r => {
@@ -1496,11 +1317,10 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           this.newCustomerIdEditMode = "";
         }
       } else {
-        console.error('currentUserSelected or uid is null or undefined');
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
       }      
     }
   }
-
 
   onCanUpdateValidTo() {
     this.canUpdateValidTo = true;
@@ -1510,7 +1330,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
   handleOk(): void {
     this.isConfirmLoading = true;
-
     setTimeout(() => {
       this.isVisible = false;
       this.isConfirmLoading = false;
@@ -1535,23 +1354,39 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.getUsersList();
   }
 
-
   getItems(searchbar: any) {
-    const q = searchbar; // Assuming `searchbar` is an input element and you want to extract its value    
-    if (!q) {       
-        // If the search query is empty, reset the devicesList to its original state
+    const q = searchbar;   
+    if (!q) {
         this.devicesList = this.loadedDevicesList.slice();
         return; 
     }
-    const text = q.toLowerCase(); // Using `toLowerCase()` instead of `toLower()` for lowercase conversion   
+    const text = q.toLowerCase(); 
     this.devicesList = this.loadedDevicesList.filter((object: any) => {
-        // Check if any property of the object contains the search text
         return Object.values(object).some((value: any) => {
-            // Convert the property value to lowercase and check if it includes the search text
             return String(value).toLowerCase().includes(text);
         });
-    });
-}
+    });   
+  }
+
+  getItemsByEmail(searchbar: string) {
+    this.isLoadingUsers = true;  
+    this.afs
+    .collection('users', (ref) => ref.where('email', '==', searchbar))
+    .snapshotChanges()
+    .pipe(
+      map((actions) => {
+        return actions.map((a) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data };
+        });
+      })
+    )
+    .subscribe(users => {          
+      this.loadUsers(users);
+      this.isCollapsed = false;
+    });        
+  }
 
   initializeItems() {
     this.devicesList = this.loadedDevicesList;
@@ -1598,15 +1433,12 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         nzOnCancel: () => console.log('Cancel')
       });
     } else {
-      console.error('currentUserSelected or uid is null or undefined');
+      this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
     }   
    
   }
   getCustomersList() {
-
-    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-      console.log( this.userCustomerId);
-      
+    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual    
       const customersCollection = this.afs.collection('customers').doc(this.userCustomerId);
       customersCollection.snapshotChanges().pipe(
         takeUntil(this.stopSubscription$),
@@ -1615,17 +1447,13 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           const data = action.payload.data() as any;
           return { id, ...data };
         }),
-        tap((customer: any) => {
-          console.log(customer);
-          
+        tap((customer: any) => {          
           this.customersList = [customer];  // Asigna un array con un único objeto
           
           this.checkOptionsOne = [{
             value: customer.id,
             label: customer.name
           }];
-          console.log(this.checkOptionsOne);
-          
           return customer;
         })
       ).subscribe();
@@ -1644,8 +1472,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           this.checkOptionsOne = customers.map((customer: any) => ({
             value: customer.id,
             label: customer.name
-          }));
-       //   console.log(this.checkOptionsOne);
+          }));   
           return customers;
         })
       ).subscribe();
@@ -1674,7 +1501,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     const resultValidations = this.validateSubmit();
 
     if (resultValidations) {
-      //this.msg.success("result " + resultValidations);
       var advanceForm: object;
       var purchaseRequest: object;
       var amountTrips : number = 0;
@@ -1687,20 +1513,16 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         if (paymentSelected == "Anticipo") {
           amount = this.validateForm.controls['amountPayment'].value; //Cantidad a Pagar.
         }
-        //console.log(this.validateForm.value)
         const frequencies = this.validateForm.controls['frequencies'].value || 0;
-       //console.log( frequencies + '/' + amountTrips  + '/' + frequencies.length);
         if (frequencies > 0){           
             amountTrips = Number(frequencies) * 80;          
         }
         const weeks = this.productSelected?.weeks || 0;       
         const rangeWeeksGroup = this.fb.group({});
-
-        const rangeWeeks = this.productSelected?.rangeWeeks || {}; // Provide a default empty object if null or undefined
-  
-          for (const [key, value] of Object.entries(rangeWeeks)) {
-            rangeWeeksGroup.addControl(key, this.fb.control(value));
-          }
+        const rangeWeeks = this.productSelected?.rangeWeeks || {}; // Provide a default empty object if null or undefined  
+        for (const [key, value] of Object.entries(rangeWeeks)) {
+          rangeWeeksGroup.addControl(key, this.fb.control(value));
+        }
         const price = this.validateForm.controls['price'].value;
         const validTo = this.validateForm.controls['validTo'].value || new Date();
         const isCourtesy = this.validateForm.controls['is_courtesy'].value || false;
@@ -1711,18 +1533,16 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         var promiseDateValue = this.validateForm.controls['promiseDate'].value || "";
         var creation_date = this.validateForm.controls['creation_date'].value.toString(); // this.validateForm.controls['creation_date'].value;
         const typePaymentValue = this.validateForm.controls['typePayment'].value; // Transferencia, efectivo, Sistema
-  
         if (paymentSelected == "Mensualidad") {
           //if is mensualidad the promiseDate sould be last of month
           const validTo = this.validateForm.controls['validTo'].value || new Date();
           promiseDateValue = validTo;
-        }
-  
+        }  
         for (const i in this.validateForm.controls) {
           this.validateForm.controls[i].markAsDirty();
           this.validateForm.controls[i].updateValueAndValidity();
         }
-        if (this.validateForm.valid) {  //TODO
+        if (this.validateForm.valid) {
           this.isConfirmLoading = true;
           var fileinfoURL = this.validateForm.controls['fileURL'].value || "";
           const send = {
@@ -1830,66 +1650,66 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
               fileURL: fileinfoURL
             };
             this.customersService.saveBoardingPassToUserPurchaseCollection(this.currentUserSelected.uid, send) // this.validateForm.value)
-              .then((success) => {
-                this.isVisible = false;
-                this.isConfirmLoading = false;
-                this.customersService.getLatestValidUserPurchasesAdvance(uid, 2, promiseDateValue, paymentSelected, creation_date).pipe(
-                  take(1),
-                  map((actions:any) =>
-                    actions.map((a:any) => {
-                      const data = a.payload.doc.data() as any;
-                      const id = a.payload.doc.id;
-                      return { id, ...data };
-                    })
-                  )
-                )
-                  .subscribe((routes) => {                 
-                        this.customersService.saveBoardingPassDetailToUserPurchaseCollection(uid, routes[0].id, send)
-                          .then((success) => {
-                            this.sendUser = send;
-                            //console.log(routes[0].id);
-                            this.idBoardingPass = routes[0].id;
-                            this.purchaseActive = true;
-                            
-                            this.customersService.createPurchaseCloud(this.sendUser,this.currentUserSelected,this.idBoardingPass);
-                           console.log(send);
-                          }).catch((err) => { console.log("error"); });                
-                  }, (error) => {
-                    console.log(error);
+            .then((success) => {
+              this.isVisible = false;
+              this.isConfirmLoading = false;
+              
+              this.customersService.getLatestValidUserPurchasesAdvance(uid, 2, promiseDateValue, paymentSelected, creation_date).pipe(
+                take(1),
+                map((actions: any) =>
+                  actions.map((a: any) => {
+                    const data = a.payload.doc.data() as any;
+                    const id = a.payload.doc.id;
+                    return { id, ...data };
                   })
-              }).catch((err) => { this.isConfirmLoading = false; });
+                )
+              )
+              .subscribe({
+                next: (routes) => {
+                  this.customersService.saveBoardingPassDetailToUserPurchaseCollection(uid, routes[0].id, send)
+                    .then((success) => {
+                      this.sendUser = send;
+                      this.idBoardingPass = routes[0].id;
+                      this.purchaseActive = true;
+
+                      this.customersService.createPurchaseCloud(this.sendUser, this.currentUserSelected, this.idBoardingPass);
+                    })
+                    .catch((err) => { this.sendMessage('error', err); });
+                },
+                error: (error) => {
+                  this.sendMessage('error', error);
+                }
+              });
+            })
+            .catch((err) => {
+              this.isConfirmLoading = false;
+          });
           }
           else {
             this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
           }
         }
       } else {
-        console.error('currentUserSelected or uid is null or undefined');
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
       }
-      
-      
     }
   }
 
-
   submitReceipt(){
-
      // this.customersService.createPurchaseCloud(this.sendUser,this.currentUserSelected,this.idBoardingPass);
   }
   async createPurchaseRequest(userID: string, purchaseDetail: any) {
     const newId = this.afs.createId();
     const user = this.afs.collection('users').doc(userID).collection("purchaseRequests").doc(newId).set(purchaseDetail)
       .then(() => {
-        console.log('Recibo de compra correctamente generado!');
+        this.sendMessage('error', 'Recibo de compra correctamente generado!');
         return newId;
       })
       .catch((error) => {
-        console.error('Error writing document: ', error);
-
+        this.sendMessage('error', error);
         return "";
       });
   }
-
 
   validateSubmit() {
     const productSelected = this.validateForm.controls['product_id'].value;
@@ -1897,7 +1717,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       this.msg.error('Es necesario seleccionar un producto, favor de validar.');
       return false;
     }
-
     const roundSelected = this.validateForm.controls['round'].value;
     if (roundSelected == "") {
       this.msg.error('Es necesario seleccionar un turno, favor de validar.');
@@ -1909,8 +1728,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       return false;
     }
     const promiseDateValue = this.validateForm.controls['promiseDate'].value; // TODO
-
-
     const validTo = this.validateForm.controls['validTo'].value;
     const validFrom = this.validateForm.controls['validFrom'].value;
     // validate when is anticipo from must be from 1 to max 15 of month selected
@@ -1952,14 +1769,12 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   calculateDiff(from: string | number | Date, todate: string | number | Date) {
     let date = new Date(from);
     let currentDate = new Date(todate);
-
     let days = Math.floor((currentDate.getTime() - date.getTime()) / 1000 / 60 / 60 / 24);
     return days;
   }
 
   submitEditForm(): void {
-    if (this.currentUserSelected && this.currentUserSelected.uid) {
-     
+    if (this.currentUserSelected && this.currentUserSelected.uid) {     
       const customerId = this.validateEditForm.controls['customerId'].value == undefined ? "" : this.validateEditForm.controls['customerId'].value;
       const customerName = this.validateEditForm.controls['customerName'].value == undefined ? "" : this.validateEditForm.controls['customerName'].value;
       const defaultRound = this.validateEditForm.controls['defaultRound'].value == undefined ? "" : this.validateEditForm.controls['defaultRound'].value;
@@ -1974,11 +1789,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       const userName = this.validateEditForm.controls['userName'].value == undefined ? "" : this.validateEditForm.controls['userName'].value;
       const defaultStopId = this.validateEditForm.controls['defaultStopId'].value == undefined ? "" : this.validateEditForm.controls['defaultStopId'].value;
       const defaultStopName = this.validateEditForm.controls['defaultStopName'].value == undefined ? "" : this.validateEditForm.controls['defaultStopName'].value;
-  
-      const uid = this.currentUserSelected.uid;
-  
-      let validForm: boolean = true;
-  
+      const uid = this.currentUserSelected.uid;  
+      let validForm: boolean = true;  
       if (this.newCustomerIdEditMode != "" && !this.resetClientEditInfo) {
         this.msg.error("Al cambiar de  Empresa es necesario asignar una operación y estación acorde a la empresa.");
         validForm = false;
@@ -2002,9 +1814,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       if (defaultRoute == "") {
         this.msg.error(" La operación es un valor requerido, favor de validar");
         validForm = false;
-      }
-  
-  
+      }  
       const data = {
         uid: uid,
         customerId: customerId,
@@ -2021,8 +1831,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         userName: userName,
         defaultStopId: defaultStopId,
         defaultStopName: defaultStopName
-      };
-  
+      }; 
   
       if (validForm) {
         this.customersService.updateUser(uid, data).then((response) => {
@@ -2040,14 +1849,12 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           this.currentUserSelected.defaultRoute = defaultRoute;
           this.currentUserSelected.defaultRouteName = defaultRouteName;
           this.currentUserSelected.defaultStopName = defaultStopName;
-          this.currentUserSelected.defaultStopId = defaultStopId;
-  
+          this.currentUserSelected.defaultStopId = defaultStopId;  
         });
       }
     } else {
-      console.error('currentUserSelected or uid is null or undefined');
-    } 
-    
+      this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
+    }    
   }
 
   submitFormProduct(): void {
@@ -2061,12 +1868,10 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     if (amount != price && !isCourtesy) {
       this.validateForm.controls['status'].setValue('partial');
     }
-
     for (const i in this.validateForm.controls) {
       this.validateForm.controls[i].markAsDirty();
       this.validateForm.controls[i].updateValueAndValidity();
     }
-
     if (this.validateForm.valid) {
       this.isConfirmLoading = true;
       if (this.userlevelAccess != "3") {
@@ -2087,12 +1892,10 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
   next(): void {
     this.current += 1;
-
     if (this.current === 2) {
       let selectedUsersCredentials: { uid: string | number; }[] = [];
       this.usersByAccount.forEach((user: { uid: string | number; }) => {
         if (this.mapOfCredentialsCheckedId[user.uid] === true) {
-
           selectedUsersCredentials.push(user);
         }
       });
@@ -2110,7 +1913,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
-
   nzClicOption() {    
     if (this.productsReference !== null) {
        this.getLatestPurchaseDetail(this.currentUserSelected.uid, this.productsReference.id);
@@ -2121,14 +1923,12 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.isBoardingPassSelected = false;
   }
 
-
   private getBase64(file: File, callback: (img: string) => void): void {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => callback(reader.result as string);
     reader.onerror = error => console.log('Error: ', error);
 }
-
 
 handleChange2(event: NzUploadChangeParam): void {
   const status = event.file.status;
@@ -2141,11 +1941,9 @@ handleChange2(event: NzUploadChangeParam): void {
         const fileName = event.file.name;
         const filePath = `${this.bucketPath}/${fileName}`;
         const fileRef = this.bucketStorage.ref(filePath);
-        this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');         
-        
+        this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');           
         // observe percentage changes
         this.uploadPercent = this.task.percentageChanges() as Observable<number>;
-
         this.uploadPercent.pipe(
           map(a => {
             return Number((a / 100).toFixed(2));
@@ -2154,7 +1952,6 @@ handleChange2(event: NzUploadChangeParam): void {
           this.uploading = value != 0;
           this.uploadvalue = value;
         })
-
         // get notified when the download URL is available
         this.task.snapshotChanges().pipe(
           finalize(() => {
@@ -2177,7 +1974,6 @@ handleChange2(event: NzUploadChangeParam): void {
 
   changePayment(event: string) {
     this.validateForm.controls['amountPayment'].setValue(0);
-
     this.paymentSelected = event;
     if (event == 'Mensualidad') {
       this.isValidDescriptionPaymentType = false;
@@ -2187,7 +1983,6 @@ handleChange2(event: NzUploadChangeParam): void {
       this.isValidDescriptionPaymentType = true; //TODO
       this.isAnticipo = true;
       this.validateForm.controls['amountPayment'].setValue(0);
-
     } else {
       this.isAnticipo = false;
       this.isValidDescriptionPaymentType = true;
@@ -2197,8 +1992,6 @@ handleChange2(event: NzUploadChangeParam): void {
 
   onChangeValidTo(result: Date): void {
     const validDateFrom = this.validateForm.controls['validFrom'].value;
-
-
     if (this.paymentSelected == 'Anticipo') {
       let dateValidTo = this.credentialForm.controls['validTo'].value || new Date();
     }
@@ -2235,7 +2028,6 @@ handleChange2(event: NzUploadChangeParam): void {
   downloadPdf() {
     //pdf generation code HTML table to pdf
     try {
-
       var doc = new jsPDF();
       html2canvas(document.getElementById("credencial")!).then(canvas => {
         const contentDataURL = canvas.toDataURL('image/png');
@@ -2246,14 +2038,13 @@ handleChange2(event: NzUploadChangeParam): void {
         pdf.save('credencial.pdf');
       });
     }
-    catch (e) {
-      console.error(e);
+    catch (e : any) {      
+      this.sendMessage('error', e);
     }
   }
 
   generatePDFInfo(){
     try {
-
       var doc = new jsPDF();
       html2canvas(document.getElementById("recibo")!).then(canvas => {
         const contentDataURL = canvas.toDataURL('image/png');
@@ -2264,12 +2055,11 @@ handleChange2(event: NzUploadChangeParam): void {
         pdf.save('recibo.pdf');
       });
     }
-    catch (e) {
-      console.error(e);
+    catch (e: any) {
+      this.sendMessage('error', e);
     }
   }
-  generatePurchasePDF(data:any) {
-    console.log(data);
+  generatePurchasePDF(data:any) {    
     this.reciboPago.push({
       amount: data.amount,
       amountTrips: data.amountTrips,
@@ -2289,7 +2079,6 @@ handleChange2(event: NzUploadChangeParam): void {
       validTo:  data.validTo
     });
     this.isVisiblePurchasePay = true;
- //   console.log("GenerarPDF");
   }
 
   bajaCheck () {
@@ -2308,21 +2097,3 @@ handleChange2(event: NzUploadChangeParam): void {
 }
 
 
-interface Recibo {
-  amount: number;
-  amountTrips: number;
-  authorization: string;
-  creation_date: string;
-  currentTrips: number;
-  description: string;
-  method: string;
-  name: string;
-  price: number;
-  routeName: string;
-  round: string;
-  stopName: string;
-  type: string;
-  typePayment: string;
-  validFrom: string;
-  validTo: string;
-}

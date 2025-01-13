@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { AngularFirestore, DocumentReference } from '@angular/fire/compat/firestore';
 //import * as firebase from 'firebase/app';
 import { GeoPoint } from 'firebase/firestore';
-import { map, switchMap, catchError } from 'rxjs/operators';
+import { map, switchMap, catchError, retry } from 'rxjs/operators';
 import * as _ from 'lodash';
 import { Observable, combineLatest, of } from 'rxjs';
 import { IVendor } from '../interfaces/vendor.type';
@@ -10,6 +10,7 @@ import { IRoute } from '../interfaces/route.type';
 import { uniq } from 'lodash';
 import { Route } from '@angular/router';
 import { ConsoleSqlOutline } from '@ant-design/icons-angular/icons';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 interface Customer {
   id: string;
@@ -23,8 +24,9 @@ interface Customer {
 export class RoutesService {
 
   joined$: Observable<any> | undefined;
+ 
 
-  constructor(private afs: AngularFirestore) { }
+  constructor(private afs: AngularFirestore, private http: HttpClient) { }
 
   getRoutes(customerId: string) {
     const routes = this.afs.collection('customers').doc(customerId).collection('routes');
@@ -49,11 +51,8 @@ export class RoutesService {
 
 
   getQuotesByRouteByBoardingPass(customerId: string, routeId:string,transportType:string){
-    console.log(customerId);
-    
     const info = this.afs.collectionGroup('boardingPasses', ref => ref
-    .where('customerId', '==', customerId)
-    //.where('quotesData0.transportType', '==', transportType)
+    .where('customerId', '==', customerId)    
     .where('routeId', '==', routeId));
     return info.snapshotChanges();
   }
@@ -88,8 +87,7 @@ export class RoutesService {
       name: routeObj.name,
       routeId: key,
       initialStart: routeObj.initialStart
-    }
-    console.log(newRoute);
+    }   
     routeObj.routeId = key;
     const route = this.afs.collection('customers').doc(routeObj.duplicateCustomerId).collection('routes').doc(key);  
     const stops = this.afs.collection('customers').doc(routeSource.customerId).collection('routes').doc(routeSource.routeId).collection('stops');
@@ -233,8 +231,7 @@ export class RoutesService {
                   ...route 
                 })))
               )
-            );
-            console.log(routeObservables);
+            );           
             return combineLatest([of(customers), combineLatest(routeObservables)]);
           }
         }),
@@ -244,10 +241,32 @@ export class RoutesService {
       )
       return this.joined$;
   }
-  getAllCustomersRoutesbyCustomer(customerId:string) {
-  //  console.log("1");
+  getAllCustomersRoutesbyCustomer(customerId:string) {  
     const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes');
       return customerbyRoute.snapshotChanges();
+  }
+
+  getCustomersRoutesbyCustomer(customerId:string, routeId:string) {  
+    const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('stops');
+      return customerbyRoute.snapshotChanges();
+  }
+  
+  public getDirectionsWithStops(stopPoints: any): Observable<any> {
+    const httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }),
+    };
+    let api = `https://us-central1-andappssystem-c14f2.cloudfunctions.net/getDirectionsWithStops`;
+    return this.http.post(api, { stopPoints: stopPoints }, httpOptions).pipe(
+      retry(0), 
+    );
+  }
+
+  setPolyline(vert: any, customerId:string, routeId: string) {
+    const key = this.afs.createId();
+   console.log(key);
+   
+    const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('polyline').doc(key);
+    return route.set(vert);
   }
 
   setAuthorizedRoutes(vendorId: string, record: any) {
@@ -390,10 +409,7 @@ export class RoutesService {
       round2: object.round2,
       round3: object.round3
     };
-    //wrappedData.geopoint = new firebase.firestore.GeoPoint(+object.latitude, +object.longitude);
-    console.log(wrappedData);
-    console.log(object.id);
-    console.log("wrappedData");
+    //wrappedData.geopoint = new firebase.firestore.GeoPoint(+object.latitude, +object.longitude);   
     wrappedData.geopoint = new GeoPoint(+object.latitude, +object.longitude);   
     const stopPoint = this.afs.collection('customers').doc(accountId).collection('routes').doc(routeId).collection('stops').doc(object.id);
     return stopPoint.update(wrappedData);

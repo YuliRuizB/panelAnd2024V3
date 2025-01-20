@@ -19,7 +19,7 @@ import esLocale from 'date-fns/locale/es';
 })
 export class SharedVendorVehiclesComponent implements OnInit {
   devicesService = inject(DevicesService);
-  @Input() vendorId!: string;
+  @Input() vendorId: string = '';
   devicesList!: IVehicle[];
   loadedDevicesList: IVehicle[] = [];
   view: string = 'cardView';
@@ -56,16 +56,16 @@ export class SharedVendorVehiclesComponent implements OnInit {
         if (this.user && this.user.rolId) {
           return this.rolService.getRol(this.user.rolId).valueChanges();
         } else {
-          return []; // Return an empty observable if user or user.rolId is not defined
+          return [];
         }
       }),
       tap((item: any) => {
         this.infoLoad = item;
         this.userlevelAccess = this.infoLoad?.optionAccessLevel;
       }),
-      catchError(err => {
-        console.error('Error fetching user role data', err);
-        return of(null); // Handle the error and return a safe observable
+      catchError(err => {        
+        this.sendMessage('error',err);
+        return of(null); 
       })
     ).subscribe();
   }
@@ -76,6 +76,7 @@ export class SharedVendorVehiclesComponent implements OnInit {
   }
 
   getSubscriptions(vendorId: any) {
+    if (this.vendorId != '') { 
     this.devicesService.getDevices(vendorId).pipe(
       takeUntil(this.stopSubscriptions$),
       map((actions:any) => actions.map((a: any) => {
@@ -86,14 +87,15 @@ export class SharedVendorVehiclesComponent implements OnInit {
       }))
     ).subscribe((devices: IVehicle[]) => {
       this.devicesList = devices;
-      this.loadedDevicesList = _.sortBy(devices, ['name', 'asc']);
-      console.log(this.devicesList);
+      this.loadedDevicesList = _.sortBy(devices, ['name', 'asc']);      
     })
+    } else {
+      this.sendMessage('error', "VendorId no encontrado , favor de validar");
+    }
   }
   sendMessage(type: string, message: string): void {
     this.messageService.create(type, message);
   }
-
 
   searchByValue() {
     this.initializeList();
@@ -139,18 +141,20 @@ export class SharedVendorVehiclesComponent implements OnInit {
   }
 
   submitForm() {
-    this.isOkLoading = true;
-    console.log(this.vehicleForm.value);
-    console.log(this.vehicleForm.valid);
+    this.isOkLoading = true;   
     if (this.userlevelAccess != "3") {
+      if (this.vendorId != '') { 
       this.devicesService.addDevice(this.vendorId, this.vehicleForm.value).then(() => {
         this.isOkLoading = false;
         this.isVisible = false;
       })
         .catch(err => {
           this.isOkLoading = false;
-          console.log(err);
+          this.sendMessage('error', err);
         });
+      } else {
+        this.sendMessage('error', 'VendorId no establecido, favor de validar con administración');
+      }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para agregar datos, favor de contactar al administrador.");
     }
@@ -159,16 +163,17 @@ export class SharedVendorVehiclesComponent implements OnInit {
 
   deletePermission(data: any) {
     if (this.userlevelAccess == "1") {
+      if (this.vendorId != '') { 
       this.devicesService.deleteDevice(this.vendorId, data.id);
+      }else {
+        this.sendMessage('error', 'VendorId no establecido, favor de validar con administración');
+      }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
-
-
   }
 
-  cancelDelete() {
-    console.log('do not delete device');
+  cancelDelete() {    
   }
 
   getContextMenuItems(params: any) {
@@ -176,8 +181,7 @@ export class SharedVendorVehiclesComponent implements OnInit {
     var result = [
       {
         name: 'Editar ' + params.node.data.name,
-        action: () => {
-          console.log(params);
+        action: () => {         
           // this.router.navigate([`vehicle/edit/${params.node.data.name}`]);
         },
         cssClasses: ['redFont', 'bold'],
@@ -185,8 +189,7 @@ export class SharedVendorVehiclesComponent implements OnInit {
       'separator',
       {
         name: 'Eliminar ' + params.node.data.name,
-        action: function () {
-          console.log(params);
+        action: function () {          
           window.alert('Alerting about ' + params.value);
         },
         cssClasses: ['redFont', 'bold'],
@@ -194,8 +197,7 @@ export class SharedVendorVehiclesComponent implements OnInit {
       {
         name: 'Desactivar',
         checked: true,
-        action: function () {
-          console.log('Checked Selected');
+        action: function () {          
         },
         icon: '<img src="../images/skills/mac.png"/>',
       },

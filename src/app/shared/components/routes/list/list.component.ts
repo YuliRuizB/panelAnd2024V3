@@ -36,7 +36,6 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
     private modalService: NzModalService,
     public messageService: NzMessageService,
     private fb: UntypedFormBuilder) {
-
   }
 
   ngOnInit() {
@@ -50,19 +49,14 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
   }
 
   generateTimeOptions(): void {
-    console.log("inicia");
     const startTime = 7; // 07:00 AM
-    const endTime = 21; // 09:00 PM
-  
+    const endTime = 21; // 09:00 PM  
     for (let i = startTime; i <= endTime; i++) {
       const hour = i % 12 || 12; // Convert 0 to 12
       const suffix = i < 12 ? 'AM' : 'PM';
       const timeStr = `${hour.toString().padStart(2, '0')}:${i % 60 === 30 ? '30' : '00'} ${suffix}`;
-      this.timeOptions.push(timeStr);
-   
-      
+      this.timeOptions.push(timeStr);         
     }
-    console.log("end");
   }
 
   createForm() {
@@ -76,8 +70,7 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
       customerId: ['', [Validators.required]],
       customerName: [''],
       initialStart: [[]], // Initialize as an empty array
-      initialEnd: [[]] //
-    
+      initialEnd: [[]] //    
     });
   }
 
@@ -109,7 +102,6 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
           onClick: () => this.modalService.confirm({
             nzTitle: '¿Está la información completa?',
             nzOnOk: () => {
-             // console.log(this.objectForm.value);
               this.objectForm.get('customerId')!.setValue(this.accountId);             
               if (this.objectForm.valid) {
 
@@ -119,7 +111,6 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
                     value: time
                   }))
                 : null; 
-
                 const initialEnd = formValue.initialEnd && formValue.initialEnd.length > 0 
                 ? formValue.initialEnd.map((time: any) => ({                 
                     value: time 
@@ -130,13 +121,11 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
                   ...formValue,
                   ...(initialStart ? { initialStart } : {}) 
                 };
-               // console.log(formData);
-                // Proceed with form submission logic
 
                const key = this.afs.createId();
                const routeObj = this.routesService.setRoute2(key, this.accountId, this.objectForm.value)
                   .then(() => {                 
-                  }).catch((err: any) => console.log(err));
+                  }).catch((err: any) => this.sendMessage('error',err));
                   this.routesService.getInternalCustomer(this.accountId).pipe(
                     takeUntil(this.stopSubscription$),
                     map((actions:any) => actions.map((a: any) => {
@@ -149,7 +138,6 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
                       const currentDate = new Date();
                       const validTo = new Date(currentDate.getFullYear() + 3, currentDate.getMonth(), currentDate.getDate());
                       const validToString = validTo.toISOString();
-                      console.log(name);
                     var fileinfoURL = "";
                     const send = {
                       authorization: "portalAuth",
@@ -257,13 +245,12 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
                           .then((success) => {                
                             const userSend: object = user[0];                               
                             this.customersService.createPurchaseCloud(send,userSend,user[0].id);                           
-                          }).catch((err) => { console.log("error"); });
+                          }).catch((err) => { this.sendMessage('error',err) });
                            
-                      }).catch((err) => { console.log(err); });         
+                      }).catch((err) => { this.sendMessage('error',err)});         
 
                       this.modalService.closeAll();    
-                    });
-                 
+                    });                 
               }
             }
           }
@@ -275,7 +262,6 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
   }
 
   getSubscriptions() {
-   // console.log(this.accountId);
     this.sub = this.routesService.getRoutes(this.accountId).pipe(
       map((actions:any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
@@ -285,7 +271,6 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
       }))
     ).subscribe((routes: IRoute[]) => {
       this.routesList = routes;
-     // console.log(this.routesList);
       routes.forEach( (route) => {
         this.tabs.push({
           name: route.name,
@@ -298,4 +283,10 @@ export class SharedRoutesListComponent implements OnInit, OnDestroy {
   getTabTitle(tab:any): string {
     return `${tab.name}`;   
   }
+
+  sendMessage(type: string, message: string): void {
+    this.messageService.create(type, message);
 }
+}
+
+

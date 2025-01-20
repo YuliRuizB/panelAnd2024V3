@@ -32,9 +32,7 @@ export class RouteEditComponent implements OnInit, OnDestroy {
   ) {
     this.authService.user.subscribe(user => {
       this.user = user;
-      // console.log(this.user); /idSegment
       if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
-
         this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
           takeUntil(this.stopSubscription$),
           map((a: any) => {
@@ -53,13 +51,11 @@ export class RouteEditComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    //console.log("entro");
     this.objectSubscription = this.route.params.pipe(
       takeUntil(this.stopSubscription$)
     ).subscribe(params => {
       this.accountId = params['accountId']; // (+) converts string 'id' to a number
-      this.routeId = params['routeId']; // (+) converts string 'id' to a number
-      console.log(params);
+      this.routeId = params['routeId']; // (+) converts string 'id' to a numbe
       this.getSubscriptions();
       this.createForm();
     });
@@ -95,7 +91,6 @@ export class RouteEditComponent implements OnInit, OnDestroy {
   }
 
   saveForm() {
-
   }
 
   getSubscriptions() {
@@ -106,24 +101,21 @@ export class RouteEditComponent implements OnInit, OnDestroy {
         const data = a.payload.data() as any;
         return { id, ...data }
       })
-    )
-      .subscribe(route => {
-
-        this.patchForm(route);
-        this.routeElement = route;
-      })
+    ).subscribe(route => {
+      this.patchForm(route);
+      this.routeElement = route;
+    })
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       this.accountsService.getAccountsByCustomer(this.user.customerId).pipe(
         takeUntil(this.stopSubscription$),
-        map((a:any) => {
+        map((a: any) => {
           const id = a.payload.id;
           const data = a.payload.data() as any;
           return { id, ...data }
         }),
-      )
-        .subscribe(accounts => {
-          this.accountsList = [accounts];
-        })
+      ).subscribe(accounts => {
+        this.accountsList = [accounts];
+      })
     } else {
       this.accountsService.getAccounts().pipe(
         takeUntil(this.stopSubscription$),
@@ -140,7 +132,6 @@ export class RouteEditComponent implements OnInit, OnDestroy {
   }
 
   onCustomerChange() {
-
   }
 
 }

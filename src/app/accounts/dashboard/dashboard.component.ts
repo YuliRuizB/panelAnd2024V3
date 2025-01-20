@@ -114,13 +114,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (this.currentJobType.length > 0) {       
 
           this.accountsService.updateJobType(this.currentJobType, this.currentConsecutive).then(() => {     
-           }, err => {
-             console.log('err: ', err)
-           }).catch((err) => console.log(err))
+           }, err => {             
+             this.sendMessage('error',err);
+           }).catch((err: any) =>   this.sendMessage('error',err))
         }
         this.isVisibleAdd = false;
         this.isOkLoading = false;
-      }).catch( err => console.log(err));
+      }).catch( err =>   this.sendMessage('error',err));
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
     }
@@ -135,9 +135,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.userlevelAccess == "1") {
       const deleteAccount = this.accountsService.deleteAccount(account.id);
       deleteAccount.then( (result) => {
-       // console.log(result);
         this.isOkLoading = false;
-      }).catch( err => console.log(err));
+      }).catch( err => this.sendMessage('error', err));
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
@@ -156,8 +155,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           return { id, ...data }
         }),
       ).subscribe((accounts) => {
-        this.accountsList = [accounts];
-        console.log( this.accountsList);
+        this.accountsList = [accounts];       
         this.loading = false;      
       });
     } else {
@@ -169,14 +167,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }))
       ).subscribe((accounts) => {
         this.accountsList = accounts;
-        console.log( this.accountsList);
-        
         this.loading = false;
-
       });
     }
-
-
   }
 
   deleteAccountModal(account: any) {
@@ -188,8 +181,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       nzOkLoading: this.isOkLoading,
       nzOnOk: () => {
         this.deleteAccount(account);
-      },
-      nzOnCancel: () => console.log('cancel')
+      }
     }); 
   }
 

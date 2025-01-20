@@ -26,7 +26,7 @@ export class AssignmentsService {
     return assignments.snapshotChanges();
   }
 
-  getActiveAssignmentsRoute(vendorId: string, routeId: string) {
+  getActiveAssignmentsRoute(routeId: string) {
     const assignments = this.afs.collectionGroup('assignments', ref => 
     ref.where('routeId','==', routeId)
       .where('active','==',true)

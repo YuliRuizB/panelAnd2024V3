@@ -25,7 +25,7 @@ export class UsersService {
       return routes.snapshotChanges();
   }
 
-  getBoardingPassesByRoute(vendorId: string) {   
+  getBoardingPassesByRoute() {   
     const today = new Date();
     this.joined$ = this.afs.collectionGroup('routesAccess', ref => ref.where('active', '==', true)).valueChanges()
       .pipe(
@@ -52,9 +52,7 @@ export class UsersService {
             )
           )
         }),
-       map(([permissions, boardingPasses]) => {       
-        console.log(boardingPasses);
-        
+       map(([permissions, boardingPasses]) => {
           const sanitized = boardingPasses.filter(item => !!item && item.length > 0);        
           return typeof sanitized != "undefined" ? sanitized.map((boardingPass:any) => {
 
@@ -112,8 +110,7 @@ export class UsersService {
         }),
         map(([permissions, boardingPasses]) => {               
           const sanitized = boardingPasses.filter(item => !!item && item.length > 0);        
-          return typeof sanitized != "undefined" ? boardingPasses.map((boardingPass:any) => {           
-         //   console.log(boardingPass[0].routeId);
+          return typeof sanitized != "undefined" ? boardingPasses.map((boardingPass:any) => {                    
          if (!Array.isArray(boardingPass) || boardingPass.length === 0) {
             const permission = _.filter(permissions, (p) => {            
                 return boardingPass.routeId === p.routeId
@@ -149,8 +146,7 @@ export class UsersService {
     this.joined$ = this.afs.collectionGroup('routesAccess', ref => ref.where('active', '==', true)).valueChanges()
       .pipe(
         take(1),
-        switchMap((permissions:any) => { 
-          console.log(permissions); 
+        switchMap((permissions:any) => {           
           const routeIds = uniq(permissions.map((p:any) => p.routeId
            ));
           return routeIds.length === 0 ? of([]) :
@@ -177,18 +173,10 @@ export class UsersService {
         }),
         map(([permissions, boardingPasses]) => {       
           const sanitized = boardingPasses.filter(item => !!item && item.length > 0);        
-          return typeof sanitized != "undefined" ? sanitized.map((boardingPass:any) => {
-            console.log("permissions");
-            console.log(permissions);
-            console.log("boardingPasses");
-            console.log(boardingPasses);
-            console.log("routeId");
-            console.log(boardingPass[0].routeId);
+          return typeof sanitized != "undefined" ? sanitized.map((boardingPass:any) => {           
             const permission = _.filter(permissions, (p) => {
                 return boardingPass[0].routeId === p.routeId
-            });    
-                console.log("permission");
-                console.log(permission);
+            }); 
             return {
               passes: [...boardingPass],
               permission: permission[0].active ? permission[0].active : false,
@@ -347,23 +335,15 @@ export class UsersService {
           )
         }),
        map(([permissions, boardingPasses]) => {          
-          const sanitized = boardingPasses.filter(item => !!item && item.length > 0);   
-          console.log("boarding pasess");
-          console.log(boardingPasses);        
+          const sanitized = boardingPasses.filter(item => !!item && item.length > 0);                 
           return typeof sanitized != "undefined" ? sanitized.map((boardingPass:any) => {
 
             const permission = _.filter(permissions, (p) => {
                 return boardingPass[0].routeId === p.routeId
             });       
-            return {
-             // passes: [...boardingPass],
-             //permissions:[...permissions]
-             // permission: permission[0].active ? permission[0].active : false,
-             // permissionId: permission[0].id,
-             // customerId: permission[0].customerId || '',
+            return {           
               routeName:permission[0].routeName || '',
-              routeId:permission[0].routeId || ''
-              //customerName: permission[0].customerName || ''
+              routeId:permission[0].routeId || ''              
             }
           }) : of([])
         }) 
@@ -371,8 +351,7 @@ export class UsersService {
       return this.joined$;
   }
 
-  getBoardingPassBySingleRoute(productId: string, routeIdPrincipal:string) {
-    console.log(productId + " / " +routeIdPrincipal);
+  getBoardingPassBySingleRoute(productId: string, routeIdPrincipal:string) {   
     const today = new Date();
     this.joined$ = this.afs.collectionGroup('routesAccess', ref => 
     ref.where('active', '==', true)
@@ -409,7 +388,6 @@ export class UsersService {
        map(([permissions, boardingPasses]) => {            
           const sanitized = boardingPasses.filter(item => !!item && item.length > 0);        
           return typeof sanitized != "undefined" ? sanitized.map((boardingPass:any) => {
-
             const permission = _.filter(permissions, (p) => {
                 return boardingPass[0].routeId === p.routeId
             });       
@@ -459,9 +437,7 @@ export class UsersService {
             )
           )
         }),
-       map(([permissions, boardingPasses]) => {    
-        console.log("boarding pasess");
-        console.log(boardingPasses);   
+       map(([permissions, boardingPasses]) => {           
           const sanitized = boardingPasses.filter(item => !!item && item.length > 0);        
           return typeof sanitized != "undefined" ? sanitized.map((boardingPass:any) => {
 
@@ -498,47 +474,35 @@ export class UsersService {
     );
   }
 
-  updateUserAvatar(userId: string, photoURL: string) {
-   // this.message.loading('Actualizando ...');
+  updateUserAvatar(userId: string, photoURL: string) { 
     const vendorRef = this.afs.collection('users').doc(userId);
-    vendorRef.update({photoURL}).then( () => {
-     // this.message.remove();
-     // this.message.success('Todo listo');
-    }).catch( (err) => {
-     // this.message.remove();
-      this.message.error('Hubo un error: ', err);
-      console.log(err)
+    vendorRef.update({photoURL}).then( () => {     
+    }).catch( (err) => {     
+      this.message.error('Hubo un error: ', err);      
     })
   }
 
   updateUserPreRegister(userId: string, status: string) {   
-     const vendorRef = this.afs.collection('users').doc(userId);
-     console.log("toChange " + userId +  " to status  " + status);
+     const vendorRef = this.afs.collection('users').doc(userId);     
      vendorRef.update({status: status}).then( () => {      
-     }).catch( (err) => {
-      // this.message.remove();
-       this.message.error('Hubo un error: ', err);
-       console.log(err)
+     }).catch( (err) => {      
+       this.message.error('Hubo un error: ', err);       
      })
    }
  
    updateUserPreRegisterE(userId: string, status: string, customerId:string, customerName:string) {   
-    const vendorRef = this.afs.collection('drivers').doc(userId);
-    console.log("toChange " + userId +  " to status  " + status);
+    const vendorRef = this.afs.collection('drivers').doc(userId);   
     vendorRef.update({status: status, validCompanyRequest: status,
         customerId: customerId, customerName:customerName, active: true
      }).then( () => {      
-    }).catch( (err) => {
-     // this.message.remove();
-      this.message.error('Hubo un error: ', err);
-      console.log(err)
+    }).catch( (err) => {     
+      this.message.error('Hubo un error: ', err);      
     })
   }
 
   updateUserCollection(uid: string, user: any) {   
     this.user =  this.afs.collection('users').doc(uid);
-    return this.user.update(user).then(() => {
-   //   this.message.success('Se actualizo con exito el usuario,  favor de refrescar la pagina.!');
+    return this.user.update(user).then(() => { 
     }).catch(err => {
       this.message.error(`¡Oops! Algo salió mal ... ${err}`);
     });
@@ -618,9 +582,7 @@ export class UsersService {
     const vendorRef = this.afs.collection('transfers').doc(uidTransfer);   
     vendorRef.update({status: status}).then( () => {      
     }).catch( (err) => {
-     // this.message.remove();
-      this.message.error('Hubo un error: ', err);
-      console.log(err)
+      this.message.error('Hubo un error: ', err);      
     })
   }
 

@@ -14,7 +14,7 @@ export interface IFileInfo {
   fileName?: string;
   fileUrl?: string;
   creation_date?: Date;
-  
+
 }
 @Component({
   templateUrl: './quality-dashboard.component.html',
@@ -23,7 +23,7 @@ export interface IFileInfo {
 export class QualityDashboardComponent implements OnInit {
   rolService = inject(RolService);
   authService = inject(AuthenticationService);
-  isConfirmLoading: boolean = false; 
+  isConfirmLoading: boolean = false;
   fileUrl: string = "http://themenate.com/applicator/dist/assets/images/avatars/thumb-13.jpg";
   autosave: boolean = true;
   uploading: boolean = false;
@@ -51,7 +51,7 @@ export class QualityDashboardComponent implements OnInit {
   gridApiDetail: any;
   gridColumnApiDetail: any;
   rowData?: IFileInfo[];
-  rowFolders:any = [];
+  rowFolders: any = [];
   qualitySubscription!: Subscription;
   addNewFolder: boolean = false;
   fileURL: string | undefined;
@@ -69,8 +69,6 @@ export class QualityDashboardComponent implements OnInit {
     private bucketStorage: AngularFireStorage,
     private fb: UntypedFormBuilder) {
 
-    //  console.log("Entro a reportsw");
-      
     this.authService.user.subscribe((user) => {
       this.user = user;
       if (this.user && this.user.rolId != undefined) {
@@ -79,7 +77,7 @@ export class QualityDashboardComponent implements OnInit {
           this.userlevelAccess = this.infoLoad.optionAccessLavel;
         });
       }
-    });  
+    });
   }
   ngOnInit() {
     this.validateForm = this.fb.group({
@@ -111,15 +109,12 @@ export class QualityDashboardComponent implements OnInit {
     this.qualitySubscription.unsubscribe();
   }
 
-
   submitForm() {
-   // console.log("GuardarArchivo");
     var fileForm: Object;
     var fileinfoURL = this.fileURL || "";
     var folder = this.validateForm.controls['folder'].value || "";
     var fileName = this.fileName || "No-Name";
     var creation_date = new Date();
-   // console.log(this.fileName);
     if (folder == "") {
       this.msg.error("Se requiere seleccionar una carpeta para almacenenar.");
     }
@@ -127,9 +122,6 @@ export class QualityDashboardComponent implements OnInit {
     if (fileinfoURL == "") {
       this.msg.error("Se requiere tener un archivo para subir.");
     }
-
-    //console.log('url==' + this.fileURL);
-
     fileForm = {
       active: true,
       folder: folder,
@@ -138,7 +130,6 @@ export class QualityDashboardComponent implements OnInit {
       creation_date: creation_date,
       uid: ''
     }
-    // console.log(fileForm);
     // save info 
     if (this.userlevelAccess != "3") {
       this.qualityService.saveFileCollection(fileForm)
@@ -155,7 +146,6 @@ export class QualityDashboardComponent implements OnInit {
   }
 
   changeFolder(event: any) {
-   // console.log("changeFolder");
   }
   newFolder() {
     this.addNewFolder = true;
@@ -164,20 +154,17 @@ export class QualityDashboardComponent implements OnInit {
   handleChange(event: NzUploadChangeParam): void {
     const status = event.file.status;
     if (status !== 'uploading') {
-      const status = event.file.status;     
-      this.fileListInfo = event.fileList; 
-     
+      const status = event.file.status;
+      this.fileListInfo = event.fileList;
+
       if (event.file.originFileObj) {
         this.getBase64(event.file.originFileObj, (img: string) => {
           this.fileUrl = img;
           const fileName = event.file.name;
           const filePath = `${this.bucketPath}/${fileName}`;
           const fileRef = this.bucketStorage.ref(filePath);
-          this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');         
-        
-          // observe percentage changes
+          this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');
           this.uploadPercent = this.task.percentageChanges() as Observable<number>;
-
           this.uploadPercent.pipe(
             map(a => {
               return Number((a / 100).toFixed(2));
@@ -193,7 +180,7 @@ export class QualityDashboardComponent implements OnInit {
               this.uploading = false;
               this.downloadURL = fileRef.getDownloadURL();
               this.downloadURL.subscribe(async (url) => {
-                this.updateURL(url);              
+                this.updateURL(url);
                 if (url.length > 0) {
                   this.sendMessage('success', `${event.file.name} Archivo cargado satisfactoriamente.`);
                 } else if (status === 'error') {
@@ -213,33 +200,25 @@ export class QualityDashboardComponent implements OnInit {
 
   private getBase64(file: File, callback: (img: string) => void): void {
     const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => callback(reader.result as string);
-  reader.onerror = error => console.log('Error: ', error);
-}
+    reader.readAsDataURL(file);
+    reader.onload = () => callback(reader.result as string);
+  }
 
   refreshTable() {
     this.loadFiles();
   }
-/*   onGridReady(params: GridReadyEvent) {   
-    this.gridApiDetail = params.api;
-    this.gridColumnApiDetail = params.columnApi;
-  }
- */
+
   newFolderSave() {
     const newFolderNameControl = this.validateForm.get('NewFolderName');
     if (newFolderNameControl && newFolderNameControl.value !== null) {
       this.rowFolders.push(newFolderNameControl.value);
-          this.addNewFolder = false;
-          this.validateForm.controls['NewFolderName'].setValue("");
-    }   
+      this.addNewFolder = false;
+      this.validateForm.controls['NewFolderName'].setValue("");
+    }
   }
 
 
   handleOKEdit() {
-    //console.log("borrararchivo." + this.view);
-    //console.log(this.selectedRecord);
-
     if (!this.isVerVisible) {
       if (this.userlevelAccess == "1") {
         this.qualityService.deletePurchase(this.selectedUid);
@@ -259,57 +238,49 @@ export class QualityDashboardComponent implements OnInit {
     } else {
       this.isVerVisible = true;
     }
-
   }
 
   handleCancelEdit() {
     this.isEditModalVisible = false;
   }
 
-  handleChangeUpload(info: NzUploadChangeParam): void { 
-    if (info.file.status !== 'uploading') {   
-
+  handleChangeUpload(info: NzUploadChangeParam): void {
+    if (info.file.status !== 'uploading') {
       if (info.file.status === 'done') {
         this.msg.success(`${info.file.name} file uploaded successfully`);
       } else if (info.file.status === 'error') {
         this.msg.error(`${info.file.name} file upload failed.`);
       }
       if (info.file.originFileObj) {
-      this.getBase64(info.file.originFileObj, (img: string) => {
-        this.fileUrl = img;
+        this.getBase64(info.file.originFileObj, (img: string) => {
+          this.fileUrl = img;
 
-        const fileRef = this.bucketStorage.ref(this.bucketPath + info.file.name);
-        // this.bucketPath +=  info.file.name;       
-        this.task = this.bucketStorage.ref(this.bucketPath + info.file.name).putString(img, 'data_url');
-        this.fileName = info.file.name;
-        // Create a reference under which you want to list
-        var listRef = this.bucketStorage.ref(this.bucketPath).child(info.file.name);
-        //console.log(fileRef);
-        // observe percentage changes
-        this.uploadPercent = this.task.percentageChanges() as Observable<number>;
-        this.uploadPercent.pipe(
-          map(a => {
-            return Number((a / 100).toFixed(2));
+          const fileRef = this.bucketStorage.ref(this.bucketPath + info.file.name);
+          // this.bucketPath +=  info.file.name;       
+          this.task = this.bucketStorage.ref(this.bucketPath + info.file.name).putString(img, 'data_url');
+          this.fileName = info.file.name;
+          // Create a reference under which you want to list
+          var listRef = this.bucketStorage.ref(this.bucketPath).child(info.file.name);
+          // observe percentage changes
+          this.uploadPercent = this.task.percentageChanges() as Observable<number>;
+          this.uploadPercent.pipe(
+            map(a => {
+              return Number((a / 100).toFixed(2));
+            })
+          ).subscribe((value) => {
+            this.uploading = value != 0;
+            this.uploadvalue = value;
           })
-        ).subscribe((value) => {
-          this.uploading = value != 0;
-          this.uploadvalue = value;
-        })
-
-        // get notified when the download URL is available
-        this.task.snapshotChanges().pipe(
-          finalize(() => {
-            this.downloadURL = fileRef.getDownloadURL();
-            this.downloadURL.subscribe(async (url) => {
-              this.updateURL(url);
-            });
-          })
-        ).subscribe();
-
-      });
+          this.task.snapshotChanges().pipe(
+            finalize(() => {
+              this.downloadURL = fileRef.getDownloadURL();
+              this.downloadURL.subscribe(async (url) => {
+                this.updateURL(url);
+              });
+            })
+          ).subscribe();
+        });
+      }
     }
-    }
-    //console.log( this.fileURL);
-
   }
 }

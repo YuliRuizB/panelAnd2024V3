@@ -17,12 +17,11 @@ export class ListComponents implements OnInit {
   user: any;
   infoSegment: any = [];
   accountsList: any;
-  public popupParent; 
+  public popupParent;
   constructor() {
     this.popupParent = document.querySelector("body");
     this.authService.user.subscribe(user => {
       this.user = user;
-      // console.log(this.user); /idSegment
       if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
 
         this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
@@ -48,7 +47,7 @@ export class ListComponents implements OnInit {
   getSubscriptions() {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       this.accountsService.getAccountsByCustomer(this.user.customerId).pipe(
-        map((a:any) => {
+        map((a: any) => {
           const id = a.payload.id;
           const data = a.payload.data() as any;
           return { id, ...data }
@@ -57,7 +56,6 @@ export class ListComponents implements OnInit {
         this.accountsList = [accounts];
       });
     } else {
-
       this.accountsService.getAccounts().pipe(
         map((actions: any) => actions.map((a: any) => {
           const id = a.payload.doc.id;
@@ -69,5 +67,4 @@ export class ListComponents implements OnInit {
       });
     }
   }
-
 }

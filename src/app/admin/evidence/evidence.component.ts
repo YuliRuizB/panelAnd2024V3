@@ -15,6 +15,7 @@ import { CustomersService } from '../../customers/services/customers.service';
 import { AngularFirestore, AngularFirestoreCollection, AngularFirestoreDocument } from '@angular/fire/compat/firestore';
 import { ProgramService } from '../../shared/services/program.service';
 import { startOfToday, startOfDay } from 'date-fns';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 @Component({
   selector: 'app-evidence',
@@ -61,6 +62,7 @@ export class EvidenceComponent implements OnInit {
   constructor(
     private afs: AngularFirestore,
     private datePipe: DatePipe,
+    private messageService: NzMessageService,
     private fb: UntypedFormBuilder) {
 
       this.authService.user.subscribe((user: any) => {
@@ -88,21 +90,18 @@ export class EvidenceComponent implements OnInit {
       this.dateFilterForm = this.fb.group({
         selectedDate: [null], // 'selectedDate' is the name of the form control
       });
-
       this.dateFilterFormProgram = this.fb.group({
         selectedDate: [null], 
         customerId: [],
         programId: [],
         name: []
-      });
-      
+      });      
       this.dateFilterFormProgramRoute = this.fb.group({
         selectedDate: [null], 
         customerId: [],
         routeId: [],
         name: []
       });
-
       this.dateFilterFormDriver = this.fb.group({
         selectedDate: [null], // 'selectedDate' is the name of the form control
         driverId:[],
@@ -110,7 +109,6 @@ export class EvidenceComponent implements OnInit {
         vendorName:[],
         vendorId: [],
       });
-
       this.vendorsService.getVendors().pipe(
         takeUntil(this.stopSubscription$),
         map((actions:any) => actions.map((a: any) => {
@@ -153,7 +151,6 @@ export class EvidenceComponent implements OnInit {
           return { id: id, ...data }
         }))
       ).subscribe((drivers: any) => {
-        console.log(drivers);
         this.driversList = drivers;
       });
     } else {
@@ -164,50 +161,43 @@ export class EvidenceComponent implements OnInit {
           return { id: id, ...data }
         }))
       ).subscribe((drivers: any) => {
-        console.log(drivers);
         this.driversList = drivers;
       });
     }
   }
 
-  ngOnInit() {
-    
+  ngOnInit() {    
   }
 
   onDriverSelected(event: any, field: any) {
-   
     this.evidenceInfoDriver =[];
-    if (event) {
-      
+    if (event) {      
       let selectedDateString = "";
-      if (this.dateFilterFormDriver) {
-       
-        selectedDateString = this.dateFilterFormDriver.get('selectedDate')!.value;
-        // Haz lo que necesites con selectedDateString
+      if (this.dateFilterFormDriver) {       
+        selectedDateString = this.dateFilterFormDriver.get('selectedDate')!.value;        
       }
      const formattedDate = this.datePipe.transform(selectedDateString, 'dd-MM-yyyy');
-
       const recordArray = _.filter(this.driversList, s => {
         return s.id == event;
       });
       const record = recordArray[0];
-//    console.log(formattedDate + " == " + record.id );
-       this.driverService.getEvidenceDriversperDriver(formattedDate!.toString(),record.id).pipe(
-        map((actions:any) => actions.map((a:any) => {
+      this.driverService.getEvidenceDriversperDriver(formattedDate!.toString(), record.id).pipe(
+        map((actions: any) => actions.map((a: any) => {
           const id = a.payload.doc.id;
           const data = a.payload.doc.data() as any;
-          return { id: id, ...data }
+          return { id: id, ...data };
         }))
-      ).subscribe(evidence2 => {     
-          this.evidenceInfoDriver = evidence2;      
-        //console.log( this.evidenceInfoDriver);
+      ).subscribe({
+        next: (evidence2) => {     
+          this.evidenceInfoDriver = evidence2;
           this.loadingevidenceInfoDriver = false;
-        }, err => {
+        },
+        error: (err) => {
           this.loadingevidenceInfoDriver = false;
-        });   
+        }
+      });  
     }
-  }
-   
+  }   
  
   onDateChange() {
     this.loadingevidenceInfo = true;
@@ -219,45 +209,41 @@ export class EvidenceComponent implements OnInit {
           map((actions: any) => actions.map((a: any) => {
             const id = a.payload.doc.id;
             const data = a.payload.doc.data() as any;
-            return { id: id, ...data }
+            return { id: id, ...data };
           }))
-        ).subscribe(
-          evidenceI => {
+        ).subscribe({
+          next: (evidenceI) => {
             this.evidenceInfo = evidenceI;
             this.loadingevidenceInfo = false;
           },
-          err => {
-            console.error('Error fetching evidence:', err);
+          error: (err) => {
+            this.sendMessage("error", err);
             this.loadingevidenceInfo = false;
           }
-        );
+        });
       } else {
         this.driverService.getEvidenceDrivers(selectedDate).pipe(
           map((actions: any) => actions.map((a: any) => {
             const id = a.payload.doc.id;
             const data = a.payload.doc.data() as any;
-            return { id: id, ...data }
+            return { id: id, ...data };
           }))
-        ).subscribe(
-          evidenceI => {
+        ).subscribe({
+          next: (evidenceI) => {
             this.evidenceInfo = evidenceI;
             this.loadingevidenceInfo = false;
           },
-          err => {
-            console.error('Error fetching evidence:', err);
+          error: (err) => {
+            this.sendMessage("error", err);
             this.loadingevidenceInfo = false;
           }
-        );
+        });
       }
     }
-
   }
 
   onDateChangeProgram(event: any ){
-
   this.date = startOfDay(new Date(event));
-
-    //fill customer
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       this.cDocument = this.afs.collection('customers').doc(this.user.customerId);
       this.customerSubscription = this.cDocument.snapshotChanges().pipe(
@@ -284,10 +270,7 @@ export class EvidenceComponent implements OnInit {
   }
 
   onDateChangeProgramRoute(event:any){
-
   this.dateRoute = startOfDay(new Date(event));
-
-  //fill customer
   if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
     this.cDocument = this.afs.collection('customers').doc(this.user.customerId);
     this.customerSubscription = this.cDocument.snapshotChanges().pipe(
@@ -313,10 +296,8 @@ export class EvidenceComponent implements OnInit {
   }   
   }
 
-  onCustomerSelected(event: any){
-   
+  onCustomerSelected(event: any) {   
     const customerIdValue = this.dateFilterFormProgram.get('customerId')!.value;
-
     if (this.date !== undefined && customerIdValue !== undefined ) {
       if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
         this.programService.getProgramsByDaybyCustomer(  this.date, this.user.customerId).pipe(
@@ -339,14 +320,11 @@ export class EvidenceComponent implements OnInit {
             return { id, ...data };
           })),
           map((programs: any[]) => {
-            // Create a Set to store unique names
             const uniqueNames = new Set();
-            // Filter the programs to include only unique names
             return programs.filter(program => {
               if (uniqueNames.has(program.name)) {
-                return false; // Skip this program as its name is already in the set
-              }
-              uniqueNames.add(program.name); // Add the name to the set and include this program
+                return false;               }
+              uniqueNames.add(program.name); 
               return true;
             });
           }),
@@ -359,10 +337,8 @@ export class EvidenceComponent implements OnInit {
   }
 
   onCustomerSelectedRoute (event:any){
-    const customerIdValue = this.dateFilterFormProgramRoute.get('customerId')!.value;
-   
-    if (this.dateRoute !== undefined && customerIdValue !== undefined ) {    
-    
+    const customerIdValue = this.dateFilterFormProgramRoute.get('customerId')!.value;   
+    if (this.dateRoute !== undefined && customerIdValue !== undefined ) {        
         this.programService.getRoutesbyCustomer(customerIdValue).pipe(
           take(1),
           map((actions:any) => actions.map((a: any) => {
@@ -371,16 +347,14 @@ export class EvidenceComponent implements OnInit {
             return { id, ...data }
           })),
           tap((data:any) => {        
-            this.RouteList = data;     
-           // console.log(this.RouteList);         
+            this.RouteList = data;
           })
         ).subscribe();
      }
   }
   onProgramSelected() {  
     this.loadingevidenceInfoByProgram = true;
-    const programIdValue = this.dateFilterFormProgram.get('programId')!.value;
-    console.log('programIdValue' + programIdValue);
+    const programIdValue = this.dateFilterFormProgram.get('programId')!.value;    
     if ( programIdValue !== undefined ) {
       this.driverService.getEvidenceByProgram(programIdValue).pipe(
         map((actions:any) => actions.map((a:any) => {
@@ -389,15 +363,13 @@ export class EvidenceComponent implements OnInit {
           return { id: id, ...data }
         }))
       ).subscribe(evidence2 => {     
-          this.evidenceInfoByProgram = evidence2;      
-        console.log( this.evidenceInfoByProgram);
+          this.evidenceInfoByProgram = evidence2;
         });   
     }
   } 
 
   onRouteSelected(){
-    const routeIdValue = this.dateFilterFormProgramRoute.get('routeId')!.value;
-    //console.log('routeIdValue' + routeIdValue);
+    const routeIdValue = this.dateFilterFormProgramRoute.get('routeId')!.value;    
     if ( routeIdValue !== undefined ) {
       this.driverService.getEvidenceByRoute(routeIdValue).pipe(
         map((actions:any) => actions.map((a:any) => {
@@ -406,12 +378,12 @@ export class EvidenceComponent implements OnInit {
           return { id: id, ...data }
         }))
       ).subscribe(evidence2 => {     
-          this.evidenceInfoByRoute = evidence2;      
-        console.log( this.evidenceInfoByRoute);
+          this.evidenceInfoByRoute = evidence2;
         });   
     }
   }
 
-
-//
+  sendMessage(type: string, message: string): void {
+    this.messageService.create(type, message);
+  }
 }

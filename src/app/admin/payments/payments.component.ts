@@ -5,8 +5,6 @@ import { UsersService } from '../../shared/services/users.service';
 import { AccountsService } from '../../shared/services/accounts.service';
 import { Observable, Subject, Subscription, map, switchMap, take, takeUntil, tap } from 'rxjs';
 import { NzButtonSize } from 'ng-zorro-antd/button';
-import { ICard, ICustomer, IFee, IPaymentMethod } from '../../customers/classes/customers';
-import { Timestamp } from 'firebase/firestore';
 import { DashboardService } from '../../shared/services/admin/dashboard.service';
 import { CustomersService } from '../../customers/services/customers.service';
 import { ProductsService } from '../../shared/services/products.service';
@@ -15,6 +13,8 @@ import { ProgramService } from '../../shared/services/program.service';
 import { RoutesService } from '../../shared/services/routes.service';
 import _ from 'lodash';
 import { IStopPoint } from '../../shared/models/ColumItem';
+import { UserData } from '../../shared/interfaces/payments.type';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 @Component({
   selector: 'app-payments',
@@ -72,15 +72,14 @@ export class AdminPaymentsComponent implements OnInit {
   stopIdValue: string = ""
 
   constructor(private fb: UntypedFormBuilder,
+    private messageService: NzMessageService,
     private afs: AngularFirestore
   ) { }
 
   ngOnInit() {
     this.authService.user.subscribe(user => {
       this.user = user;
-      // console.log(this.user); /idSegment
       if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
-
         this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
           takeUntil(this.stopSubscription$),
           map((a: any) => {
@@ -95,19 +94,16 @@ export class AdminPaymentsComponent implements OnInit {
         ).subscribe();
       }
     });
-
     this.signupForm = this.fb.group({
       status: [''],
       id: ['']
     });
-
     this.signupFormE = this.fb.group({
       status: [''],
       id: [''],
       customerId: [''],
       customerName: ['']
     });
-
     this.viewDetalle = this.fb.group({
       status: [''],
       id: [''],
@@ -119,7 +115,6 @@ export class AdminPaymentsComponent implements OnInit {
       defaultRouteName: [''],
       defaultRound: ['']
     });
-
     this.validateForm = this.fb.group({
       active: [true, [Validators.required]],
       amount: [0, [Validators.required]],
@@ -180,31 +175,24 @@ export class AdminPaymentsComponent implements OnInit {
     this.validateForm.controls['promiseDate'].setValue(currentDate);
     this.validateForm.controls['validTo'].setValue('');
     this.validateForm.controls['validFrom'].setValue(currentDate);
-
     this.validateForm.get('stopId')!.valueChanges.subscribe(event => {
       this.onStopPointSelected(event, this.stopPoints);
     });
   }
 
   fillData() {
-
     if (this.dataUsuariosList.length <= 1) {
       if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
         this.usersService.getPreRegisterInfoByCustomer(this.user.customerId).subscribe((data) => {
           this.dataUsuarios = data as any[];
           this.dataUsuariosList = this.dataUsuarios;
         });
-
-
-
       } else {
         this.usersService.getPreRegisterInfo().subscribe((data) => {
           this.dataUsuarios = data as any[];
           this.dataUsuariosList = this.dataUsuarios;
         });
-
       }
-
     }
   }
 
@@ -225,8 +213,6 @@ export class AdminPaymentsComponent implements OnInit {
           .subscribe((customers: any) => {
             this.customers = customers;
           });
-
-
         this.routesService.getProducts(this.user.customerId).pipe(
           takeUntil(this.stopSubscription$),
           map((actions: any) => actions.map((a: any) => {
@@ -237,13 +223,10 @@ export class AdminPaymentsComponent implements OnInit {
           .subscribe((products: any) => {
             this.products = products;
           });
-
-
       } else {
         this.usersService.getTransferInfo().subscribe((data) => {
           this.dataTransfer = data as any[];
           this.dataTransferList = this.dataTransfer;
-          //console.log(this.dataTransfer);
           this.cCollection = this.afs.collection<any>('customers', ref => ref.where('active', '==', true));
           this.customerSubscription = this.cCollection.snapshotChanges().pipe(
             map((actions: any) => actions.map((a: any) => {
@@ -253,17 +236,13 @@ export class AdminPaymentsComponent implements OnInit {
             }))
           ).subscribe(customers => {
             this.customers = customers;
-            console.log(this.customers);
           });
-
         });
       }
     }
   }
 
-
   fillDataE() {
-
     if (this.dataEjecutoresList.length <= 1) {
       if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
         this.usersService.getPreRegisterInfoEByCustomer(this.user.customerId).subscribe((data) => {
@@ -280,28 +259,26 @@ export class AdminPaymentsComponent implements OnInit {
     if (this.infoSegment.nivelNum == 1) { //Individual
       this.accountsService.getAccountsByCustomer(this.user.customerId).pipe(
         takeUntil(this.stopSubscription$),
-        map((a:any) => {
+        map((a: any) => {
           const id = a.payload.id;
           const data = a.payload.data() as any;
           return { id, ...data }
         }),
       ).subscribe((accounts) => {
-        this.listOfCustomer = [accounts];       
+        this.listOfCustomer = [accounts];
       });
-
-
     } else {
       this.accountsService.getAccounts().pipe(
         takeUntil(this.stopSubscription$),
-        map((actions:any) => actions.map((a:any) => {
+        map((actions: any) => actions.map((a: any) => {
           const id = a.payload.doc.id;
           const data = a.payload.doc.data() as any;
           return { id, ...data }
         }))
       ).subscribe((accounts) => {
-       this.listOfCustomer = accounts;       
+        this.listOfCustomer = accounts;
       });
-     }
+    }
   }
 
   ngOnDestroy() {
@@ -323,12 +300,9 @@ export class AdminPaymentsComponent implements OnInit {
 
   openModal(userid: any) {
     this.isViewInfo = true;
-    console.log(userid);
     this.usersService.getUserInfo(userid).subscribe(action => {
       const data = action.payload.data() as UserData;
-      //console.log(data);
       this.currentUserSelected = data;
-      //console.log(this.viewDetalle.value);
       if (data) {
         const userObj = {
           id: data['displayName'],
@@ -342,7 +316,6 @@ export class AdminPaymentsComponent implements OnInit {
         };
         this.viewDetalle.patchValue({ ...userObj });
       }
-      console.log(this.viewDetalle.value);
     });
   }
 
@@ -357,16 +330,12 @@ export class AdminPaymentsComponent implements OnInit {
   }
 
   handleOKEdit() {
-    // let data = this.signupForm.value;
-    //console.log('full data is: ',  this.signupForm.value); //userId: string, status: string) {   
     this.usersService.updateUserPreRegister(this.signupForm.controls['id'].value, this.signupForm.controls['status'].value);
-
     this.isEditModal = false;
   }
 
   handleOKEditE() {
     let data = this.signupFormE.value;
-    //console.log('full data is: ', this.signupFormE.value); //userId: string, status: string) {   
     this.usersService.updateUserPreRegisterE(this.signupFormE.controls['id'].value
       , this.signupFormE.controls['status'].value,
       this.signupFormE.controls['customerId'].value,
@@ -375,7 +344,6 @@ export class AdminPaymentsComponent implements OnInit {
   }
   handleCancel(): void {
     this.isVisible1 = false;
-
   }
   handleOk(): void {
     this.isConfirmLoading = true;
@@ -386,7 +354,6 @@ export class AdminPaymentsComponent implements OnInit {
     }, 3000);
   }
 
-
   initializeItems() {
     this.dataUsuarios = this.dataUsuariosList;
     this.dataEjecutores = this.dataEjecutoresList;
@@ -394,49 +361,40 @@ export class AdminPaymentsComponent implements OnInit {
   }
 
   getItems(searchbar: any) {
-    const q = searchbar; // Assuming `searchbar` is an input element and you want to extract its value    
+    const q = searchbar;
     if (!q) {
-      // If the search query is empty, reset the devicesList to its original state
       this.dataUsuarios = this.dataUsuariosList.slice();
       return;
     }
-    const text = q.toLowerCase(); // Using `toLowerCase()` instead of `toLower()` for lowercase conversion   
+    const text = q.toLowerCase();
     this.dataUsuarios = this.dataUsuariosList.filter((object: any) => {
-      // Check if any property of the object contains the search text
       return Object.values(object).some((value: any) => {
-        // Convert the property value to lowercase and check if it includes the search text
         return String(value).toLowerCase().includes(text);
       });
     });
   }
   getItemsE(searchbar: any) {
-    const q = searchbar; // Assuming `searchbar` is an input element and you want to extract its value    
+    const q = searchbar;
     if (!q) {
-      // If the search query is empty, reset the devicesList to its original state
       this.dataEjecutores = this.dataEjecutoresList.slice();
       return;
     }
-    const text = q.toLowerCase(); // Using `toLowerCase()` instead of `toLower()` for lowercase conversion   
+    const text = q.toLowerCase();
     this.dataEjecutores = this.dataEjecutoresList.filter((object: any) => {
-      // Check if any property of the object contains the search text
       return Object.values(object).some((value: any) => {
-        // Convert the property value to lowercase and check if it includes the search text
         return String(value).toLowerCase().includes(text);
       });
     });
   }
   getItemsT(searchbar: any) {
-    const q = searchbar; // Assuming `searchbar` is an input element and you want to extract its value    
+    const q = searchbar;
     if (!q) {
-      // If the search query is empty, reset the devicesList to its original state
       this.dataTransfer = this.dataTransferList.slice();
       return;
     }
-    const text = q.toLowerCase(); // Using `toLowerCase()` instead of `toLower()` for lowercase conversion   
+    const text = q.toLowerCase();
     this.dataTransfer = this.dataTransferList.filter((object: any) => {
-      // Check if any property of the object contains the search text
       return Object.values(object).some((value: any) => {
-        // Convert the property value to lowercase and check if it includes the search text
         return String(value).toLowerCase().includes(text);
       });
     });
@@ -449,8 +407,6 @@ export class AdminPaymentsComponent implements OnInit {
   rechazarPago(data: any) {
     this.usersService.updateTransfer(data.uid, "rejected");
     this.readytoGenerateBoardinPass = false;
-
-    //notificar! // userId
   }
 
   onAmountChange(amount: number) {
@@ -459,14 +415,12 @@ export class AdminPaymentsComponent implements OnInit {
     }
   }
   onProductSelected(event: any, products: any) {
-    console.log(event);
     this.productSelected = [];
     const recordArray = _.filter(products, p => {
       return p.id == event;
     });
     const record = recordArray[0];
     this.productSelected = record;
-    console.log(this.productSelected);
     this.validateForm.controls['name'].setValue(record.name);
     this.validateForm.controls['description'].setValue(record.description);
     this.validateForm.controls['product_description'].setValue(record.description);
@@ -486,18 +440,13 @@ export class AdminPaymentsComponent implements OnInit {
 
     this.usersService.getUserInfo(userId).subscribe(action => {
       const data = action.payload.data() as UserData;
-    //  console.log(data);
       this.currentUserSelected = data;
       this.currentLine = currentLine;
-      //console.log('aqui');
-
       this.isVisible1 = true;
     });
 
   }
   submitForm() {
-
-    console.log(this.validateForm);
     var purchaseRequest: object;
     var amountTrips: number = 0;
     const validTo = this.validateForm.controls['validTo'].value || new Date();
@@ -512,27 +461,21 @@ export class AdminPaymentsComponent implements OnInit {
     if (paymentSelected == "Anticipo") {
       amount = this.validateForm.controls['amountPayment'].value; //Cantidad a Pagar.
     }
-    //console.log(this.validateForm.value)
     const frequencies = this.validateForm.controls['frequencies'].value || 0;
-    //console.log( frequencies + '/' + amountTrips  + '/' + frequencies.length);
     if (frequencies > 0) {
       amountTrips = Number(frequencies) * 80;
     }
     const weeks = this.productSelected?.weeks || 0;
     const rangeWeeksGroup = this.fb.group({});
-
     const rangeWeeks = this.productSelected?.rangeWeeks || {}; // Provide a default empty object if null or undefined
-
     for (const [key, value] of Object.entries(rangeWeeks)) {
       rangeWeeksGroup.addControl(key, this.fb.control(value));
     }
     if (paymentSelected == "Mensualidad") {
-      //if is mensualidad the promiseDate sould be last of month
       const validTo = this.validateForm.controls['validTo'].value || new Date();
       promiseDateValue = validTo;
     }
     const send = {
-
       authorization: "portalAuth",
       operation_type: "in",
       method: this.validateForm.controls['payment'].value,
@@ -609,12 +552,9 @@ export class AdminPaymentsComponent implements OnInit {
       amountTrips: amountTrips,
       currentTrips: 0
     }
-    //   console.log(send);
-    // console.log(this.currentUserSelected.uid);
     this.customersService.saveBoardingPassToUserPurchaseCollection(this.currentUserSelected.uid, send) // this.validateForm.value)
       .then((success) => {
         this.isConfirmLoading = false;
-        console.log(success);
         this.customersService.getLatestValidUserPurchasesAdvance(this.currentUserSelected.uid, 2, promiseDateValue, paymentSelected, creation_date).pipe(
           take(1),
           map((actions: any) =>
@@ -624,23 +564,26 @@ export class AdminPaymentsComponent implements OnInit {
               return { id, ...data };
             })
           )
-        )
-          .subscribe((routes) => {
-            //  console.log(routes[0].id);               
+        ).subscribe({
+          next: (routes) => {
             this.customersService.saveBoardingPassDetailToUserPurchaseCollection(this.currentUserSelected.uid, routes[0].id, send)
-              .then((success) => {
-                //   console.log("last" + success);                
+              .then(() => {
                 this.customersService.createPurchaseCloud(send, this.currentUserSelected, routes[0].id);
-                // console.log("lastsas");
-                // console.log(send);
                 this.usersService.updateTransfer(this.currentLine, "complete");
-                //console.log("fin");
-
-              }).catch((err) => { console.log("error"); });
-          }, (error) => {
-            console.log(error);
-          })
-      }).catch((err) => { });
+              }).catch((err) => {
+                this.sendMessage('error', err);
+              });
+          },
+          error: (error) => {
+            this.sendMessage('error', error);
+          }
+        });
+      }).catch((err) => {
+        this.sendMessage('error', err);
+      });
+  }
+  sendMessage(type: string, message: string): void {
+    this.messageService.create(type, message);
   }
 
   enviarMensajeConfirmacion(uidUser: string, token: string) {
@@ -667,15 +610,11 @@ export class AdminPaymentsComponent implements OnInit {
 
     this.dashboardService.setChatMessage(dataMessage)
       .then(() => {
-
       });
   }
 
   onCustomerSelected(event: any) {
-
     const customerIdValue = this.validateForm.get('customerId')!.value;
-
-
     this.routesService.getProducts(customerIdValue).pipe(
       takeUntil(this.stopSubscription$),
       map((actions: any) => actions.map((a: any) => {
@@ -685,7 +624,6 @@ export class AdminPaymentsComponent implements OnInit {
       })))
       .subscribe((products: any) => {
         this.products = products;
-        //  console.log( this.products) ;
       });
 
     this.routesService.getRoutes(customerIdValue).pipe(
@@ -698,9 +636,6 @@ export class AdminPaymentsComponent implements OnInit {
       .subscribe((routes: IStopPoint[]) => {
         this.routes = routes;
       });
-
-
-
   }
 
   onRouteSelected(event: any, routes: any) {
@@ -709,9 +644,7 @@ export class AdminPaymentsComponent implements OnInit {
     });
     const record = recordArray[0];
     this.validateForm.controls['routeName'].setValue(record.name);
-
     const customerIdValue = this.validateForm.get('customerId')!.value;
-
     this.accountsService.getStopsByCustomer(customerIdValue, event).pipe(
       takeUntil(this.stopSubscription$),
       map((actions: any) => actions.map((a: any) => {
@@ -721,11 +654,9 @@ export class AdminPaymentsComponent implements OnInit {
       }))).subscribe((stopPoints: any) => {
         this.stopPoints = stopPoints;
       });
-
   }
   onChangeValidTo(result: Date): void {
     const validDateFrom = this.validateForm.controls['validFrom'].value;
-
   }
   onCourtesyChange(isCourtesy: boolean) {
     if (isCourtesy) {
@@ -734,7 +665,6 @@ export class AdminPaymentsComponent implements OnInit {
   }
   changePayment(event: string) {
     this.validateForm.controls['amountPayment'].setValue(0);
-
     this.paymentSelected = event;
     if (event == 'Mensualidad') {
       this.isValidDescriptionPaymentType = false;
@@ -744,7 +674,6 @@ export class AdminPaymentsComponent implements OnInit {
       this.isValidDescriptionPaymentType = true; //TODO
       this.isAnticipo = true;
       this.validateForm.controls['amountPayment'].setValue(0);
-
     } else {
       this.isAnticipo = false;
       this.isValidDescriptionPaymentType = true;
@@ -754,7 +683,6 @@ export class AdminPaymentsComponent implements OnInit {
   onStopPointSelected(event: any, stoppoints: any) {
     const recordArray = _.filter(this.stopPoints, s => s.stopPointId === event);
     const record = recordArray[0];
-
     if (record) {
       this.stopIdValue = record.id;
       this.validateForm.patchValue({
@@ -763,70 +691,6 @@ export class AdminPaymentsComponent implements OnInit {
         stopDescription: record.description
       });
     }
-    console.log(this.stopIdValue);
-    console.log(this.validateForm.value);
   }
-
 }
 
-interface UserData {
-  displayName: string;
-  studentId: string;
-  phoneNumber: string;
-  email: string;
-  status: string;
-  customerName: string;
-  customerId: string;
-  defaultRouteName: string;
-  defaultRound: string;
-}
-
-export interface IBoardingPass {
-  active: boolean;
-  amount: number;
-  authorization: number;
-  card?: ICard;
-  category: string;
-  conciliated: boolean;
-  creation_date: Date;
-  promiseDate: Date;
-  currency: string;
-  customer_id?: string;
-  customer?: ICustomer;
-  date_created: Timestamp;
-  due_date?: Date;
-  description: string;
-  error_message: string;
-  fee?: IFee;
-  is_courtesy?: boolean;
-  method: string;
-  name: string;
-  operation_date: Date;
-  operation_type: string;
-  order_id: string;
-  payment_method?: IPaymentMethod;
-  price: number;
-  product_description: string;
-  product_id: string;
-  round: string;
-  routeId: string;
-  routeName: string;
-  status: string;
-  stopDescription: string;
-  stopId: string;
-  stopName: string;
-  transaction_type: string;
-  validFrom: Timestamp;
-  validTo: Timestamp;
-  realValidTo?: Date;
-  isTaskIn: boolean;
-  isTaskOut: boolean;
-  isOpenpay?: boolean;
-  paidApp?: string;
-  id?: string;
-  amountPayment?: string;
-  typePayment?: string;
-  payment?: string;
-  baja?: boolean;
-  idBoardingPass?: string;
-}

@@ -16,7 +16,7 @@ import { AuthenticationService } from '../../../services/authentication.service'
 import { CustomersService } from '../../../../customers/services/customers.service';
 @Component({
   selector: 'app-shared-users-list',
-  templateUrl: './list.component.html' 
+  templateUrl: './list.component.html'
 })
 export class SharedUsersListComponent implements OnInit, OnDestroy {
   customersService = inject(CustomersService);
@@ -30,15 +30,12 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
   rowGroupPanelShow = rowGroupPanelShow;
   popupParent: any;
   pageSize: number = 10;
-
   //Modal
   isVisible: boolean = false;
   isConfirmLoading: boolean = false;
-
   //Wizard
   current = 0;
   index = 'First-content';
-
   //Ngx CSV Parser
   csvRecords: any[] = [];
   header = true;
@@ -54,12 +51,12 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
 
   constructor(
     private afs: AngularFirestore,
-   private msg: NzMessageService,    
+    private msg: NzMessageService,
     private ngxCsvParser: NgxCsvParser) {
 
     this.authService.user.subscribe((user) => {
       this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {         
+      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
         this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
           this.infoLoad = item;
           this.userlevelAccess = this.infoLoad.optionAccessLavel;
@@ -79,26 +76,22 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
 
   getSubscriptions() {
     this.sub = this.usersService.getAccountUsers(this.accountId).pipe(
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id, ...data }
       }))
-    )
-      .subscribe((users) => {
-        this.usersList = users;
-        console.log(this.usersList)
-      });
+    ).subscribe((users) => {
+      this.usersList = users;
+    });
   }
 
   repairUsers() {
     this.usersList.forEach((user: any) => {
-
       const currentUserLocation = this.afs.doc(`/users/${user.id}`);
       const expectedUserLocation = this.afs.doc(`/users/${user.uid}`);
 
       if (user.uid == user.id) {
-        console.log('skipped user: ', user);
       } else {
         expectedUserLocation.set(user, { merge: true }).then(() => {
           currentUserLocation.delete();
@@ -107,19 +100,19 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
 
     });
   }
+
   sendMessage(type: string, message: string): void {
     this.msg.create(type, message);
   }
+
   deleteUsers() {
     if (this.userlevelAccess == "1") {
       this.usersList.forEach((user: any) => {
-        console.log(user);
         this.usersService.deleteUser(user.id);
       });
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
-
   }
 
   onGridReady(params: any) {
@@ -128,7 +121,6 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
   }
   setPaginationPageSize(pageSize: number = 10) {
     this.pageSize = pageSize;
-    console.log(this.gridApi);
     this.gridApi.paginationSetPageSize(Number(pageSize));
   }
 
@@ -137,7 +129,6 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
       {
         name: "Ver detalles de " + params.node.data.firstName,
         action: () => {
-          console.log(params);
           let context = params.context.thisComponent;
           const notification = context.afs.collection('testFCM').doc(params.value);
           notification.set({ name: 'hola' });
@@ -151,7 +142,6 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
         name: "Checked",
         checked: true,
         action: function () {
-          console.log("Checked Selected");
         },
         icon: '<img src="../images/skills/mac.png"/>'
       },
@@ -169,7 +159,6 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
   }
 
   handleOk(): void {
-    console.log('Button ok clicked!');
     this.isSavingUsers = false;
     this.isVisible = false;
     this.csvRecords = [];
@@ -178,7 +167,6 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
   }
 
   handleCancel(): void {
-    console.log('Button cancel clicked!');
     this.isVisible = false;
     this.csvRecords = [];
     this.current = 0;
@@ -202,22 +190,14 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
     if (this.userlevelAccess != "3") {
       this.csvRecords.forEach(user => {
         this.usersService.createUserWithoutApp(this.makeUserObject(user)).then((response: any) => {
-
-          console.log(response);
-
-          const userCreateBoardingPass = user.createBoardingPass //.toLowerCase() == 'true';
-          console.log('create boarding pass: ', userCreateBoardingPass);
-
+          const userCreateBoardingPass = user.createBoardingPass //.toLowerCase() == 'true'          
           if (userCreateBoardingPass) {
             user.uid = response;
-            console.log('will create a boarding pass for this user');
             this.makeBoardingPassObject(user);
           }
-
-          console.log(response);
           user.result = 'Creado'
         }).catch(err => {
-          console.log(err);
+          this.sendMessage('error', err);
           user.result = err.message;
         })
 
@@ -225,18 +205,13 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
     }
-
-
     this.isDone = true;
   }
 
   async makeBoardingPassObject(user: any) {
-    console.log(user);
-
     let service: any;
     let route: any;
     let stopPoint: any;
-
     const servicesRef: AngularFirestoreCollection<any> = this.afs.collection('customers').doc(this.accountId).collection('products');
     const actualService = servicesRef.ref.where('name', '==', user.service);
 
@@ -246,7 +221,6 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
     if (this.userlevelAccess != "3") {
       actualService.get().then(serviceQuerySnapshot => {
         const count = serviceQuerySnapshot.size;
-        console.log('size of services found: ', count);
         if (count > 0) {
           serviceQuerySnapshot.forEach(doc => {
             const id = doc.id;
@@ -259,43 +233,24 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
 
         actualRoute.get().then(querySnapshot => {
           const count = querySnapshot.size;
-          console.log('size of route found; ', count);
           if (count > 0) {
             querySnapshot.forEach(doc => {
               const id = doc.id;
               const data = doc.data() as any;
               route = { id, ...data }
+              const stopPointRef = this.afs.collection('customers').doc(this.accountId).collection('routes').doc(route.id).collection('stops').ref;
+              const actualStop = query(stopPointRef, where('order', '==', +user.stop));
 
-             /*  const stopPointRef = firebase.firestore().collection('customers').doc(this.accountId).collection('routes').doc(route.id).collection('stops');
-              const actualStop = stopPointRef.where('order', '==', +user.stop);
-
-              actualStop.get().then(stopQuerySnapshot => {
+              getDocs(actualStop).then((stopQuerySnapshot) => {
                 const count = stopQuerySnapshot.size;
-                console.log('size of stop found; ', count);
+
                 if (count > 0) {
-                  stopQuerySnapshot.forEach(doc => {
+                  stopQuerySnapshot.forEach((doc) => {
                     const id = doc.id;
-                    const data = doc.data() as any;
-                    stopPoint = { id, ...data }
-                  }); */
-                  const stopPointRef = this.afs.collection('customers').doc(this.accountId).collection('routes').doc(route.id).collection('stops').ref;
-                  const actualStop = query(stopPointRef, where('order', '==', +user.stop));
-
-                  getDocs(actualStop).then((stopQuerySnapshot) => {
-                    const count = stopQuerySnapshot.size;
-                    console.log('size of stop found; ', count);
-
-                    if (count > 0) {
-                      stopQuerySnapshot.forEach((doc) => {
-                        const id = doc.id;
-                        const data = doc.data();
-                        const stopPoint = { id, ...data };
-                        // Do something with stopPoint
-                      });
-                    
-                  console.log(service, route, stopPoint);
-
-
+                    const data = doc.data();
+                    const stopPoint = { id, ...data };
+                    // Do something with stopPoint
+                  });
                   let boardingPassObject = {
                     active: user.validated,
                     amount: service.price,
@@ -344,9 +299,6 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
                     validFrom: service.validFrom,
                     validTo: service.validTo
                   };
-
-                  console.log(boardingPassObject);
-
                   this.customersService.saveBoardingPassToUserPurchaseCollection(user.uid, boardingPassObject)
                     .then((success) => {
                       this.isVisible = false;
@@ -403,16 +355,12 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
     if (event.fileList.length == 0) {
       this.csvRecords = [];
     }
-    if (status !== 'uploading') {
-      console.log(event.file, event.fileList, event);
-    }
+    if (status !== 'uploading') { }
     if (status === 'done') {
       this.msg.success(`${event.file.name} Se ha cargado con éxito.`);
-      console.log(event.file);
       if (event.file.originFileObj) {
-      this.parser(event.file.originFileObj);
+        this.parser(event.file.originFileObj);
       }
-
     } else if (status === 'error') {
       this.msg.error(`${event.file.name} no ha podido ser cargado.`);
     }
@@ -424,10 +372,8 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
         .subscribe(
           (value: any[] | NgxCSVParserError) => { // Specify the union type for the value parameter
             if (value instanceof NgxCSVParserError) {
-              console.log('Error', value);
             } else {
               const result: any[] = value;
-              console.log('Result', result);
               this.csvRecords = result;
             }
           }
@@ -443,8 +389,6 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
       sanitizedResults.push(newResult);
     }
     this.csvRecords = sanitizedResults;
-    console.log(this.csvRecords);
-
   }
 
   changeContent(): void {

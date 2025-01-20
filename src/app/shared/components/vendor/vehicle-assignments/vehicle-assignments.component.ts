@@ -17,7 +17,7 @@ import { RoutesService } from '../../../services/routes.service';
   styleUrls: ['./vehicle-assignments.component.css']
 })
 export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
-   @Input() vendorId!: string;
+   @Input() vendorId: string = '';
   @Input() customerId!: string;
   @Input() customerName!: string;
   @Input() assignmentId!: string;
@@ -58,11 +58,9 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
             });
         }
     });
-
     }
 
-  ngOnInit() {
-    
+  ngOnInit() {    
     this.getSubscriptions();
     this.createForm();
   }
@@ -84,13 +82,13 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
       vehicleCapacity: [0],
       driverId: ['', [Validators.required ]],
       driverName: ['', [Validators.required ]],
-
     })
   }
   sendMessage(type: string, message: string): void {
     this.messageService.create(type, message);
 }
   getSubscriptions() {
+    if (this.vendorId != '') { 
     this.vehicleAssignmentSubscription = this.routesService.getRouteVehicleAssignments(this.customerId, this.routeId, this.assignmentId, this.vendorId).pipe(
       takeUntil(this.stopSubscription$),
       map((actions:any) => actions.map((a: any) => {
@@ -111,8 +109,7 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
         return { id, ...data}
       }))
     ).subscribe( vehicles => {
-      this.vehiclesList = vehicles;
-     // console.log(vehicles);
+      this.vehiclesList = vehicles;   
       this.loading = false;
     });
 
@@ -124,11 +121,12 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
         return { id, ...data}
       }))
     ).subscribe( drivers => {
-      this.driversList = drivers;
-     // console.log(drivers);
+       this.driversList = drivers;    
       this.loading = false;
     });
-
+    } else {
+      this.sendMessage('error', "VendorId no esta asignado, favor de validar con soporte técnico")
+    }
   }
 
   showModal() {
@@ -141,18 +139,16 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
   }
 
   handleOk() {
-   // console.log(this.assignmentForm.value);
     if (this.userlevelAccess != "3") {
       if(this.assignmentForm.valid) {
         this.routesService.setRouteVehicleAssignments(this.customerId, this.routeId, this.assignmentForm.value);
         this.isModalVisible = false;
-      } else {
-        console.log('form is invalid');
+      } else {        
+        this.sendMessage('error', 'La forma es inválida');
       }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
-    }  
-    
+    }    
   }
 
   toggleActive(data: any) {
@@ -160,7 +156,7 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
     this.routesService.toggleRouteVehicleAssignment(this.customerId, this.routeId, data.id, data).then( () => {
       this.loading = false;
     })
-    .catch( err => console.log(err));
+    .catch( err => this.sendMessage('error',err));
   }
 
   selectProgramDay(data: any) {
@@ -181,8 +177,6 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
     data.routeId = this.routeId;
     data.customerName = this.customerName;
     data.routeName = this.routeName;
-    console.log('full data is: ', data);
-    
     this.programService.setProgram(data);
     this.selectedAssignment = null;
     this.isSelectDayVisible = false;
@@ -194,12 +188,10 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
       this.routesService.deleteRouteVehicleAssignments(this.customerId, this.routeId, data.id).then( () => {
         this.loading = false;
       })
-      .catch( err => console.log(err));
+      .catch( err => this.sendMessage('error',err));
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
-    
-   
   }
 
   onDriverSelected(event: any, field: any) {
@@ -208,7 +200,6 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
         return s.id == event;
       });
       const record = recordArray[0];
-   //   console.log(record);
       this.assignmentForm.controls[field].setValue(record.displayName);
     }
   }
@@ -218,8 +209,7 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
       const recordArray = _.filter(this.vehiclesList, s => {
         return s.id == event;
       });
-      const record = recordArray[0];
-     // console.log(record);
+      const record = recordArray[0];     
       this.assignmentForm.controls[field].setValue(record.name);
       this.assignmentForm.controls['vehicleCapacity'].setValue(record.seats);
     }

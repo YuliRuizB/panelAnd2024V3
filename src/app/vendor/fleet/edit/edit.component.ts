@@ -24,7 +24,7 @@ export class VehicleEditComponent implements OnInit, OnDestroy {
   objectForm!: UntypedFormGroup;
   objectSubscription!: Subscription;
   recordId: any;
-  vendorId: any;
+  vendorId: any ='';
   driversList: any = [];
   selectedIndex: number = 0;
   record: any = {};
@@ -111,10 +111,13 @@ export class VehicleEditComponent implements OnInit, OnDestroy {
       debounceTime(2000),
       takeWhile(() => this.autosave)
     ).subscribe((values) => {
-      if (this.objectForm.valid) {
-        //console.log('update values', values);
+      if (this.objectForm.valid) {       
         if (this.userlevelAccess != "3") {
+          if (this.vendorId != '') { 
           this.vehicleService.updateVehicle(this.vendorId, this.recordId, this.objectForm.value);
+          } else {
+            this.sendMessage('error', 'VendorId no esta establecido, favor de validar con administración');
+          }
         } else {
           this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
         }
@@ -189,6 +192,7 @@ export class VehicleEditComponent implements OnInit, OnDestroy {
   }
 
   getSubscriptions(vendorId: string) {
+    if (vendorId != '') { 
     this.vehicleService.getVehicle(vendorId, this.recordId).pipe(
       takeUntil(this.stopSubscriptions$),
       map((a:any) => {
@@ -198,8 +202,7 @@ export class VehicleEditComponent implements OnInit, OnDestroy {
       })
     ).subscribe((vehicle: IVehicle) => {
       this.record = vehicle;
-      this.patchForm(vehicle);
-     // console.log(this.record);
+      this.patchForm(vehicle);    
     })
     this.driversService.getDrivers(vendorId).pipe(
       takeUntil(this.stopSubscriptions$),
@@ -209,9 +212,11 @@ export class VehicleEditComponent implements OnInit, OnDestroy {
         return { id: id, ...data }
       }))
     ).subscribe((drivers: any) => {
-      this.driversList = drivers;
-      //console.log(drivers);
+      this.driversList = drivers;      
     })
+    } else {
+      this.sendMessage('error','VendorId no esta establecido, favor de validar con administración');
+    }
   }
 
   submitForm(): void {
@@ -222,13 +227,16 @@ export class VehicleEditComponent implements OnInit, OnDestroy {
 
     if (this.objectForm.valid) {
       if (this.userlevelAccess != "3") {
+        if (this.vendorId != '') { 
         this.vehicleService.updateVehicle(this.vendorId, this.recordId, this.objectForm.value);
+        } else {
+          this.sendMessage('error','VendorId no esta establecido, favor de validar con administración');
+        }
       } else {
         this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
       }
-
     } else {
-
+      this.sendMessage('error', 'La forma no es valida');
     }
   }
 
@@ -237,8 +245,7 @@ export class VehicleEditComponent implements OnInit, OnDestroy {
     reader.addEventListener('load', () => {
         if (reader.result !== null && typeof reader.result === 'string') {
             callback(reader.result);
-        } else {
-            // Handle the case where reader.result is null or not a string
+        } else {            
             console.error('Invalid result from FileReader');
         }
     });
@@ -251,15 +258,10 @@ beforeUpload(): Observable<boolean> {
   handleChange(info: { file: NzUploadFile }): void {
     if (info.file.originFileObj) {
     this.getBase64(info.file.originFileObj, (img: string) => {
-      this.avatarUrl = img;
-      //console.log(img);
+      this.avatarUrl = img;    
       const fileRef = this.bucketStorage.ref(this.bucketPath);
-
-      this.task = this.bucketStorage.ref(this.bucketPath).putString(img, 'data_url');
-
-      // observe percentage changes
-      this.uploadPercent = this.task.percentageChanges() as Observable<number>;
-    
+      this.task = this.bucketStorage.ref(this.bucketPath).putString(img, 'data_url');      
+      this.uploadPercent = this.task.percentageChanges() as Observable<number>;    
       this.uploadPercent.pipe(
         map(a => {
           return Number((a / 100).toFixed(2));
@@ -267,9 +269,7 @@ beforeUpload(): Observable<boolean> {
       ).subscribe((value) => {
         this.uploading = value != 0;
         this.uploadvalue = value;
-      })
-
-      // get notified when the download URL is available
+      })     
       this.task.snapshotChanges().pipe(
         finalize(() => {
           this.uploading = false;
@@ -279,21 +279,20 @@ beforeUpload(): Observable<boolean> {
           });
         })
       ).subscribe();
-
     });
     }
   }
 
-  async updatePhotoURL(url: any) {
-
-    console.log("started updatePhotoURL with url: ", url);
+  async updatePhotoURL(url: any) {   
     this.objectForm.controls['avatar'].patchValue(url);
     if (this.userlevelAccess != "3") {
+      if (this.vendorId != '') { 
       this.vehicleService.updateVehicleAvatar(this.vendorId, this.recordId, url);
+    } else {
+      this.sendMessage('error','VendorId no esta establecido, favor de validar con administración');
+    }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
     }
-
   }
-
 }

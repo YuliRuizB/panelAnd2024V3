@@ -1,11 +1,11 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import * as _ from 'lodash';
-import { Firestore } from 'firebase/firestore'; 
+import { Firestore } from 'firebase/firestore';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
 import { FormControl, FormGroup, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { Observable, Subject, Subscription, forkJoin, of } from 'rxjs';
-import {  NzModalService } from 'ng-zorro-antd/modal';
-import {  catchError, finalize, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
+import { NzModalService } from 'ng-zorro-antd/modal';
+import { catchError, finalize, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { AngularFireStorage, AngularFireUploadTask } from '@angular/fire/compat/storage';
 import { NzUploadChangeParam } from 'ng-zorro-antd/upload';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -29,7 +29,7 @@ export interface IStopPoint {
   id: string;
   active: boolean;
   description: string;
-  geopoint:GeoPoint;
+  geopoint: GeoPoint;
   imageUrl: string;
   name: string;
   order: number;
@@ -51,22 +51,21 @@ export const months = {
   10: 'Noviembre',
   11: 'Diciembre'
 };
-@Component({  
+@Component({
   templateUrl: './default-dashboard.component.html',
-  styleUrls: ['./default-dashboard.component.css' ] 
+  styleUrls: ['./default-dashboard.component.css']
 })
 
 export class DefaultDashboardComponent implements OnInit, OnDestroy {
-  @ViewChild('download', { static: false }) download!: ElementRef;    
+  @ViewChild('download', { static: false }) download!: ElementRef;
   authService = inject(AuthenticationService);
-  userService= inject(UsersService);
+  userService = inject(UsersService);
   routesService = inject(RoutesService);
   dashboardService = inject(DashboardService);
   productsService = inject(ProductsService);
   customersService = inject(CustomersService);
-  size:number = 40;
+  size: number = 40;
   @ViewChild('searchBar', { static: false }) searchbar: any;
-
   search: any;
   rolService = inject(RolService);
   usersCollection: AngularFirestoreCollection<any> | undefined;
@@ -84,10 +83,9 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   isDone: boolean = false;
   isCreatingBoardingPasses: boolean = false;
   isCreatingCredentials: boolean = false;
-
-  sendUser:any; 
-  idBoardingPass! : string;
-  isCollapsed = true; 
+  sendUser: any;
+  idBoardingPass!: string;
+  isCollapsed = true;
   listOfSelection = [
     {
       text: 'Seleccionar todas las páginas',
@@ -103,7 +101,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       }
     }
   ];
-
   listOfCredentialsSelection = [
     {
       text: 'Seleccionar todas las páginas',
@@ -119,7 +116,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       }
     }
   ];
-
   isAllDisplayDataChecked = false;
   isIndeterminate = false;
   listOfDisplayData = [];
@@ -132,22 +128,23 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   isContentOpen = false;
   isUserSelected = false;
   isLoadingUsers = false;
-  currentUserSelected!: { uid: string ; studentId: string;
-                     paymentId: string; disabled: any; 
-                    customerId: string; firstName: any; 
-                    emailVerified:any ; lastName: any; 
-                    email: any; phoneNumber: any;
-                    status: string; id: string; 
-                    token: any; defaultRoute: any; 
-                    displayName: any; photoURL:any;
-                    userName: any; customerName: any; 
-                    defaultRound: any; defaultRouteName: any; 
-                    defaultStopName: any; defaultStopId: any;
-                    turno: string; roundTrip: string;
-                  } ;
+  currentUserSelected!: {
+    uid: string; studentId: string;
+    paymentId: string; disabled: any;
+    customerId: string; firstName: any;
+    emailVerified: any; lastName: any;
+    email: any; phoneNumber: any;
+    status: string; id: string;
+    token: any; defaultRoute: any;
+    displayName: any; photoURL: any;
+    userName: any; customerName: any;
+    defaultRound: any; defaultRouteName: any;
+    defaultStopName: any; defaultStopId: any;
+    turno: string; roundTrip: string;
+  };
   currentSelectedCustomerId: string | undefined;
   loadingLastPurchase = false;
-  lastPurchase?: IBoardingPass ;
+  lastPurchase?: IBoardingPass;
   isBoardingPassSelected = false;
   isCredentialSelected = false;
   isLoadingPayments = false;
@@ -198,7 +195,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   routeId$ = new Subject<string>();
   canUpdatePayment = false;
   canUpdateValidTo = false;
-  jobTypeIdCustomerSelected : any = "";
+  jobTypeIdCustomerSelected: any = "";
   elementType = 'url';
   customersList: any[] = [];
   stopSubscription$: Subject<any> = new Subject();
@@ -239,114 +236,110 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   infoLoad: any = [];
   userlevelAccess: string | undefined;
   user: any;
-  purchaseActive :boolean = false;
-  isVisiblePurchasePay:boolean = false;
-  accountsService= inject(AccountsService);
-  infoSegment: any  =[];
+  purchaseActive: boolean = false;
+  isVisiblePurchasePay: boolean = false;
+  accountsService = inject(AccountsService);
+  infoSegment: any = [];
   requiredFields: boolean = false;
-  productSelected : any = [];
+  productSelected: any = [];
   switchValueUsers = true;
   checkOptionsOne: any[] = [];
-  selectedOption: string = ""; 
+  selectedOption: string = "";
   userCustomerId: string = "";
-                
 
   constructor(
     private afs: AngularFirestore,
     public modalService: NzModalService,
-    private fb: UntypedFormBuilder,        
+    private fb: UntypedFormBuilder,
     private aff: AngularFireFunctions,
     private bucketStorage: AngularFireStorage,
     private msg: NzMessageService
-  ) { 
-    
-    this.authService.user.subscribe(user => {   
-      this.user = user;          
-      if(this.user) {      
-        this.userCustomerId = this.user.customerId;  
-       
+  ) {
+
+    this.authService.user.subscribe(user => {
+      this.user = user;
+      if (this.user) {
+        this.userCustomerId = this.user.customerId;
         this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
           map((a: any) => {
             if (a && a.payload) {
               const id = a.payload.id;
               const data = a.payload.data ? a.payload.data() : {};
               return { id, ...data };
-            } else {              
-              this.sendMessage('error', a);              
+            } else {
+              this.sendMessage('error', a);
               return {};
             }
           })
-        ).subscribe((record: any) => {        
-          this.infoSegment = record;      
+        ).subscribe((record: any) => {
+          this.infoSegment = record;
           this.filldata();
-        }) 
-      }    
-    });   
+        })
+      }
+    });
   }
- 
-  filldata(){
+
+  filldata() {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual  
-      const customerSuscription: Observable<any>  = this.accountId$.pipe(
+      const customerSuscription: Observable<any> = this.accountId$.pipe(
         switchMap(async (accountId) => this.afs.collection('customers').doc(accountId)));
-        customerSuscription.subscribe((customers: any) => {
-          this.customers = customers;
-        });
+      customerSuscription.subscribe((customers: any) => {
+        this.customers = customers;
+      });
 
     } else {
-      const customerSuscription: Observable<any>  = this.accountId$.pipe(
+      const customerSuscription: Observable<any> = this.accountId$.pipe(
         switchMap(accountId => this.afs.collection('customers', ref => ref.where('active', '==', true)).valueChanges({ idField: 'uid' })
-        ));  
-        customerSuscription.subscribe((customers: any) => {
-          this.customers = customers;
-        });
+        ));
+      customerSuscription.subscribe((customers: any) => {
+        this.customers = customers;
+      });
     }
-
-    const routesObservable: Observable<any>  = this.accountId$.pipe(
+    const routesObservable: Observable<any> = this.accountId$.pipe(
       switchMap(accountId => this.afs.collection('customers').doc(accountId).collection('routes', ref => ref.where('active', '==', true)).valueChanges({ idField: 'routeId' })
       ));
-
     // subscribe to changes
     routesObservable.subscribe((routes: any) => {
       this.routes = routes;
     });
-    const routeEditUserObservable: Observable<any>  = this.accountId$.pipe(
+    const routeEditUserObservable: Observable<any> = this.accountId$.pipe(
       switchMap(accountId => this.afs.collection('customers').doc(accountId).collection('products', ref => ref.where('active', '==', true)).valueChanges({ idField: 'productId' })
       ));
 
-    const productsObservable: Observable<any>  = this.accountId$.pipe(
+    const productsObservable: Observable<any> = this.accountId$.pipe(
       switchMap(accountId => this.afs.collection('customers').doc(accountId).collection('products', ref => ref.where('active', '==', true)).valueChanges({ idField: 'productId' })
       ));
 
-      const usersObservable: Observable<any> = this.accountId$.pipe(
-        switchMap(accountId =>
-          this.afs.collection('users', ref => 
-            ref.where('customerId', '==', accountId)
-               .where('active', '==', true)
-               .orderBy('studentId')
-          ).valueChanges({ idField: 'uid' })
-        )
-      );
+    const usersObservable: Observable<any> = this.accountId$.pipe(
+      switchMap(accountId =>
+        this.afs.collection('users', ref =>
+          ref.where('customerId', '==', accountId)
+            .where('active', '==', true)
+            .orderBy('studentId')
+        ).valueChanges({ idField: 'uid' })
+      )
+    );
 
-    const stopPointsObservable: Observable<any>  = this.routeId$.pipe(
+    const stopPointsObservable: Observable<any> = this.routeId$.pipe(
       switchMap(routeId => this.afs.collection('customers').doc(this.currentSelectedCustomerId).collection('routes').doc(routeId).collection('stops', ref => ref.orderBy('order', 'asc').where('active', '==', true)).valueChanges({ idField: 'stopPointId' })
       ));
-      productsObservable.subscribe((products: any) => {       
-        this.products = products;
-      });
-      stopPointsObservable.subscribe((stopPoints: any) => {
-        this.stopPoints = stopPoints;
-      });
-      usersObservable.subscribe((usersByAccount: any) => {
-        this.usersByAccount = usersByAccount;
-      })    
+    productsObservable.subscribe((products: any) => {
+      this.products = products;
+    });
+    stopPointsObservable.subscribe((stopPoints: any) => {
+      this.stopPoints = stopPoints;
+    });
+    usersObservable.subscribe((usersByAccount: any) => {
+      this.usersByAccount = usersByAccount;
+    })
     this.getCustomersList();
   }
 
-  log(value:any): void {
-  this.devicesList = [];
+  log(value: any): void {
+    this.devicesList = [];
   }
 
-  ngOnInit() {      
+  ngOnInit() {
     this.credentialForm = this.fb.group({
       active: [true, [Validators.required]],
       validFrom: [new Date(), [Validators.required]],
@@ -360,7 +353,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       category: ['', [Validators.required]],
       conciliated: [false, [Validators.required]],
       creation_date: [new Date().toISOString(), [Validators.required]],
-      currency: ['MXN', [Validators.required]],      
+      currency: ['MXN', [Validators.required]],
       customer_id: ['', [Validators.required]],
       customerId: [''],
       date_created: [new Date(), [Validators.required]],
@@ -434,10 +427,10 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
     this.validateLiqForm = this.fb.group({
       customerId: [''],
-      amount: new FormControl({value: '', disabled: true}),
+      amount: new FormControl({ value: '', disabled: true }),
       productSelected: [''],
-      alreadyPayment: new FormControl({value: '', disabled: true}),
-      completeAmount: new FormControl({value: '', disabled: true}),
+      alreadyPayment: new FormControl({ value: '', disabled: true }),
+      completeAmount: new FormControl({ value: '', disabled: true }),
       validFrom: [''],
       validTo: [''],
       typePayment: [''],
@@ -494,14 +487,14 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       if (this.userlevelAccess != "3") {
         if (this.currentUserSelected && this.currentUserSelected.uid) {
           this.isCreatingCredentials = true;
-        this.customersService.createCredential(this.currentUserSelected.uid, this.currentUserSelected.studentId, validFrom, validTo, active).then((response: any) => {
-          this.isModalCredentialVisible = false;
-        });
-        this.isCreatingCredentials = false;
-        this.isDone = true;
-        } else {       
+          this.customersService.createCredential(this.currentUserSelected.uid, this.currentUserSelected.studentId, validFrom, validTo, active).then((response: any) => {
+            this.isModalCredentialVisible = false;
+          });
+          this.isCreatingCredentials = false;
+          this.isDone = true;
+        } else {
           this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-        }       
+        }
       } else {
         this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
       }
@@ -515,7 +508,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         this.currentUserSelected.paymentId = credentialId;
       } else {
         this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-      }        
+      }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
     }
@@ -525,23 +518,22 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     if (this.userlevelAccess == "1") {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         this.customersService.deleteCredential(this.currentUserSelected.uid, credentialId);
-      this.isBoardingPassSelected = false;
-      } else {        
+        this.isBoardingPassSelected = false;
+      } else {
         this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-      }        
+      }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
   }
 
-
   getUserCredentials(userId: string) {
-    this.loadingUserCredentials = true;    
+    this.loadingUserCredentials = true;
     this.customersService.getUserCredentials(userId).pipe(
       tap(userCredentials => {
         this.userCredentials = userCredentials;
       }),
-      catchError(err => {        
+      catchError(err => {
         this.sendMessage('error', err);
         this.userCredentials = null;
         return of(null); // Return a fallback value to keep the observable chain alive
@@ -559,9 +551,9 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
   refreshCredentialsStatus(): void {
     const allChecked = this.usersByAccount.length > 0 &&
-      this.usersByAccount.every((item:any) => this.mapOfCredentialsCheckedId[item.uid]);
-      const someChecked = this.usersByAccount.some((item:any) => this.mapOfCredentialsCheckedId[item.uid]);
-      this.isCredentialsAllDisplayDataChecked = allChecked;
+      this.usersByAccount.every((item: any) => this.mapOfCredentialsCheckedId[item.uid]);
+    const someChecked = this.usersByAccount.some((item: any) => this.mapOfCredentialsCheckedId[item.uid]);
+    this.isCredentialsAllDisplayDataChecked = allChecked;
     this.isCredentialsIndeterminate = someChecked && !allChecked;
   }
 
@@ -583,7 +575,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         })
       );
     });
-      forkJoin(requests).subscribe();
+    forkJoin(requests).subscribe();
   }
 
   createMultipleCredentials() {
@@ -593,7 +585,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     const active = this.credentialForm.controls['active'].value || false;
     if (this.userlevelAccess != "3") {
       this.isCreatingCredentials = true;
-      this.selectedUsersForCredentials.forEach((user:any) => {
+      this.selectedUsersForCredentials.forEach((user: any) => {
         this.customersService.createCredential(user.uid, user.studentId, validFrom, validTo, active).then((response: any) => {
         });
       });
@@ -632,63 +624,71 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.validateForm.controls['frequencies'].setValue(record.frequencies);
   }
 
-  searchloadUsers(){
+  searchloadUsers() {
     this.getUsersList();
   }
   getUsersList() {
     this.isLoadingUsers = true;
+    console.log(this.selectedOption);
+    
     this.afs
-    .collection('users', (ref) =>
-      ref.where('customerId', '==', this.selectedOption)
-    )
-    .ref.get() 
-    .then((snapshot) => {
+  .collection('users', (ref) =>
+    ref.where('customerId', '==', this.selectedOption)
+  )
+  .get()
+  .subscribe({
+    next: (snapshot) => {
       const users: any[] = [];
       snapshot.forEach((doc) => {
         users.push(doc.data());
-      });              
-      this.loadUsers(users);
-      this.isCollapsed = false; 
-      this.isLoadingUsers = false;
-    })
-      .catch((error: any) => {
-        console.error('Error al obtener usuarios:', error); 
-        this.isLoadingUsers = false; 
       });
+      console.log(users);
+      
+      this.loadUsers(users);
+      this.isCollapsed = false;
+      this.isLoadingUsers = false;
+    },
+    error: (error: any) => {
+      console.error('Error al obtener usuarios:', error);
+      this.isLoadingUsers = false;
+    },
+  });
   }
-  
+
   setUserDisabled(disabled: boolean) {
     if (this.userlevelAccess != "3") {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         this.customersService.setUserDisabled(this.currentUserSelected.uid, disabled);
         this.currentUserSelected.disabled = disabled;
-      } else {        
-        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');        
+      } else {
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
       }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
     }
   }
 
-  loadUsers(users: any[]) {    
-      const displayNameMap = new Map();
-      const devicesList = [];     
-      for (const user of users) {
-        if (user.displayName !== null && user.displayName !== undefined && !displayNameMap.has(user.displayName)) {
-          displayNameMap.set(user.displayName, true);
-          devicesList.push(user);
-        }
-      }      
-      devicesList.sort((a, b) => a.displayName.localeCompare(b.displayName));  
-      this.devicesList = devicesList;
-      this.loadedDevicesList = devicesList;
-      this.displayData = devicesList;
+  loadUsers(users: any[]) {
+    const displayNameMap = new Map();
+    const devicesList = [];
+    for (const user of users) {
+      if (user.displayName !== null && user.displayName !== undefined && !displayNameMap.has(user.displayName)) {
+        displayNameMap.set(user.displayName, true);
+        devicesList.push(user);
+      }
+    }
+    devicesList.sort((a, b) => a.displayName.localeCompare(b.displayName));
+    this.devicesList = devicesList;
+    this.loadedDevicesList = devicesList;
+    this.displayData = devicesList;
   }
 
-  userSelected(data: { uid: string; studentId: string; paymentId: string; disabled: any; customerId: string; firstName: any; photoURL:any;
-    lastName: any; email: any; phoneNumber: any; status: string; id: string; token: any; defaultRoute: any; emailVerified:any ;
+  userSelected(data: {
+    uid: string; studentId: string; paymentId: string; disabled: any; customerId: string; firstName: any; photoURL: any;
+    lastName: any; email: any; phoneNumber: any; status: string; id: string; token: any; defaultRoute: any; emailVerified: any;
     turno: string; roundTrip: string;
-     displayName: any; userName: any; customerName: any; defaultRound: any; defaultRouteName: any; defaultStopName: any; defaultStopId: any; } ) {   
+    displayName: any; userName: any; customerName: any; defaultRound: any; defaultRouteName: any; defaultStopName: any; defaultStopId: any;
+  }) {
     this.currentUserSelected = data;
     this.currentSelectedCustomerId = this.currentUserSelected.customerId;
     this.accountId$.next(this.currentUserSelected.customerId);
@@ -708,8 +708,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     if (this.userlevelAccess != "3") {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         this.customersService.saveOldBoardingPassToUserCollection(this.currentUserSelected.paymentId);
-      } else {  
-        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');  
+      } else {
+        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
       }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
@@ -718,14 +718,14 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
   getUserChatMessages(userId: string): void {
     this.loadingChatMessages = true;
-    
+
     if (this.userChatMessagesSubscription) {
       this.userChatMessagesSubscription.unsubscribe();
     }
     this.userChatMessagesSubscription = this.dashboardService.getUserChatMessages(userId, 10)
       .subscribe(userChatMsn => {
         this.userChatMessageData = userChatMsn;
-        this.loadingChatMessages = false; 
+        this.loadingChatMessages = false;
       });
   }
 
@@ -733,40 +733,40 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.dashboardService.getJobType(customerId).pipe(
       takeUntil(this.stopSubscription$),
       map((actions: any) => {
-          return actions.jobTypeID;
+        return actions.jobTypeID;
       })
     )
-    .subscribe({
-      next: (customerInfo: any) => {
-        if (customerInfo !== undefined) {
-          if (customerInfo.length > 0) {
-            this.dashboardService.getJobTypeInfo(customerInfo).pipe(
-              takeUntil(this.stopSubscription$),
-              map((actions: any) => {
+      .subscribe({
+        next: (customerInfo: any) => {
+          if (customerInfo !== undefined) {
+            if (customerInfo.length > 0) {
+              this.dashboardService.getJobTypeInfo(customerInfo).pipe(
+                takeUntil(this.stopSubscription$),
+                map((actions: any) => {
                   return actions.requiredFields;
-              })
-            )
-            .subscribe({
-              next: (requiredFields: any) => {    
-                this.requiredFields = requiredFields;
-              },
-              error: (error: any) => {
-                this.sendMessage('error', error);
-              }
-            });
-          } 
+                })
+              )
+                .subscribe({
+                  next: (requiredFields: any) => {
+                    this.requiredFields = requiredFields;
+                  },
+                  error: (error: any) => {
+                    this.sendMessage('error', error);
+                  }
+                });
+            }
+          }
+        },
+        error: (error: any) => {
+          this.sendMessage('error', error);
         }
-      },
-      error: (error: any) => {        
-        this.sendMessage('error', error);
-      }
-    });
+      });
   }
 
   //#endregion
- 
+
   //#region  Purchases and Payments
-  onBulkBoardingPassSelected(customerId: string ) {
+  onBulkBoardingPassSelected(customerId: string) {
     this.accountId$.next(customerId);
     this.currentSelectedCustomerId = customerId;
     this.isVisibleBulk = true;
@@ -791,222 +791,221 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       var amount = Number(this.lastPurchase.amount);
       this.validateLiqForm.controls['productSelected'].setValue(this.lastPurchase.name);
       this.validateLiqForm.controls['alreadyPayment'].setValue(amountPayment);
-      this.validateLiqForm.controls['amount'].setValue(amount);  
+      this.validateLiqForm.controls['amount'].setValue(amount);
       this.validateLiqForm.controls['completeAmount'].setValue(amount - amountPayment);
       this.validateLiqForm.controls['validFrom'].setValue(this.lastPurchase.validFrom.toDate());
       this.productSelectedValue = this.lastPurchase.name;
-  } else {      
+    } else {
       this.sendMessage('error', 'lastPurchase is undefined');
-  }   
+    }
   }
 
-  createLiquidacion() {   
+  createLiquidacion() {
     const validTo = this.validateLiqForm.controls['validTo'].value || new Date();
     const typePayment = this.validateLiqForm.controls['typePayment'].value;
-  
+
     if (this.lastPurchase !== undefined) {
       const purchId = this.lastPurchase ? String(this.lastPurchase.id) : undefined;
-      
-    if (validTo == "") {
-      this.msg.error("Se requiere  seleccionar una fecha de terminación de pase.");
-    } else {
-      if (typePayment == "") {
-        //TODO  create document. for file.
-        this.msg.error("Se requiere  seleccionar un tipo de referencia.");
+
+      if (validTo == "") {
+        this.msg.error("Se requiere  seleccionar una fecha de terminación de pase.");
       } else {
-        if (this.currentUserSelected && this.currentUserSelected.uid) {
-          var advanceForm: object;
-        var fileinfoURL = this.validateLiqForm.controls['fileURL'].value || "";
-        const amountTrips = this.productSelected?.amountTrips || 0;
-        const frequencies = this.productSelected?.frequencies || 0;
-        const weeks = this.productSelected?.weeks || 0;
-        const rangeWeeks = this.productSelected?.rangeWeeks || {};
-        const send = {
-         
-          authorization: "portalAuth",
-          operation_type: "in",
-          method: this.validateLiqForm.controls['payment'].value,
-          transaction_type: "charge",
-          card:
-          {
-            type: '',
-            brand: '',
-            address: '',
-            card_number: '',
-            holder_name: '',
-            expiration_year: '',
-            expiration_month: '',
-            allows_charges: '',
-            allows_payouts: '',
-            bank_name: '',
-            bank_code: '',
-            points_card: '',
-            points_type: '',
-          },
-          status: 'completed',// 'awaiting confirmation',
-          conciliated: false,
-          creation_date: new Date().toISOString(),
-          operation_date: new Date().toISOString(),
-          description: "Liquidación a traves del portal",
-          error_message: "",
-          order_id: "portalOrder",
-          currency: "MXN",
-          amount: this.validateLiqForm.controls['amountPayment'].value,
-          customer:
-          {
-            name: this.currentUserSelected.firstName,
-            last_name: this.currentUserSelected.lastName,
-            email: this.currentUserSelected.email,
-            phone_number: this.currentUserSelected.phoneNumber,
-            address: "",
-            creation_date: "",
-            external_id: "",
-            clabe: ""
-          },
-          product:{
-            product_id: this.validateLiqForm.controls['product_id'].value,
-            amountTrips: amountTrips,
-            frequencies: frequencies,
-            rangeWeeks: rangeWeeks,
-            weeks:weeks,
-            name: this.productSelected.name
-          },
-          customerId : this.currentUserSelected.customerId ,
-          active: true,
-          category: "permanente",
-          date_created: new Date().toISOString(),
-          product_description: "Liquidación a traves del portal",
-          product_id: this.validateLiqForm.controls['product_id'].value,
-          name: this.validateLiqForm.controls['name'].value,
-          isTaskIn: 'false',
-          isTaskOut: 'false',
-          type: "Servicio",
-          isOpenpay: false,
-          paidApp: 'portal',
-          price: this.lastPurchase.price,
-          round: this.validateLiqForm.controls['round'].value,
-          routeId: this.validateLiqForm.controls['routeId'].value,
-          routeName: this.validateLiqForm.controls['routeName'].value,
-          stopDescription: '',
-          stopId: this.validateLiqForm.controls['stopId'].value,
-          stopName: this.validateLiqForm.controls['stopDescription'].value,
-          validFrom: this.validateLiqForm.controls['validFrom'].value,
-          validTo: validTo,
-          idBoardingPass: this.currentUserSelected.uid,
-          idPurchasteRequest: '',
-          is_courtesy: false,
-          typePayment: typePayment
-        }
-
-        advanceForm = {
-          active: true,
-          amountPayment: this.validateLiqForm.controls['completeAmount'].value,
-          payment: "Liquidacion",
-          status: this.validateForm.controls['status'].value,
-          customer_id: this.currentUserSelected.customerId,
-          creation_date: this.validateForm.controls['creation_date'].value,
-          name: this.lastPurchase.name,
-          price: this.lastPurchase.price,
-          operation_date: this.validateForm.controls['operation_date'].value,
-          routeId: this.lastPurchase.routeId,
-          routeName: this.lastPurchase.routeName,
-          round: this.lastPurchase.round,
-          stopName: this.validateForm.controls['stopDescription'].value,
-          stopId: this.validateForm.controls['stopId'].value,
-          typePayment: typePayment,
-          validFrom: this.validateForm.controls['validFrom'].value,
-          idBoardingPass: this.currentUserSelected.uid,
-          idPurchasteRequest: '',
-          baja: false,
-          validTo: validTo,
-          type: "Servicio",
-          fileURL: fileinfoURL
-        };
-
-        
-         if (this.userlevelAccess != "3") {
-          if (purchId !== undefined) {
-            this.customersService.saveBoardingPassDetailToUserPurchaseCollection(this.currentUserSelected.uid, purchId, send)
-            .then((success) => {   
-             this.msg.success("El registro se genero correctamente");
-             if (this.lastPurchase && this.lastPurchase.realValidTo !== undefined) {
-              const validTo = new Date(this.lastPurchase.realValidTo);
-              this.lastPurchase.validTo = Timestamp.fromDate(validTo);
-
-              this.lastPurchase.status = 'completed';
-              this.lastPurchase.active = true;
-              
-              this.lastPurchase.typePayment = this.validateLiqForm.controls['typePayment'].value;
-              this.lastPurchase.status = 'completed';
-              this.lastPurchase.price = this.validateLiqForm.controls['amount'].value;
-              this.lastPurchase.amountPayment = this.validateLiqForm.controls['amount'].value;
-              this.lastPurchase.payment = "Liquidacion";
-
-              let status = this.currentUserSelected.status;             
-              if (status == "preRegister") {
-                this.userService.updateUserPreRegister(this.currentUserSelected.uid, status);
-              }
-
-              this.customersService.createPurchaseCloud(send,this.currentUserSelected, purchId);              
-              this.customersService.updateBoardingPassToUserPurchaseCollection(this.currentUserSelected.uid, this.lastPurchase)
-                .then((success) => {
-                  this.msg.success("Se actualizo el pase");
-                  this.canUpdatePayment = false;
-                }).catch((err) => { this.isConfirmLoading = false; });
-              }
-            }).catch((err) => { this.sendMessage('error', err);
-             });
-
-          // reflect information on fields..
-          //TODO
-        } else {            
-            this.sendMessage('error', 'lastPurchase is undefined');
-        }         
-
+        if (typePayment == "") {
+          this.msg.error("Se requiere  seleccionar un tipo de referencia.");
         } else {
-          this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
-        } 
-        } else {          
-          this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-        }
-        
-       
-      }
-    }
-  } else {      
-      this.sendMessage('error', 'lastPurchase is undefined');
-  }
+          if (this.currentUserSelected && this.currentUserSelected.uid) {
+            var advanceForm: object;
+            var fileinfoURL = this.validateLiqForm.controls['fileURL'].value || "";
+            const amountTrips = this.productSelected?.amountTrips || 0;
+            const frequencies = this.productSelected?.frequencies || 0;
+            const weeks = this.productSelected?.weeks || 0;
+            const rangeWeeks = this.productSelected?.rangeWeeks || {};
+            const send = {
 
+              authorization: "portalAuth",
+              operation_type: "in",
+              method: this.validateLiqForm.controls['payment'].value,
+              transaction_type: "charge",
+              card:
+              {
+                type: '',
+                brand: '',
+                address: '',
+                card_number: '',
+                holder_name: '',
+                expiration_year: '',
+                expiration_month: '',
+                allows_charges: '',
+                allows_payouts: '',
+                bank_name: '',
+                bank_code: '',
+                points_card: '',
+                points_type: '',
+              },
+              status: 'completed',// 'awaiting confirmation',
+              conciliated: false,
+              creation_date: new Date().toISOString(),
+              operation_date: new Date().toISOString(),
+              description: "Liquidación a traves del portal",
+              error_message: "",
+              order_id: "portalOrder",
+              currency: "MXN",
+              amount: this.validateLiqForm.controls['amountPayment'].value,
+              customer:
+              {
+                name: this.currentUserSelected.firstName,
+                last_name: this.currentUserSelected.lastName,
+                email: this.currentUserSelected.email,
+                phone_number: this.currentUserSelected.phoneNumber,
+                address: "",
+                creation_date: "",
+                external_id: "",
+                clabe: ""
+              },
+              product: {
+                product_id: this.validateLiqForm.controls['product_id'].value,
+                amountTrips: amountTrips,
+                frequencies: frequencies,
+                rangeWeeks: rangeWeeks,
+                weeks: weeks,
+                name: this.productSelected.name
+              },
+              customerId: this.currentUserSelected.customerId,
+              active: true,
+              category: "permanente",
+              date_created: new Date().toISOString(),
+              product_description: "Liquidación a traves del portal",
+              product_id: this.validateLiqForm.controls['product_id'].value,
+              name: this.validateLiqForm.controls['name'].value,
+              isTaskIn: 'false',
+              isTaskOut: 'false',
+              type: "Servicio",
+              isOpenpay: false,
+              paidApp: 'portal',
+              price: this.lastPurchase.price,
+              round: this.validateLiqForm.controls['round'].value,
+              routeId: this.validateLiqForm.controls['routeId'].value,
+              routeName: this.validateLiqForm.controls['routeName'].value,
+              stopDescription: '',
+              stopId: this.validateLiqForm.controls['stopId'].value,
+              stopName: this.validateLiqForm.controls['stopDescription'].value,
+              validFrom: this.validateLiqForm.controls['validFrom'].value,
+              validTo: validTo,
+              idBoardingPass: this.currentUserSelected.uid,
+              idPurchasteRequest: '',
+              is_courtesy: false,
+              typePayment: typePayment
+            }
+
+            advanceForm = {
+              active: true,
+              amountPayment: this.validateLiqForm.controls['completeAmount'].value,
+              payment: "Liquidacion",
+              status: this.validateForm.controls['status'].value,
+              customer_id: this.currentUserSelected.customerId,
+              creation_date: this.validateForm.controls['creation_date'].value,
+              name: this.lastPurchase.name,
+              price: this.lastPurchase.price,
+              operation_date: this.validateForm.controls['operation_date'].value,
+              routeId: this.lastPurchase.routeId,
+              routeName: this.lastPurchase.routeName,
+              round: this.lastPurchase.round,
+              stopName: this.validateForm.controls['stopDescription'].value,
+              stopId: this.validateForm.controls['stopId'].value,
+              typePayment: typePayment,
+              validFrom: this.validateForm.controls['validFrom'].value,
+              idBoardingPass: this.currentUserSelected.uid,
+              idPurchasteRequest: '',
+              baja: false,
+              validTo: validTo,
+              type: "Servicio",
+              fileURL: fileinfoURL
+            };
+
+
+            if (this.userlevelAccess != "3") {
+              if (purchId !== undefined) {
+                this.customersService.saveBoardingPassDetailToUserPurchaseCollection(this.currentUserSelected.uid, purchId, send)
+                  .then((success) => {
+                    this.msg.success("El registro se genero correctamente");
+                    if (this.lastPurchase && this.lastPurchase.realValidTo !== undefined) {
+                      const validTo = new Date(this.lastPurchase.realValidTo);
+                      this.lastPurchase.validTo = Timestamp.fromDate(validTo);
+
+                      this.lastPurchase.status = 'completed';
+                      this.lastPurchase.active = true;
+
+                      this.lastPurchase.typePayment = this.validateLiqForm.controls['typePayment'].value;
+                      this.lastPurchase.status = 'completed';
+                      this.lastPurchase.price = this.validateLiqForm.controls['amount'].value;
+                      this.lastPurchase.amountPayment = this.validateLiqForm.controls['amount'].value;
+                      this.lastPurchase.payment = "Liquidacion";
+
+                      let status = this.currentUserSelected.status;
+                      if (status == "preRegister") {
+                        this.userService.updateUserPreRegister(this.currentUserSelected.uid, status);
+                      }
+
+                      this.customersService.createPurchaseCloud(send, this.currentUserSelected, purchId);
+                      this.customersService.updateBoardingPassToUserPurchaseCollection(this.currentUserSelected.uid, this.lastPurchase)
+                        .then((success) => {
+                          this.msg.success("Se actualizo el pase");
+                          this.canUpdatePayment = false;
+                        }).catch((err) => { this.isConfirmLoading = false; });
+                    }
+                  }).catch((err) => {
+                    this.sendMessage('error', err);
+                  });
+
+                // reflect information on fields..
+                //TODO
+              } else {
+                this.sendMessage('error', 'lastPurchase is undefined');
+              }
+
+            } else {
+              this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
+            }
+          } else {
+            this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
+          }
+
+
+        }
+      }
+    } else {
+      this.sendMessage('error', 'lastPurchase is undefined');
+    }
   }
 
   onPaymentUpdated(event: number) {
     if (this.lastPurchase !== undefined) {
-    if (+this.lastPurchase.price === event) {
-      this.lastPurchase.status = 'completed';
-      this.lastPurchase.amount = event;
-      this.lastPurchase.active = true;
-      if (this.lastPurchase?.realValidTo !== undefined) {
-        const validToDate = new Date(this.lastPurchase.realValidTo);
-      this.lastPurchase.validTo = Timestamp.fromDate(validToDate);
-    }     
-    } else {
-      this.lastPurchase.amount = event;
-    }
-    if (this.userlevelAccess != "3") {
-      if (this.currentUserSelected && this.currentUserSelected.uid) {
-        this.customersService.updateBoardingPassToUserPurchaseCollection(this.currentUserSelected.uid, this.lastPurchase)
-        .then((success) => {
-          this.isVisible = false;
-          this.isConfirmLoading = false;
-        }).catch((err) => { this.isConfirmLoading = false; });
-      this.canUpdatePayment = false;
+      if (+this.lastPurchase.price === event) {
+        this.lastPurchase.status = 'completed';
+        this.lastPurchase.amount = event;
+        this.lastPurchase.active = true;
+        if (this.lastPurchase?.realValidTo !== undefined) {
+          const validToDate = new Date(this.lastPurchase.realValidTo);
+          this.lastPurchase.validTo = Timestamp.fromDate(validToDate);
+        }
       } else {
-        this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-      }      
-    } else {
-      this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
+        this.lastPurchase.amount = event;
+      }
+      if (this.userlevelAccess != "3") {
+        if (this.currentUserSelected && this.currentUserSelected.uid) {
+          this.customersService.updateBoardingPassToUserPurchaseCollection(this.currentUserSelected.uid, this.lastPurchase)
+            .then((success) => {
+              this.isVisible = false;
+              this.isConfirmLoading = false;
+            }).catch((err) => { this.isConfirmLoading = false; });
+          this.canUpdatePayment = false;
+        } else {
+          this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
+        }
+      } else {
+        this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
+      }
     }
-  }
   }
 
   getLastPurchase(purchaseId: string) {
@@ -1021,25 +1020,25 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       this.lastPurchase = undefined;
       this.productsReference = null;
     });
- 
+
   }
 
   activatePurchase(purchaseId: string, paid: boolean) {
-    if (this.currentUserSelected && this.currentUserSelected.uid) {       
-    this.customersService.activatePurchase(this.currentUserSelected.uid, purchaseId, paid);
-    this.currentUserSelected.paymentId = purchaseId;
-    } else {      
+    if (this.currentUserSelected && this.currentUserSelected.uid) {
+      this.customersService.activatePurchase(this.currentUserSelected.uid, purchaseId, paid);
+      this.currentUserSelected.paymentId = purchaseId;
+    } else {
       this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-    } 
+    }
   }
 
-  deletePurchase(purchaseId: string) {   
+  deletePurchase(purchaseId: string) {
     if (this.currentUserSelected && this.currentUserSelected.uid) {
       this.customersService.deletePurchase(this.currentUserSelected.uid, purchaseId);
-    this.isBoardingPassSelected = false;
+      this.isBoardingPassSelected = false;
 
-    this.userService.updateUserPreRegister(this.currentUserSelected.uid, this.currentUserSelected.status);
-    } else {      
+      this.userService.updateUserPreRegister(this.currentUserSelected.uid, this.currentUserSelected.status);
+    } else {
       this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
     }
   }
@@ -1107,15 +1106,15 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     if (this.userlevelAccess != "3") {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         if (this.lastPurchase !== undefined) {
-        const purchaseId = this.lastPurchase.id;
-        const uid: string = this.currentUserSelected.uid;
-        const boardingPassRef = this.afs.collection('users').doc(this.currentUserSelected.id).collection('boardingPasses').doc(this.lastPurchase.id);
-        boardingPassRef.set(this.lastPurchase).then((response) => {
-          const oldBoardingPassRef = this.afs.collection('users').doc(uid).collection('boardingPasses').doc(purchaseId);
-          oldBoardingPassRef.delete();
-        });
-      }
-      } else {        
+          const purchaseId = this.lastPurchase.id;
+          const uid: string = this.currentUserSelected.uid;
+          const boardingPassRef = this.afs.collection('users').doc(this.currentUserSelected.id).collection('boardingPasses').doc(this.lastPurchase.id);
+          boardingPassRef.set(this.lastPurchase).then((response) => {
+            const oldBoardingPassRef = this.afs.collection('users').doc(uid).collection('boardingPasses').doc(purchaseId);
+            oldBoardingPassRef.delete();
+          });
+        }
+      } else {
         this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
       }
     } else {
@@ -1126,16 +1125,16 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   bajaBoardingPass(id: string, set: any) {
     if (this.currentUserSelected && this.currentUserSelected.uid) {
       const boardingPassRef = this.afs.collection('users').doc(this.currentUserSelected.id).collection('boardingPasses').doc(id);
-    const updatedData = {
-      baja: true,
-    };
-    boardingPassRef.update(updatedData).then((response) => {
-    }).catch((error) => {
-      this.sendMessage('error: ', error);
-    });
-    } else {      
+      const updatedData = {
+        baja: true,
+      };
+      boardingPassRef.update(updatedData).then((response) => {
+      }).catch((error) => {
+        this.sendMessage('error: ', error);
+      });
+    } else {
       this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-    }    
+    }
   }
   boardingPassSelected(purchase: IBoardingPass) {
     if (this.currentUserSelected) {
@@ -1159,9 +1158,11 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.isVisible = true;
   }
 
-  showModalEditUser(currentUserSelected: { firstName: any; lastName: any; displayName: any; userName: any;
-     studentId: any; email: any; customerId: any; customerName: any; phoneNumber: any; defaultRound: any; 
-     defaultRoute: any; defaultRouteName: any; defaultStopId: any; defaultStopName: any; }) {
+  showModalEditUser(currentUserSelected: {
+    firstName: any; lastName: any; displayName: any; userName: any;
+    studentId: any; email: any; customerId: any; customerName: any; phoneNumber: any; defaultRound: any;
+    defaultRoute: any; defaultRouteName: any; defaultStopId: any; defaultStopName: any;
+  }) {
     this.isEditUserVisible = true;
 
     this.validateEditForm.controls['firstName'].setValue(currentUserSelected.firstName);
@@ -1187,7 +1188,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   fillCustomerRouteEditUser(customerID: string) {
     this.routesService.getRoutes(customerID).pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a:any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id, ...data }
@@ -1200,7 +1201,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   fillStopsEditUser(customerId: string, routeId: string) {
     this.routesService.getRouteStopPoints(customerId, routeId).pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a:any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IStopPoint;
         return { ...data, id }; // Ensure id is not spread again       
@@ -1214,36 +1215,36 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   async showModalMessageCenter() {
     if (this.currentUserSelected && this.currentUserSelected.uid) {
       // send menssage to sender..   
-    const dataMessage = {
-      createdAt: new Date(),
-      from: 'FyXKSXsUbYNtAbWL7zZ66o2f1M92',
-      fromName: 'Apps And Informa',
-      msg: this.newMessage,
-      requestId: 'suhB7YFAh6PYXCRuJhfD',
-      token: this.currentUserSelected.token,
-      uid: this.currentUserSelected.uid,
-      result: ""
-    }
-    const notifMessage = {
-      timestamp: new Date(),
-      title: 'Apps And Informa General',
-      from: 'FyXKSXsUbYNtAbWL7zZ66o2f1M92',
-      requestId: 'suhB7YFAh6PYXCRuJhfD',
-      body: this.newMessage,
-      token: this.currentUserSelected.token, // 'dXf-sDaPH4U:APA91bGiTZ1H8jzNXEexZW65A8QUzNOqV77-vKquP6qZ535IyWWQ7m0PUFCI-3g-qXRvrvuo8-VJgkwF317YHegZh6oNUCHlylU1PoA_aM_5bJw44xNUChtV1sO30ge4VSx6MK2InIzr',//eachUserMessage.token,
-      uid: this.currentUserSelected.uid//'RgNnO7ElJgdThoKh8rUvrpb2EhH2'
-    }
-    this.dashboardService.setMessage(notifMessage, this.currentUserSelected.uid);
-    this.dashboardService.setChatMessage(dataMessage)
-      .then(() => {
-        this.newMessage = "";
-      });
+      const dataMessage = {
+        createdAt: new Date(),
+        from: 'FyXKSXsUbYNtAbWL7zZ66o2f1M92',
+        fromName: 'Apps And Informa',
+        msg: this.newMessage,
+        requestId: 'suhB7YFAh6PYXCRuJhfD',
+        token: this.currentUserSelected.token,
+        uid: this.currentUserSelected.uid,
+        result: ""
+      }
+      const notifMessage = {
+        timestamp: new Date(),
+        title: 'Apps And Informa General',
+        from: 'FyXKSXsUbYNtAbWL7zZ66o2f1M92',
+        requestId: 'suhB7YFAh6PYXCRuJhfD',
+        body: this.newMessage,
+        token: this.currentUserSelected.token, // 'dXf-sDaPH4U:APA91bGiTZ1H8jzNXEexZW65A8QUzNOqV77-vKquP6qZ535IyWWQ7m0PUFCI-3g-qXRvrvuo8-VJgkwF317YHegZh6oNUCHlylU1PoA_aM_5bJw44xNUChtV1sO30ge4VSx6MK2InIzr',//eachUserMessage.token,
+        uid: this.currentUserSelected.uid//'RgNnO7ElJgdThoKh8rUvrpb2EhH2'
+      }
+      this.dashboardService.setMessage(notifMessage, this.currentUserSelected.uid);
+      this.dashboardService.setChatMessage(dataMessage)
+        .then(() => {
+          this.newMessage = "";
+        });
     } else {
       this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-    }    
+    }
   }
 
-  onRouteEditUserSelected(event: string , routes: any) {
+  onRouteEditUserSelected(event: string, routes: any) {
     if (event != null && event != '') {
       const recordArray = _.filter(routes, r => {
         return r.routeId == event;
@@ -1252,7 +1253,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         this.validateEditForm.controls['defaultRouteName'].setValue(record.name);
         const oldCustomer = this.currentUserSelected.customerId;
-        const oldRoute = this.currentUserSelected.defaultRoute;  
+        const oldRoute = this.currentUserSelected.defaultRoute;
         if (oldCustomer != this.newCustomerIdEditMode && oldRoute != record.routeId) {
           this.newRouteIdEditeMode = record.routeId;
           this.fillStopsEditUser(this.newCustomerIdEditMode, record.routeId);
@@ -1260,7 +1261,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         else {
           this.newRouteIdEditeMode = oldRoute;
         }
-      } else {        
+      } else {
         this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
       }
     }
@@ -1276,7 +1277,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
 
   }
 
-  onStopPointEditUserSelected(event: string , stopPointsList: any) {
+  onStopPointEditUserSelected(event: string, stopPointsList: any) {
     if (event != null && event != '') {
       const recordArray = _.filter(stopPointsList, s => {
         return s.id == event;
@@ -1308,7 +1309,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         this.validateEditForm.controls['customerName'].setValue(record.name);
         const oldCustomer = this.currentUserSelected.customerId;
-  
+
         if (oldCustomer != record.uid) {
           this.newCustomerIdEditMode = record.uid;
           this.fillCustomerRouteEditUser(record.uid);
@@ -1318,7 +1319,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         }
       } else {
         this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-      }      
+      }
     }
   }
 
@@ -1355,37 +1356,37 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
 
   getItems(searchbar: any) {
-    const q = searchbar;   
+    const q = searchbar;
     if (!q) {
-        this.devicesList = this.loadedDevicesList.slice();
-        return; 
+      this.devicesList = this.loadedDevicesList.slice();
+      return;
     }
-    const text = q.toLowerCase(); 
+    const text = q.toLowerCase();
     this.devicesList = this.loadedDevicesList.filter((object: any) => {
-        return Object.values(object).some((value: any) => {
-            return String(value).toLowerCase().includes(text);
-        });
-    });   
+      return Object.values(object).some((value: any) => {
+        return String(value).toLowerCase().includes(text);
+      });
+    });
   }
 
   getItemsByEmail(searchbar: string) {
-    this.isLoadingUsers = true;  
+    this.isLoadingUsers = true;
     this.afs
-    .collection('users', (ref) => ref.where('email', '==', searchbar))
-    .snapshotChanges()
-    .pipe(
-      map((actions) => {
-        return actions.map((a) => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data };
-        });
-      })
-    )
-    .subscribe(users => {          
-      this.loadUsers(users);
-      this.isCollapsed = false;
-    });        
+      .collection('users', (ref) => ref.where('email', '==', searchbar))
+      .snapshotChanges()
+      .pipe(
+        map((actions) => {
+          return actions.map((a) => {
+            const id = a.payload.doc.id;
+            const data = a.payload.doc.data() as any;
+            return { id, ...data };
+          });
+        })
+      )
+      .subscribe(users => {
+        this.loadUsers(users);
+        this.isCollapsed = false;
+      });
   }
 
   initializeItems() {
@@ -1406,14 +1407,14 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
             studentId: '',
             emailVerified: '',
             paymentId: '',
-            turno: '', 
+            turno: '',
             roundTrip: '',
             disabled: null,
             customerId: '',
             firstName: '',
             lastName: '',
             email: '',
-            photoURL : '',
+            photoURL: '',
             phoneNumber: '',
             status: '',
             id: '',
@@ -1426,16 +1427,15 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
             defaultRouteName: '',
             defaultStopName: '',
             defaultStopId: ''
-        };
+          };
           this.isUserSelected = false;
         },
-        nzCancelText: 'No',
-        nzOnCancel: () => console.log('Cancel')
+        nzCancelText: 'No'
       });
     } else {
       this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-    }   
-   
+    }
+
   }
   getCustomersList() {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual    
@@ -1447,9 +1447,9 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           const data = action.payload.data() as any;
           return { id, ...data };
         }),
-        tap((customer: any) => {          
+        tap((customer: any) => {
           this.customersList = [customer];  // Asigna un array con un único objeto
-          
+
           this.checkOptionsOne = [{
             value: customer.id,
             label: customer.name
@@ -1457,28 +1457,28 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           return customer;
         })
       ).subscribe();
-        
+
     } else {
       const customersCollection = this.afs.collection('customers', ref => ref.orderBy('name'));
       customersCollection.snapshotChanges().pipe(
         takeUntil(this.stopSubscription$),
-        map((actions:any) => actions.map((a:any) => {
+        map((actions: any) => actions.map((a: any) => {
           const id = a.payload.doc.id;
           const data = a.payload.doc.data() as any;
           return { id, ...data }
         })),
-        tap((customers:any) => {
+        tap((customers: any) => {
           this.customersList = customers;
           this.checkOptionsOne = customers.map((customer: any) => ({
             value: customer.id,
             label: customer.name
-          }));   
+          }));
           return customers;
         })
       ).subscribe();
     }
   }
-  currentPageDataChange($event: any ): void {
+  currentPageDataChange($event: any): void {
     this.listOfDisplayData = $event;
     this.refreshStatus();
   }
@@ -1503,7 +1503,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     if (resultValidations) {
       var advanceForm: object;
       var purchaseRequest: object;
-      var amountTrips : number = 0;
+      var amountTrips: number = 0;
       if (this.currentUserSelected && this.currentUserSelected.uid) {
         const uid: string = this.currentUserSelected.uid;
         this.validateForm.controls['customer_id'].setValue(this.currentUserSelected.customerId);
@@ -1514,10 +1514,10 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           amount = this.validateForm.controls['amountPayment'].value; //Cantidad a Pagar.
         }
         const frequencies = this.validateForm.controls['frequencies'].value || 0;
-        if (frequencies > 0){           
-            amountTrips = Number(frequencies) * 80;          
+        if (frequencies > 0) {
+          amountTrips = Number(frequencies) * 80;
         }
-        const weeks = this.productSelected?.weeks || 0;       
+        const weeks = this.productSelected?.weeks || 0;
         const rangeWeeksGroup = this.fb.group({});
         const rangeWeeks = this.productSelected?.rangeWeeks || {}; // Provide a default empty object if null or undefined  
         for (const [key, value] of Object.entries(rangeWeeks)) {
@@ -1537,7 +1537,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           //if is mensualidad the promiseDate sould be last of month
           const validTo = this.validateForm.controls['validTo'].value || new Date();
           promiseDateValue = validTo;
-        }  
+        }
         for (const i in this.validateForm.controls) {
           this.validateForm.controls[i].markAsDirty();
           this.validateForm.controls[i].updateValueAndValidity();
@@ -1546,7 +1546,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           this.isConfirmLoading = true;
           var fileinfoURL = this.validateForm.controls['fileURL'].value || "";
           const send = {
-           
+
             authorization: "portalAuth",
             operation_type: "in",
             method: this.validateForm.controls['payment'].value,
@@ -1567,7 +1567,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
               points_card: '',
               points_type: '',
             },
-            status:  this.validateForm.controls['status'].value,
+            status: this.validateForm.controls['status'].value,
             conciliated: false,
             creation_date: creation_date,// new Date().toISOString(),          
             operation_date: new Date().toISOString(),
@@ -1587,15 +1587,15 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
               external_id: "",
               clabe: ""
             },
-            product:{
-              product_id: this.validateForm.controls['product_id'].value,           
-                amountTrips: amountTrips,
-                frequencies: frequencies,
-                rangeWeeks: rangeWeeksGroup.value,
-                weeks:weeks,
-                name: this.productSelected.name
+            product: {
+              product_id: this.validateForm.controls['product_id'].value,
+              amountTrips: amountTrips,
+              frequencies: frequencies,
+              rangeWeeks: rangeWeeksGroup.value,
+              weeks: weeks,
+              name: this.productSelected.name
             },
-            customerId: this.currentUserSelected.customerId ,
+            customerId: this.currentUserSelected.customerId,
             active: true,
             category: "permanente",
             date_created: new Date().toISOString(),
@@ -1620,9 +1620,9 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
             idPurchasteRequest: '',
             is_courtesy: false,
             typePayment: paymentSelected,
-            amountTrips : amountTrips,
+            amountTrips: amountTrips,
             currentTrips: 0
-          }         
+          }
           if (this.userlevelAccess != "3") {
             advanceForm = {
               active: true,
@@ -1650,40 +1650,40 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
               fileURL: fileinfoURL
             };
             this.customersService.saveBoardingPassToUserPurchaseCollection(this.currentUserSelected.uid, send) // this.validateForm.value)
-            .then((success) => {
-              this.isVisible = false;
-              this.isConfirmLoading = false;
-              
-              this.customersService.getLatestValidUserPurchasesAdvance(uid, 2, promiseDateValue, paymentSelected, creation_date).pipe(
-                take(1),
-                map((actions: any) =>
-                  actions.map((a: any) => {
-                    const data = a.payload.doc.data() as any;
-                    const id = a.payload.doc.id;
-                    return { id, ...data };
-                  })
-                )
-              )
-              .subscribe({
-                next: (routes) => {
-                  this.customersService.saveBoardingPassDetailToUserPurchaseCollection(uid, routes[0].id, send)
-                    .then((success) => {
-                      this.sendUser = send;
-                      this.idBoardingPass = routes[0].id;
-                      this.purchaseActive = true;
+              .then((success) => {
+                this.isVisible = false;
+                this.isConfirmLoading = false;
 
-                      this.customersService.createPurchaseCloud(this.sendUser, this.currentUserSelected, this.idBoardingPass);
+                this.customersService.getLatestValidUserPurchasesAdvance(uid, 2, promiseDateValue, paymentSelected, creation_date).pipe(
+                  take(1),
+                  map((actions: any) =>
+                    actions.map((a: any) => {
+                      const data = a.payload.doc.data() as any;
+                      const id = a.payload.doc.id;
+                      return { id, ...data };
                     })
-                    .catch((err) => { this.sendMessage('error', err); });
-                },
-                error: (error) => {
-                  this.sendMessage('error', error);
-                }
+                  )
+                )
+                  .subscribe({
+                    next: (routes) => {
+                      this.customersService.saveBoardingPassDetailToUserPurchaseCollection(uid, routes[0].id, send)
+                        .then((success) => {
+                          this.sendUser = send;
+                          this.idBoardingPass = routes[0].id;
+                          this.purchaseActive = true;
+
+                          this.customersService.createPurchaseCloud(this.sendUser, this.currentUserSelected, this.idBoardingPass);
+                        })
+                        .catch((err) => { this.sendMessage('error', err); });
+                    },
+                    error: (error) => {
+                      this.sendMessage('error', error);
+                    }
+                  });
+              })
+              .catch((err) => {
+                this.isConfirmLoading = false;
               });
-            })
-            .catch((err) => {
-              this.isConfirmLoading = false;
-          });
           }
           else {
             this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
@@ -1695,8 +1695,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  submitReceipt(){
-     // this.customersService.createPurchaseCloud(this.sendUser,this.currentUserSelected,this.idBoardingPass);
+  submitReceipt() {
+    // this.customersService.createPurchaseCloud(this.sendUser,this.currentUserSelected,this.idBoardingPass);
   }
   async createPurchaseRequest(userID: string, purchaseDetail: any) {
     const newId = this.afs.createId();
@@ -1774,7 +1774,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
 
   submitEditForm(): void {
-    if (this.currentUserSelected && this.currentUserSelected.uid) {     
+    if (this.currentUserSelected && this.currentUserSelected.uid) {
       const customerId = this.validateEditForm.controls['customerId'].value == undefined ? "" : this.validateEditForm.controls['customerId'].value;
       const customerName = this.validateEditForm.controls['customerName'].value == undefined ? "" : this.validateEditForm.controls['customerName'].value;
       const defaultRound = this.validateEditForm.controls['defaultRound'].value == undefined ? "" : this.validateEditForm.controls['defaultRound'].value;
@@ -1789,8 +1789,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       const userName = this.validateEditForm.controls['userName'].value == undefined ? "" : this.validateEditForm.controls['userName'].value;
       const defaultStopId = this.validateEditForm.controls['defaultStopId'].value == undefined ? "" : this.validateEditForm.controls['defaultStopId'].value;
       const defaultStopName = this.validateEditForm.controls['defaultStopName'].value == undefined ? "" : this.validateEditForm.controls['defaultStopName'].value;
-      const uid = this.currentUserSelected.uid;  
-      let validForm: boolean = true;  
+      const uid = this.currentUserSelected.uid;
+      let validForm: boolean = true;
       if (this.newCustomerIdEditMode != "" && !this.resetClientEditInfo) {
         this.msg.error("Al cambiar de  Empresa es necesario asignar una operación y estación acorde a la empresa.");
         validForm = false;
@@ -1814,7 +1814,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       if (defaultRoute == "") {
         this.msg.error(" La operación es un valor requerido, favor de validar");
         validForm = false;
-      }  
+      }
       const data = {
         uid: uid,
         customerId: customerId,
@@ -1831,8 +1831,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         userName: userName,
         defaultStopId: defaultStopId,
         defaultStopName: defaultStopName
-      }; 
-  
+      };
+
       if (validForm) {
         this.customersService.updateUser(uid, data).then((response) => {
           this.isEditUserVisible = false;
@@ -1849,12 +1849,12 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           this.currentUserSelected.defaultRoute = defaultRoute;
           this.currentUserSelected.defaultRouteName = defaultRouteName;
           this.currentUserSelected.defaultStopName = defaultStopName;
-          this.currentUserSelected.defaultStopId = defaultStopId;  
+          this.currentUserSelected.defaultStopId = defaultStopId;
         });
       }
     } else {
       this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
-    }    
+    }
   }
 
   submitFormProduct(): void {
@@ -1913,10 +1913,10 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     }, 500);
   }
 
-  nzClicOption() {    
+  nzClicOption() {
     if (this.productsReference !== null) {
-       this.getLatestPurchaseDetail(this.currentUserSelected.uid, this.productsReference.id);
-    }   
+      this.getLatestPurchaseDetail(this.currentUserSelected.uid, this.productsReference.id);
+    }
   }
 
   nzClicOptionInformacion() {
@@ -1926,51 +1926,50 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   private getBase64(file: File, callback: (img: string) => void): void {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => callback(reader.result as string);
-    reader.onerror = error => console.log('Error: ', error);
-}
+    reader.onload = () => callback(reader.result as string);    
+  }
 
-handleChange2(event: NzUploadChangeParam): void {
-  const status = event.file.status;
-  if (status !== 'uploading') {
-    const status = event.file.status;     
-    this.fileListInfo = event.fileList;   
-    if (event.file.originFileObj) {
-      this.getBase64(event.file.originFileObj, (img: string) => {
-        this.fileUrl = img;
-        const fileName = event.file.name;
-        const filePath = `${this.bucketPath}/${fileName}`;
-        const fileRef = this.bucketStorage.ref(filePath);
-        this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');           
-        // observe percentage changes
-        this.uploadPercent = this.task.percentageChanges() as Observable<number>;
-        this.uploadPercent.pipe(
-          map(a => {
-            return Number((a / 100).toFixed(2));
+  handleChange2(event: NzUploadChangeParam): void {
+    const status = event.file.status;
+    if (status !== 'uploading') {
+      const status = event.file.status;
+      this.fileListInfo = event.fileList;
+      if (event.file.originFileObj) {
+        this.getBase64(event.file.originFileObj, (img: string) => {
+          this.fileUrl = img;
+          const fileName = event.file.name;
+          const filePath = `${this.bucketPath}/${fileName}`;
+          const fileRef = this.bucketStorage.ref(filePath);
+          this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');
+          // observe percentage changes
+          this.uploadPercent = this.task.percentageChanges() as Observable<number>;
+          this.uploadPercent.pipe(
+            map(a => {
+              return Number((a / 100).toFixed(2));
+            })
+          ).subscribe((value) => {
+            this.uploading = value != 0;
+            this.uploadvalue = value;
           })
-        ).subscribe((value) => {
-          this.uploading = value != 0;
-          this.uploadvalue = value;
-        })
-        // get notified when the download URL is available
-        this.task.snapshotChanges().pipe(
-          finalize(() => {
-            this.uploading = false;
-            this.downloadURL = fileRef.getDownloadURL();
-            this.downloadURL.subscribe(async (url) => {
-              this.updateAdvanceURL(url);
-              if (url.length > 0) {
-                this.sendMessage('success', `${event.file.name} Archivo cargado satisfactoriamente.`);
-              } else if (status === 'error') {
-                this.sendMessage('error', `${event.file.name} archivo fallido, favor de validar.`);
-              }
-            });
-          })
-        ).subscribe();
-      });
+          // get notified when the download URL is available
+          this.task.snapshotChanges().pipe(
+            finalize(() => {
+              this.uploading = false;
+              this.downloadURL = fileRef.getDownloadURL();
+              this.downloadURL.subscribe(async (url) => {
+                this.updateAdvanceURL(url);
+                if (url.length > 0) {
+                  this.sendMessage('success', `${event.file.name} Archivo cargado satisfactoriamente.`);
+                } else if (status === 'error') {
+                  this.sendMessage('error', `${event.file.name} archivo fallido, favor de validar.`);
+                }
+              });
+            })
+          ).subscribe();
+        });
+      }
     }
   }
-}
 
   changePayment(event: string) {
     this.validateForm.controls['amountPayment'].setValue(0);
@@ -2038,12 +2037,12 @@ handleChange2(event: NzUploadChangeParam): void {
         pdf.save('credencial.pdf');
       });
     }
-    catch (e : any) {      
+    catch (e: any) {
       this.sendMessage('error', e);
     }
   }
 
-  generatePDFInfo(){
+  generatePDFInfo() {
     try {
       var doc = new jsPDF();
       html2canvas(document.getElementById("recibo")!).then(canvas => {
@@ -2059,30 +2058,30 @@ handleChange2(event: NzUploadChangeParam): void {
       this.sendMessage('error', e);
     }
   }
-  generatePurchasePDF(data:any) {    
+  generatePurchasePDF(data: any) {
     this.reciboPago.push({
       amount: data.amount,
       amountTrips: data.amountTrips,
-      authorization:  data.authorization,
-      creation_date:  data.creation_date,
+      authorization: data.authorization,
+      creation_date: data.creation_date,
       currentTrips: data.currentTrips,
-      description:  data.description,
-      method:  data.method,
-      name:  data.name,
+      description: data.description,
+      method: data.method,
+      name: data.name,
       price: data.price,
-      routeName:  data.routeName,
-      round:  data.round,
-      stopName:  data.stopName,
-      type:  data.type,
-      typePayment:  data.typePayment,
-      validFrom:  data.validFrom,
-      validTo:  data.validTo
+      routeName: data.routeName,
+      round: data.round,
+      stopName: data.stopName,
+      type: data.type,
+      typePayment: data.typePayment,
+      validFrom: data.validFrom,
+      validTo: data.validTo
     });
     this.isVisiblePurchasePay = true;
   }
 
-  bajaCheck () {
-    
+  bajaCheck() {
+
   }
   downloadImg(): void {
     const canvas = document.getElementById('download')?.querySelector<HTMLCanvasElement>('canvas');

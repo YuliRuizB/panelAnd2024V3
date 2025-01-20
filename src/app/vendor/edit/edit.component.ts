@@ -47,13 +47,13 @@ export class EditComponentVendor implements OnInit {
   infoLoad: any = [];
   userlevelAccess!: string;
   user: any;
-  vendorService= inject(VendorService);
+  vendorService = inject(VendorService);
 
   constructor(
     private fb: UntypedFormBuilder,
     private route: ActivatedRoute,
     private modalService: NzModalService,
-    private message: NzMessageService,   
+    private message: NzMessageService,
     private bucketStorage: AngularFireStorage
   ) {
 
@@ -72,19 +72,14 @@ export class EditComponentVendor implements OnInit {
   sendMessage(type: string, message: string): void {
     this.message.create(type, message);
   }
-
-
   ngOnInit() {
-
-  
     this.objectSubscription = this.route.params.subscribe(params => {
       this.recordId = params['id']; // (+) converts string 'id' to a number
       this.selectedIndex = params['index']; // (+) converts string 'id' to a number      
-      this.bucketPath += this.recordId;      
+      this.bucketPath += this.recordId;
       this.getSubscriptions();
     });
     this.createForm();
-
     this.autoSave();
   }
 
@@ -94,20 +89,6 @@ export class EditComponentVendor implements OnInit {
   }
 
   autoSave() {
-   /*  this.objectForm.statusChanges.pipe(
-      debounceTime(2000),
-      takeWhile(() => this.autosave)
-    ).subscribe((values) => {
-      if (this.objectForm.valid) {
-
-        if (this.userlevelAccess != "3") {
-          this.vendorService.updateVendor(this.recordId, this.objectForm.value);
-
-        } else {
-          this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
-        }
-      }
-    }) */
   }
 
   createForm() {
@@ -141,7 +122,7 @@ export class EditComponentVendor implements OnInit {
 
   getSubscriptions() {
     this.vendorService.getVendor(this.recordId).pipe(
-      map((a:any) => {
+      map((a: any) => {
         const id = a.payload.id;
         const data = a.payload.data() as any;
         return { id: id, ...data }
@@ -157,7 +138,6 @@ export class EditComponentVendor implements OnInit {
       this.objectForm.controls[i].markAsDirty();
       this.objectForm.controls[i].updateValueAndValidity();
     }
-
     if (this.objectForm.valid) {
       if (this.userlevelAccess != "3") {
         this.vendorService.updateVendor(this.recordId, this.objectForm.value);
@@ -172,65 +152,54 @@ export class EditComponentVendor implements OnInit {
   private getBase64(img: File, callback: (img: string) => void): void {
     const reader = new FileReader();
     reader.addEventListener('load', () => {
-        if (reader.result !== null && typeof reader.result === 'string') {
-            callback(reader.result);
-        } else {
-            // Handle the case where reader.result is null or not a string
-            console.error('Invalid result from FileReader');
-        }
+      if (reader.result !== null && typeof reader.result === 'string') {
+        callback(reader.result);
+      } else {
+        // Handle the case where reader.result is null or not a string
+        console.error('Invalid result from FileReader');
+      }
     });
     reader.readAsDataURL(img);
-}
+  }
 
-beforeUpload(): Observable<boolean> {
-  // Simplemente devuelve un valor booleano envuelto en un Observable
-  return of(true);
-}
+  beforeUpload(): Observable<boolean> {
+    // Simplemente devuelve un valor booleano envuelto en un Observable
+    return of(true);
+  }
   handleChange(info: { file: NzUploadFile }): void {
     if (info.file.originFileObj) {
-    this.getBase64(info.file.originFileObj, (img: string) => {
-      this.avatarUrl = img;
-    //  console.log(img);
-    const fileName = info.file.name;
-    const filePath = `${this.bucketPath}/${fileName}`;
-    
-    const fileRef = this.bucketStorage.ref(filePath); 
- 
-
-      this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');
-
-      // observe percentage changes
-      this.uploadPercent = this.task.percentageChanges() as Observable<number>;
-   
-      this.uploadPercent.pipe(
-        map(a => {
-          return Number((a / 100).toFixed(2));
+      this.getBase64(info.file.originFileObj, (img: string) => {
+        this.avatarUrl = img;
+        const fileName = info.file.name;
+        const filePath = `${this.bucketPath}/${fileName}`;
+        const fileRef = this.bucketStorage.ref(filePath);
+        this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');
+        // observe percentage changes
+        this.uploadPercent = this.task.percentageChanges() as Observable<number>;
+        this.uploadPercent.pipe(
+          map(a => {
+            return Number((a / 100).toFixed(2));
+          })
+        ).subscribe((value) => {
+          this.uploading = value != 0;
+          this.uploadvalue = value;
         })
-      ).subscribe((value) => {
-        this.uploading = value != 0;
-        this.uploadvalue = value;
-      })
-
-      // get notified when the download URL is available
-      this.task.snapshotChanges().pipe(
-        finalize(() => {
-          this.uploading = false;
-          this.downloadURL = fileRef.getDownloadURL();
-          this.downloadURL.subscribe(async (url) => {
-            this.updatePhotoURL(url);
-          });
-        })
-      ).subscribe();
-
-    });
+        // get notified when the download URL is available
+        this.task.snapshotChanges().pipe(
+          finalize(() => {
+            this.uploading = false;
+            this.downloadURL = fileRef.getDownloadURL();
+            this.downloadURL.subscribe(async (url) => {
+              this.updatePhotoURL(url);
+            });
+          })
+        ).subscribe();
+      });
     }
   }
 
   async updatePhotoURL(url: any) {
-
-  //  console.log("started updatePhotoURL with url: ", url);
     this.objectForm.controls['avatar'].patchValue(url);
-
     if (this.userlevelAccess != "3") {
       this.vendorService.updateVendorAvatar(this.recordId, url);
     } else {

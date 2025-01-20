@@ -12,7 +12,7 @@ import { AccountsService } from '../../../services/accounts.service';
 @Component({
   selector: 'app-shared-vendor-settings',
   templateUrl: './settings.component.html'
- 
+
 })
 export class SharedVendorSettingsComponent implements OnInit, OnDestroy {
 
@@ -33,102 +33,111 @@ export class SharedVendorSettingsComponent implements OnInit, OnDestroy {
   isConfirmLoading: boolean = false;
   selectedRoute: any = null;
   infoLoad: any = [];
-  userlevelAccess!:string;
- user: any;
- accountsService = inject(AccountsService);
- infoSegment: any = [];
- stopSubscription$: Subject<boolean> = new Subject();
+  userlevelAccess!: string;
+  user: any;
+  accountsService = inject(AccountsService);
+  infoSegment: any = [];
+  stopSubscription$: Subject<boolean> = new Subject();
 
-  constructor(   
+  constructor(
     public modalService: NzModalService,
-    public message: NzMessageService  
-  ) { 
+    public message: NzMessageService
+  ) {
     this.authService.user.subscribe((user) => {
       this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {      
-          this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-              this.infoLoad = item;
-              this.userlevelAccess = this.infoLoad.optionAccessLavel;                 
-          });
-          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-            takeUntil(this.stopSubscription$),
-            map((a:any) => {
-              const id = a.payload.id;
-              const data = a.payload.data() as any;
-              return { id, ...data }
-            }),
-            tap(record => {             
-              this.infoSegment = record;            
-              return record;
-            })
-          ).subscribe();
+      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+          this.infoLoad = item;
+          this.userlevelAccess = this.infoLoad.optionAccessLavel;
+        });
+        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+          takeUntil(this.stopSubscription$),
+          map((a: any) => {
+            const id = a.payload.id;
+            const data = a.payload.data() as any;
+            return { id, ...data }
+          }),
+          tap(record => {
+            this.infoSegment = record;
+            return record;
+          })
+        ).subscribe();
       }
-  });
+    });
   }
   sendMessage(type: string, message: string): void {
     this.message.create(type, message);
-}
+  }
 
   ngOnInit() {
     this.getSubscriptions();
   }
 
   ngOnDestroy() {
-    if(this.allRoutesSubscription) {
+    if (this.allRoutesSubscription) {
       this.allRoutesSubscription.unsubscribe();
     }
-    if(this.vendorRoutesSubscription) {
+    if (this.vendorRoutesSubscription) {
       this.vendorRoutesSubscription.unsubscribe();
     }
-    if(this.permissionsSubscription) {
+    if (this.permissionsSubscription) {
       this.permissionsSubscription.unsubscribe();
     }
   }
 
   toggleActive(data: any) {
-    this.routesService.toggleActiveVendorRouteAccess(this.vendorId, data.permissionId, data);
+    if (this.vendorId != '') {
+      this.routesService.toggleActiveVendorRouteAccess(this.vendorId, data.permissionId, data);
+    }
   }
 
-  deletePermission(data: any ) {
+  deletePermission(data: any) {
     if (this.userlevelAccess == "1") {
-      this.routesService.deleteVendorRouteAccess(this.vendorId, data.permissionId);
+      if (this.vendorId != '') {
+        this.routesService.deleteVendorRouteAccess(this.vendorId, data.permissionId);
+      }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
   }
 
-  getSubscriptions() {   
-
-    
-    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-      this.allRoutesSubscription = this.routesService.getAllCustomersRoutesbyCustomer(this.user.customerId).subscribe((routes: any[]) => {
-        this.allRoutesList = routes;
-      }, err =>  {
-        console.log('Error Get suscriptions: ', err);
-        this.loading = false;
-      })
+  getSubscriptions() {
+    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { // Individual
+      this.allRoutesSubscription = this.routesService.getAllCustomersRoutesbyCustomer(this.user.customerId).subscribe({
+        next: (routes: any[]) => {
+          this.allRoutesList = routes;
+        },
+        error: (err) => {          
+          this.sendMessage('error',err);
+          this.loading = false;
+        },
+      });
     } else {
-      this.allRoutesSubscription = this.routesService.getRoutesByCustomer().subscribe((routes: any[]) => {
-        this.allRoutesList = routes;
-      }, err =>  {
-        console.log('Error Get suscriptions: ', err);
-        this.loading = false;
-      })
+      this.allRoutesSubscription = this.routesService.getRoutesByCustomer().subscribe({
+        next: (routes: any[]) => {
+          this.allRoutesList = routes;
+        },
+        error: (err) => {
+          this.sendMessage('error',err);
+          this.loading = false;
+        },
+      });
     }
-
-   
-    this.vendorRoutesSubscription = this.routesService.getAuthorizedRoutes(this.vendorId).subscribe((routes: any) => {    
- 
-   console.log(routes);
-   
-      this.vendorRoutesList = !!routes && routes.length > 0 ? routes : [];
-      console.log(this.vendorRoutesList);
-    
-      this.userCanUpdate =true;
-    }, err =>  {
-      this.vendorRoutesList = [];    
+    if (this.vendorId != '') {
+      this.vendorRoutesSubscription = this.routesService.getAuthorizedRoutes(this.vendorId).subscribe({
+        next: (routes: any) => {
+          this.vendorRoutesList = !!routes && routes.length > 0 ? routes : [];
+          this.userCanUpdate = true;
+        },
+        error: (err) => {
+          this.vendorRoutesList = [];
+          this.loading = false;
+        },
+      });
+    } else {
+      this.vendorRoutesList = [];
       this.loading = false;
-    });    
+    }
   }
 
   showModal(): void {
@@ -136,32 +145,30 @@ export class SharedVendorSettingsComponent implements OnInit, OnDestroy {
   }
 
   handleOk(): void {
-    if(this.selectedRoute) {
-    const dataArray = this.selectedRoute.split(',');
-    const customerId = dataArray[0];
-    const customerName = dataArray[1];
-    const routeId = dataArray[2];
-    const routeName = dataArray[3];
-    const routePath = `customers/${customerId}/routes/${routeId}`;
-    const vendorId = this.vendorId;
-    const record = {
-      active: true,
-      routeId,
-      routeName,
-      routePath,
-      customerId,
-      customerName,
-      vendorId
-    };   
-    console.log(this.vendorId);
-    console.log(record);
-    
-    
-    this.routesService.setAuthorizedRoutes(this.vendorId, record).then( () => {
-      this.isModalVisible = false;
-      this.isConfirmLoading = false;
-    });
-  }
+    if (this.selectedRoute) {
+      const dataArray = this.selectedRoute.split(',');
+      const customerId = dataArray[0];
+      const customerName = dataArray[1];
+      const routeId = dataArray[2];
+      const routeName = dataArray[3];
+      const routePath = `customers/${customerId}/routes/${routeId}`;
+      const vendorId = this.vendorId;
+      const record = {
+        active: true,
+        routeId,
+        routeName,
+        routePath,
+        customerId,
+        customerName,
+        vendorId
+      };
+      if (this.vendorId != '') {
+        this.routesService.setAuthorizedRoutes(this.vendorId, record).then(() => {
+          this.isModalVisible = false;
+          this.isConfirmLoading = false;
+        });
+      }
+    }
   }
 
   handleCancel(): void {

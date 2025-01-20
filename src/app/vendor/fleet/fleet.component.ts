@@ -27,8 +27,7 @@ export class FleetComponent implements OnInit, OnDestroy {
   stopSubscriptions$: Subject<boolean> = new Subject();
   searchValue: string = "";
   isVisible: boolean = false;
-  isOkLoading: boolean = false;
- 
+  isOkLoading: boolean = false; 
   vehicleForm!: UntypedFormGroup;
   user: any;
   infoLoad: any = [];
@@ -79,19 +78,20 @@ export class FleetComponent implements OnInit, OnDestroy {
   }
 
   getSubscriptions(vendorId: any) {
-    this.devicesService.getDevices(vendorId).pipe(
-      takeUntil(this.stopSubscriptions$),
-      map((actions:any) => actions.map((a: any) => {
-        const data = a.payload.doc.data() as IVehicle;
-        const id = a.payload.doc.id;
-        const route = { ...data, id }; // Spread data and add id
-        return route;
-      }))
-    ).subscribe((devices: IVehicle[]) => {
-      this.devicesList = devices;
-      this.loadedDevicesList = _.sortBy(devices, ['name', 'asc']);
-      console.log(this.devicesList);
-    })
+    if (vendorId != undefined) { 
+      this.devicesService.getDevices(vendorId).pipe(
+        takeUntil(this.stopSubscriptions$),
+        map((actions:any) => actions.map((a: any) => {
+          const data = a.payload.doc.data() as IVehicle;
+          const id = a.payload.doc.id;
+          const route = { ...data, id }; // Spread data and add id
+          return route;
+        }))
+      ).subscribe((devices: IVehicle[]) => {
+        this.devicesList = devices;
+        this.loadedDevicesList = _.sortBy(devices, ['name', 'asc']);      
+      })
+    }
   }
 
   searchByValue() {
@@ -109,7 +109,6 @@ export class FleetComponent implements OnInit, OnDestroy {
       } else {
         return false;
       }
-
     });
   }
 
@@ -137,24 +136,22 @@ export class FleetComponent implements OnInit, OnDestroy {
 
   submitForm() {
     this.isOkLoading = true;
-    console.log(this.vehicleForm.value);
-    console.log(this.vehicleForm.valid);
-
     if (this.userlevelAccess != "3") {
-
+      if (this.user.vendorId != '') { 
       this.devicesService.addDevice(this.user.vendorId, this.vehicleForm.value).then(() => {
         this.isOkLoading = false;
         this.isVisible = false;
       })
         .catch(err => {
           this.isOkLoading = false;
-          console.log(err);
+          this.sendMessage('error',err);
         });
+      } else {
+        this.sendMessage('error', 'VendorId no esta establecido favor de validar con administración');
+      }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para agregar datos, favor de contactar al administrador.");
     }
-
-
   }
 
   getContextMenuItems(params: any) {
@@ -162,8 +159,7 @@ export class FleetComponent implements OnInit, OnDestroy {
     var result = [
       {
         name: 'Editar ' + params.node.data.name,
-        action: () => {
-          console.log(params);
+        action: () => {          
           // this.router.navigate([`vehicle/edit/${params.node.data.name}`]);
         },
         cssClasses: ['redFont', 'bold'],
@@ -171,8 +167,7 @@ export class FleetComponent implements OnInit, OnDestroy {
       'separator',
       {
         name: 'Eliminar ' + params.node.data.name,
-        action: function () {
-          console.log(params);
+        action: function () {         
           window.alert('Alerting about ' + params.value);
         },
         cssClasses: ['redFont', 'bold'],
@@ -180,8 +175,7 @@ export class FleetComponent implements OnInit, OnDestroy {
       {
         name: 'Desactivar',
         checked: true,
-        action: function () {
-          console.log('Checked Selected');
+        action: function () {          
         },
         icon: '<img src="../images/skills/mac.png"/>',
       },

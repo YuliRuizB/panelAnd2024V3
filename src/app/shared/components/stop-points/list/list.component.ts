@@ -72,7 +72,6 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.getSubscriptions();
-
     this.usersCollection = this.afs.collection<any>('users', ref => 
       ref.where('customerId', '==', this.accountId)
      .where('email','==', 'internal').orderBy('customerName')
@@ -99,7 +98,6 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   }
 
   timePickerChange() {
-   //console.log(event);
   }
 
   handleCancel() {
@@ -107,10 +105,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   }
 
   handleOkPDF() {
-    // imprimir aqui
-    //console.log("Imprimir");
     try {
-
       var doc = new jsPDF();
       html2canvas(document.getElementById("documentoPDF")!).then(canvas => {
         const contentDataURL = canvas.toDataURL('image/png');
@@ -123,14 +118,12 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
       });
       this.isPdfVisible = false; // Close the modal
     }
-    catch (e) {
-      console.error(e);
-    }
-  
+    catch (e : any) {
+      this.sendMessage('error',e)
+    }  
   }
 
   toggleActive(data: any) {
-    // this.routesService.toggleActiveRoute(this.accountId, this.routeId, data)
     this.routesService.toggleActiveStopPoint(this.accountId, this.routeId, data);
   }
 
@@ -151,13 +144,11 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   deleteRoute(data: any) {
     if (this.userlevelAccess == "1") {
       this.routesService.deleteRoute(data.customerId, data.routeId).then(() => {
-        console.log('done');
       })
-        .catch(err => console.log(err));
+        .catch(err =>   this.sendMessage('error',err));
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
-
   }
 
   getSubscriptions() {
@@ -183,7 +174,6 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
       }),
       tap(route => {
         this.item = route;
-       // console.log(this.item);
         return route;
       })
     ).subscribe();
@@ -212,7 +202,6 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   }
 
   handleOkEdit(){
-    console.log(this.validateForm.value);
       this.routesService.updateStopPoint(this.accountId, this.routeId, this.validateForm.value).then(() => {    
         this.isEditVisible = false;      
         this.message.success('¡Listo!');
@@ -221,6 +210,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
         this.message.error('Ocurrió un error: ', err);      
     });
   }
+
   handleCancelEdit(){
     this.isEditVisible = false;
   }
@@ -229,9 +219,6 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
     let modal = this.modalService.create({
       nzTitle: 'Nueva Estación',
       nzContent: SharedStopPointsNewComponent,
-     /*  nzComponentParams: {
-         stopPoint: {}
-      },*/
       nzOkText: 'Crear',
       nzCancelText: 'Cancelar',
       nzOkLoading: this.isEditing,
@@ -239,7 +226,6 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
         this.isEditing = true;
         const record = modal.getContentComponent().validateForm.value;
         record.id = this.afs.createId();
-      //  console.log(record);
         await this.routesService.createStopPoint(this.accountId, this.routeId, record).then(() => {
           resolve;
           this.isEditing = false;
@@ -250,17 +236,11 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
           this.message.error('Ocurrió un error: ', err);
           resolve;
         })
-      }),
-      nzOnCancel: () => console.log('cancel')
+      })      
     });
-
-    // modal.afterOpen.subscribe(() => console.log('[afterOpen] emitted!'));
-    // modal.afterClose.subscribe(result => console.log('[afterClose] The result is:', result));
-
   }
 
   onEditOk() {
-
   }
 
   downloadImg(): void {

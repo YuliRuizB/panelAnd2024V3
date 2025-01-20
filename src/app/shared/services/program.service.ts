@@ -13,11 +13,9 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 })
 export class ProgramService {
 
-  constructor(private afs: AngularFirestore,public messageService: NzMessageService) { }
+  constructor(private afs: AngularFirestore, public messageService: NzMessageService) { }
 
   setProgram(data: any) {
-   // console.log(data);
-
     const assignmentRef = this.afs.collection('customers').doc(data.customerId).collection('routes').doc(data.routeId).collection('assignments').doc(data.assignmentId);
     const driverRef = this.afs.collection('drivers').doc(data.driverId);
 
@@ -27,23 +25,20 @@ export class ProgramService {
 
     return assignmentRef.get().pipe(
       take(1),
-      map( (assign:any) => {
+      map((assign: any) => {
         let a = assign.data();
-       // console.log('assignment data: ', a);
-        let startTime = a.stopBeginHour.substring(0,5);
-        let endTime = a.stopEndHour.substring(0,5);
-      
+        let startTime = a.stopBeginHour.substring(0, 5);
+        let endTime = a.stopEndHour.substring(0, 5);
+
         let startTimeArray = startTime.split(':');
         let endTimeArray = endTime.split(':');
 
         startAt.setHours(startTimeArray[0], startTimeArray[1], 0, 0);
         endAt.setHours(endTimeArray[0], endTimeArray[1], 0, 0);
-
-       // console.log(a);
         driverConfirmationAt.setHours(startTimeArray[0], startTimeArray[1], 0, 0);
-        driverConfirmationAt.setMinutes(+driverConfirmationAt.getMinutes()-15,0,0);
+        driverConfirmationAt.setMinutes(+driverConfirmationAt.getMinutes() - 15, 0, 0);
 
-        if(a.program == 'S') {
+        if (a.program == 'S') {
           let time = new Date(a.time.toDate());
           driverConfirmationAt = addMinutes(time, -15);
         }
@@ -67,7 +62,7 @@ export class ProgramService {
           isLive: false,
           isRejected: false,
           isTaskIn: a.program == 'M' ? true : false,
-          isTaskOut: a.program == 'M' ? false: true,
+          isTaskOut: a.program == 'M' ? false : true,
           isWithTrouble: false,
           lastUpdatedAt: null,
           name: data.routeName,
@@ -90,10 +85,10 @@ export class ProgramService {
           startAtFormat: startAt
         }
       })
-    ).subscribe( assignment => {     
+    ).subscribe(assignment => {
       const programRef = this.afs.collection('customers').doc(data.customerId).collection('program');
       return programRef.add(assignment)
-      .then(() => this.sendMessage('success', 'La Programación ha sido generada. Favor de Actualizar la tabla.'))
+        .then(() => this.sendMessage('success', 'La Programación ha sido generada. Favor de Actualizar la tabla.'))
         .catch(err => this.sendMessage('error', `¡Oops! Algo salió mal ... ${err}`));
       // return true;
     });
@@ -103,13 +98,11 @@ export class ProgramService {
 
     let start = date;
     let end = addDays(start, 1);
-   // console.log(start, end);
-    
-    const programmedAssignments = this.afs.collectionGroup('program', ref => 
-    ref.where('startAt','>=', start)
-       .where('startAt','<=', end)
-      .where('active','==',true)
-      .orderBy('startAt','asc')
+    const programmedAssignments = this.afs.collectionGroup('program', ref =>
+      ref.where('startAt', '>=', start)
+        .where('startAt', '<=', end)
+        .where('active', '==', true)
+        .orderBy('startAt', 'asc')
     );
     return programmedAssignments.snapshotChanges();
   }
@@ -118,14 +111,12 @@ export class ProgramService {
 
     let start = date;
     let end = addDays(start, 1);
-    console.log(start, end);
-    
-    const programmedAssignments = this.afs.collectionGroup('program', ref => 
-    ref.where('startAt','>=', start)
-       .where('startAt','<=', end)
-      .where('active','==',true)
-      .where('customerId' ,'==', customerId)
-      .orderBy('startAt','asc')
+    const programmedAssignments = this.afs.collectionGroup('program', ref =>
+      ref.where('startAt', '>=', start)
+        .where('startAt', '<=', end)
+        .where('active', '==', true)
+        .where('customerId', '==', customerId)
+        .orderBy('startAt', 'asc')
     );
     return programmedAssignments.snapshotChanges();
   }
@@ -135,80 +126,75 @@ export class ProgramService {
   }
 
   getRoutesbyCustomer(customerId: string) {
-    const programmedAssignments = this.afs.collectionGroup('routes', ref => 
-    ref.where('active','==',true)
-      .where('customerId' ,'==', customerId)
-      .orderBy('name','asc')
+    const programmedAssignments = this.afs.collectionGroup('routes', ref =>
+      ref.where('active', '==', true)
+        .where('customerId', '==', customerId)
+        .orderBy('name', 'asc')
     );
     return programmedAssignments.snapshotChanges();
   }
 
   getRoutes() {
-    const programmedAssignments = this.afs.collectionGroup('routes', ref => 
-    ref.where('active','==',true)
-      .orderBy('name','asc')
+    const programmedAssignments = this.afs.collectionGroup('routes', ref =>
+      ref.where('active', '==', true)
+        .orderBy('name', 'asc')
     );
     return programmedAssignments.snapshotChanges();
   }
 
-  getHelpCenter(type:string, date:string, customerId:string) {
-    const programmedAssignments = this.afs.collection('helpCenter', ref => 
-    ref.where('active','==',"true")
-        .where('customerId', '==',customerId)
-        .where('type','==',type)
-        .where('currentDate','==',date)      
+  getHelpCenter(type: string, date: string, customerId: string) {
+    const programmedAssignments = this.afs.collection('helpCenter', ref =>
+      ref.where('active', '==', "true")
+        .where('customerId', '==', customerId)
+        .where('type', '==', type)
+        .where('currentDate', '==', date)
     );
     return programmedAssignments.snapshotChanges();
   }
 
-  getHelpCenterAll(types: string, customerId: string, statusSelected : string): Observable<any[]> { 
-    
+  getHelpCenterAll(types: string, customerId: string, statusSelected: string): Observable<any[]> {
     // Create an observable for each type   
-      const programmedAssignments = this.afs.collection('helpCenter', ref => 
-        ref.where('active','==',"true")         
-            .where('type','==',types)
-            .where('status', '==',statusSelected)
-            .where('customerId', '==',customerId)            
-            .orderBy('currentDate', 'asc')    
-        );
-        return programmedAssignments.snapshotChanges();
+    const programmedAssignments = this.afs.collection('helpCenter', ref =>
+      ref.where('active', '==', "true")
+        .where('type', '==', types)
+        .where('status', '==', statusSelected)
+        .where('customerId', '==', customerId)
+        .orderBy('currentDate', 'asc')
+    );
+    return programmedAssignments.snapshotChanges();
   }
 
-  getRefund(customerId: string, statusSelected : string): Observable<any[]> { 
-    
-    // Create an observable for each type   
-      const programmedAssignments = this.afs.collection('refund', ref => 
-        ref.where('status', '==',statusSelected)
-            .where('customer', '==',customerId)            
-            .orderBy('date', 'asc')    
-        );
-        return programmedAssignments.snapshotChanges();
+  getRefund(customerId: string, statusSelected: string): Observable<any[]> {
+    const programmedAssignments = this.afs.collection('refund', ref =>
+      ref.where('status', '==', statusSelected)
+        .where('customer', '==', customerId)
+        .orderBy('date', 'asc')
+    );
+    return programmedAssignments.snapshotChanges();
   }
 
 
 
 
-  editProgram(vendorId:string, data: any) {
-   // console.log(data);
+  editProgram(vendorId: string, data: any) {
     const programRef = this.afs.collection('customers').doc(data.value.customerId).collection('program').doc(data.value.id);
-      return programRef.update({
-        driver: data.value.driver , 
-        driverId: data.value.driverId ,
-        vehicleId: data.value.vehicleId ,
-        vehicleName:data.value.vehicleName
-      })
-        .then(() => this.messageService.success('La Programación ha sido modificada. Favor de Actualizar la tabla.'))
-        .catch(err => this.sendMessage('error', `¡Oops! Algo salió mal ... ${err}`));
-  }
-
-  deleteProgram(programId:string, customerId: any) {
-   
-    const programRef = this.afs.collection('customers').doc(customerId).collection('program').doc(programId);
-      return programRef.delete()
-      .then(() => this.sendMessage('success', 'La  programacion ha sido eliminada.'))
+    return programRef.update({
+      driver: data.value.driver,
+      driverId: data.value.driverId,
+      vehicleId: data.value.vehicleId,
+      vehicleName: data.value.vehicleName
+    })
+      .then(() => this.messageService.success('La Programación ha sido modificada. Favor de Actualizar la tabla.'))
       .catch(err => this.sendMessage('error', `¡Oops! Algo salió mal ... ${err}`));
   }
 
+  deleteProgram(programId: string, customerId: any) {
+
+    const programRef = this.afs.collection('customers').doc(customerId).collection('program').doc(programId);
+    return programRef.delete()
+      .then(() => this.sendMessage('success', 'La  programacion ha sido eliminada.'))
+      .catch(err => this.sendMessage('error', `¡Oops! Algo salió mal ... ${err}`));
+  }
 
   sendMessage(type: string, message: string): void {
     this.messageService.create(type, message);
@@ -216,11 +202,11 @@ export class ProgramService {
 
   updateTicketHelpCenter(ticketId: string, status: string) {
     const helpCenter = this.afs.collection('helpCenter').doc(ticketId);
-    return helpCenter.update({status : status});
+    return helpCenter.update({ status: status });
   }
   updateTicketRefund(ticketId: string, status: string) {
     const helpCenter = this.afs.collection('refund').doc(ticketId);
-    return helpCenter.update({status : status});
+    return helpCenter.update({ status: status });
   }
 
 }

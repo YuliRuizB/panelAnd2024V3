@@ -28,9 +28,7 @@ export class HomeTestComponent implements OnInit {
 					this.vendorsList = response;
 					resolve(true)
 				},
-				error: (error) => {
-					console.log(error)
-					// treat error
+				error: (error) => {					
 				},
 			});
 		})

@@ -101,10 +101,8 @@ export class CenterComponent {
       selectedOption: [null], // 'selectedDate' is the name of the form control
       status: []
     });
-
     this.getCustomersList();
   }
-
 
   ngOnDestroy() {
     this.stopSubscription$.next(undefined);
@@ -112,21 +110,15 @@ export class CenterComponent {
   }
 
   ngOnInit() {
-    // Assuming this.mfData is already populated with your data
-
   }
 
-
   onDateChange(mode: string) {
-
-    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-
+    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual 
     }
     else {
       if (mode == "1") {
         const selectedOptionValue = this.dateFilterForm.get('selectedOption')!.value;
-        const statusSelected =  this.dateFilterForm.get('status')!.value;
-    
+        const statusSelected =  this.dateFilterForm.get('status')!.value;  
 
         if (selectedOptionValue && statusSelected) {
           this.programService.getHelpCenterAll("Mejora", selectedOptionValue, statusSelected).pipe(
@@ -168,8 +160,7 @@ export class CenterComponent {
 
       } else if (mode == "2") {
         const selectedOptionValue = this.dateFilterFormI.get('selectedOption')!.value;     
-        const statusSelected =  this.dateFilterFormI.get('status')!.value;     
-    
+        const statusSelected =  this.dateFilterFormI.get('status')!.value;
         if (selectedOptionValue && statusSelected) {
           this.programService.getHelpCenterAll("Incidente", selectedOptionValue, statusSelected).pipe(
             map((actions: any) => actions.map((a: any) => {
@@ -178,7 +169,6 @@ export class CenterComponent {
               return { id: id, ...data }
             }))
           ).subscribe((data: any) => {
-
             if (data.length > 0) {
               this.incidenteData = data;
               this.incidenteData.forEach((data2: any) => {
@@ -193,12 +183,9 @@ export class CenterComponent {
         }else {
           this.sendMessage("error", "Los criterios son requeridos para la busqueda");
         }
-
       } else {
         const selectedOptionValue = this.dateFilterFormO.get('selectedOption')!.value;     
         const statusSelected =  this.dateFilterFormO.get('status')!.value;
-      
-
         if (selectedOptionValue && statusSelected) {
           this.programService.getHelpCenterAll("Objeto Perdido", selectedOptionValue, statusSelected).pipe(
             map((actions: any) => actions.map((a: any) => {
@@ -221,7 +208,6 @@ export class CenterComponent {
         }else {
           this.sendMessage("error", "Los criterios son requeridos para la busqueda");
         }
-
       }
     }
   }
@@ -263,7 +249,6 @@ export class CenterComponent {
     if (this.routeNames[routeId]) {
       return this.routeNames[routeId];
     }
-
     this.routesService.getRoute(customerId, routeId).pipe(
       take(1),
       map((a: any) => {
@@ -273,7 +258,6 @@ export class CenterComponent {
         return routeName;
       })
     ).subscribe();
-
     return 'Loading...'; // Return a loading text until the data is available
   }
 
@@ -296,17 +280,13 @@ export class CenterComponent {
     if (!this.selectedStatus || !this.response) {
       this.errorMessage = 'Por favor, complete todos los campos antes de enviar.';
     } else {
-      this.errorMessage = null;    
-     
+      this.errorMessage = null;     
       // Add your submission logic here
       if (!this.selectedUserToken || !this.selectHelpCenterIdTicket || !this.selectedUidUser || !this.selectedDataUser) {
         this.errorMessage = 'Falta información por cargar. Validar nuevamente.';
       } else {
         let userNotificationToken = this.selectedUserToken || '';
-
         this.programService.updateTicketHelpCenter(this.selectHelpCenterIdTicket, this.selectedStatus);
-
-
         if (userNotificationToken) {
           const dataMessage = {
             createdAt: new Date(),
@@ -329,14 +309,12 @@ export class CenterComponent {
             uid: this.selectedUidUser
           }         
 
-          this.dashboardService.setChatMessage(dataMessage);        
-
+          this.dashboardService.setChatMessage(dataMessage);
           this.dashboardService.setMessage(notifMessage, this.selectedUidUser);
           this.isSeguimientoVisible = false;
-
           this.response = "";
-        } else {
-          console.log('Null token :' + this.selectedUidUser + "// " + this.modalDataUser.customerName);
+        } else {         
+          this.sendMessage("error",'Null token :' + this.selectedUidUser + "// " + this.modalDataUser.customerName);
         }
       }
     }
@@ -351,31 +329,31 @@ export class CenterComponent {
     this.selectedUidUser = "";
   }
 
-
   loadProgramData(programId: string, customerId: string): void {    
-
-    this.programService.getProgrambyCustomer(programId, customerId).subscribe(action => {
-      if (action.payload) {
-        const data = action.payload.data() as { [key: string]: any }; // Type assertion for index signature
-     
-        const startAt = data['startAt'] ? data['startAt'].toDate() : new Date(); // Ensure startAt is a Timestamp
-        const endAt = data['endAt'] ? data['endAt'].toDate() : new Date();
-        const formattedDate = this.datePipe.transform(startAt, 'dd-MM-yyyy HH:mm');
-        const formatendAt = this.datePipe.transform(endAt, 'dd-MM-yyyy HH:mm');
-        this.modalData = {
-          customerName: data['customerName'],
-          driver: data['driver'],
-          startAt: formattedDate,
-          round: data['round'],
-          endAt: formatendAt,
-          vehicleName: data['vehicleName']
-          // add any other fields if needed
-        };
-      } else {
-        console.error("No data found");
+    this.programService.getProgrambyCustomer(programId, customerId).subscribe({
+      next: (action) => {
+        if (action.payload) {
+          const data = action.payload.data() as { [key: string]: any }; // Type assertion for index signature
+       
+          const startAt = data['startAt'] ? data['startAt'].toDate() : new Date(); // Ensure startAt is a Timestamp
+          const endAt = data['endAt'] ? data['endAt'].toDate() : new Date();
+          const formattedDate = this.datePipe.transform(startAt, 'dd-MM-yyyy HH:mm');
+          const formatendAt = this.datePipe.transform(endAt, 'dd-MM-yyyy HH:mm');
+          this.modalData = {
+            customerName: data['customerName'],
+            driver: data['driver'],
+            startAt: formattedDate,
+            round: data['round'],
+            endAt: formatendAt,
+            vehicleName: data['vehicleName']
+          };
+        } else {        
+          this.sendMessage("error", "Registro no encontrado");
+        }
+      },
+      error: (error) => {      
+        this.sendMessage("error", error);
       }
-    }, error => {
-      console.error("Error fetching data", error);
     });
   }
 
@@ -385,26 +363,25 @@ export class CenterComponent {
   }
 
   loadUserInfo(uidUser: string) {
-
-    this.userService.getUserInfo(uidUser).subscribe(action => {
-      if (action.payload) {
-        const data = action.payload.data() as { [key: string]: any }; // Type assertion for index signature    
-
-        this.selectedDataUser = data;
-        this.modalDataUser = {
-          customerName: data['customerName'],
-          displayName: data['displayName'],
-          email: data['email'],
-          phoneNumber: data['phoneNumber'],
-          token: data['token']
-          // add any other fields if needed
-        };
-      } else {
-        console.error("No data found");
+    this.userService.getUserInfo(uidUser).subscribe({
+      next: (action) => {
+        if (action.payload) {
+          const data = action.payload.data() as { [key: string]: any }; // Type assertion for index signature
+          this.selectedDataUser = data;
+          this.modalDataUser = {
+            customerName: data['customerName'],
+            displayName: data['displayName'],
+            email: data['email'],
+            phoneNumber: data['phoneNumber'],
+            token: data['token']
+          };
+        } else {
+          this.sendMessage("error", "Registro no encontrado");
+        }
+      },
+      error: (error) => {
+        this.sendMessage("error", error);
       }
-    }, error => {
-      console.error("Error fetching data", error);
     });
-
   }
 }

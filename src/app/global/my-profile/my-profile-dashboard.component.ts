@@ -15,12 +15,10 @@ import { AccountsService } from "../../shared/services/accounts.service";
 })
 
 export class MyProfileComponent implements OnInit {
-    userService= inject(UsersService);
+    userService = inject(UsersService);
     authService = inject(AuthenticationService);
-   rolService = inject(RolService);
-   accountService = inject(AccountsService);
-   //AngularFireModule = inject(AngularFireModule);
-
+    rolService = inject(RolService);
+    accountService = inject(AccountsService);
     user: any;
     userRol: string = "";
     infoLoad: any = [];
@@ -28,10 +26,10 @@ export class MyProfileComponent implements OnInit {
     avatarUrl: string = "http://themenate.com/applicator/dist/assets/images/avatars/thumb-13.jpg";
     uploading: boolean = false;
     bucketPath: string = 'profile/';
-    userlevelAccess?:string;
+    userlevelAccess?: string;
     userForm: any = [];
     // Upload Task 
-   task: AngularFireUploadTask | undefined;
+    task: AngularFireUploadTask | undefined;
     // Progress in percentage
     uploadPercent: Observable<number> | undefined;
     uploadvalue: number = 0;
@@ -43,32 +41,31 @@ export class MyProfileComponent implements OnInit {
     //Uploaded Image List
     images: Observable<any[]> | undefined;
 
-    constructor( private fb: UntypedFormBuilder,
-        private bucketStorage: AngularFireStorage,       
+    constructor(private fb: UntypedFormBuilder,
+        private bucketStorage: AngularFireStorage,
         private messageService: NzMessageService) {
 
         this.validateForm = this.fb.group({
-            email: new FormControl({value: '', disabled: true}, Validators.required),
+            email: new FormControl({ value: '', disabled: true }, Validators.required),
             firstName: [null, [Validators.required]],
             lastName: [null, [Validators.required]],
             phoneNumber: [''],
             username: [''],
             displayName: [''],
-         // address: [''],
-          //  city: [''],
-           // postCode: [''],
-           // state: [''],
-            emailVerified:  new FormControl({value: '', disabled: true}),
-            userRol:  new FormControl({value: '', disabled: true}),
-            customerName:  new FormControl({value: '', disabled: true}),
+            // address: [''],
+            //  city: [''],
+            // postCode: [''],
+            // state: [''],
+            emailVerified: new FormControl({ value: '', disabled: true }),
+            userRol: new FormControl({ value: '', disabled: true }),
+            customerName: new FormControl({ value: '', disabled: true }),
             photoURL: [''],
             idPRepa2: []
         });
 
 
-         this.authService.user.subscribe((user) => {
+        this.authService.user.subscribe((user) => {
             this.user = user;
-            //console.log(this.user);
             if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
                 this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
                     this.infoLoad = item;
@@ -77,20 +74,15 @@ export class MyProfileComponent implements OnInit {
                     this.fillInfo();
                 });
             }
-        }); 
+        });
     }
 
     ngOnInit() {
-
     }
 
-    borrar(){
-        console.log(this.validateForm.controls["idPRepa2"].value);
-        var valueDAta =this.validateForm.controls["idPRepa2"].value;
-
+    borrar() {
+        var valueDAta = this.validateForm.controls["idPRepa2"].value;
         this.accountService.getUserAccountDeleteByData(valueDAta);
-        console.log("paso");
-        
     }
 
     done(): void {
@@ -99,38 +91,28 @@ export class MyProfileComponent implements OnInit {
             let userData = {
                 displayName: this.validateForm.controls["displayName"].value,
                 firstName: this.validateForm.controls["firstName"].value,
-                lastName: this.validateForm.controls["lastName"].value,          
+                lastName: this.validateForm.controls["lastName"].value,
                 phoneNumber: this.validateForm.controls["phoneNumber"].value
             };
             if (this.userlevelAccess != "3") {
-              //  console.log(this.user.uid);
-               // console.log(userData);
-                 this.userService.updateUserCollection(this.user.uid, userData).then(response => {
-                 //   console.log(response);
+                this.userService.updateUserCollection(this.user.uid, userData).then(response => {
                     this.sendMessage('success', "Se actualizó con exito!");
                 }).catch(err => {
-                    console.log(err);
-                }); 
+                    this.sendMessage('error', err);
+                });
             } else {
                 this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
             }
-          
         }
     }
 
     fillInfo() {
-        //console.log(this.user);
-        //assing value
         if (this.user) {
             this.validateForm.controls['photoURL'].setValue(this.user.photoURL);
             this.validateForm.controls['displayName'].setValue(this.user.displayName);
             this.validateForm.controls['firstName'].setValue(this.user.firstName);
             this.validateForm.controls['lastName'].setValue(this.user.lastName);
             this.validateForm.controls['username'].setValue(this.user.username);
-           /*  this.validateForm.controls['address'].setValue(this.user.address.addressLine);
-            this.validateForm.controls['city'].setValue(this.user.address.city);
-            this.validateForm.controls['postCode'].setValue(this.user.address.postCode);
-            this.validateForm.controls['state'].setValue(this.user.address.state); */
             this.validateForm.controls['phoneNumber'].setValue(this.user.phoneNumber);
             this.validateForm.controls['email'].setValue(this.user.email);
             this.validateForm.controls['emailVerified'].setValue(this.user.emailVerified);
@@ -140,7 +122,6 @@ export class MyProfileComponent implements OnInit {
     }
 
     updateConfirmValidator(): void {
-        /** wait for refresh value */
         Promise.resolve().then(() => this.validateForm.controls["checkPassword"].updateValueAndValidity());
     }
 
@@ -163,50 +144,44 @@ export class MyProfileComponent implements OnInit {
             if (reader.result !== null && typeof reader.result === 'string') {
                 callback(reader.result);
             } else {
-                // Handle the case where reader.result is null or not a string
-                console.error('Invalid result from FileReader');
+                this.sendMessage('error', 'FileReader invalido');
             }
         });
         reader.readAsDataURL(img);
     }
-    
+
     handleChange(info: { file: NzUploadFile }): void {
         if (info.file.originFileObj) {
-        this.getBase64(info.file.originFileObj, (img: string) => {
-            this.avatarUrl = img;
-            console.log(img);
-               // Extract the original file name
-          const fileName = info.file.name;
-          const filePath = `${this.bucketPath}/${fileName}`;
-          
-          const fileRef = this.bucketStorage.ref(filePath);
-          this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');
-    
-            // observe percentage changes
-            this.uploadPercent = this.task.percentageChanges() as Observable<number>;
-    
-            this.uploadPercent.pipe(
-                map((a:any) => {
-                    return Number((a / 100).toFixed(2));
-                })
-            ).subscribe((value) => {
-                this.uploading = value != 0;
-                this.uploadvalue = value;
-            }) 
+            this.getBase64(info.file.originFileObj, (img: string) => {
+                this.avatarUrl = img;
+                const fileName = info.file.name;
+                const filePath = `${this.bucketPath}/${fileName}`;
 
-            // get notified when the download URL is available
-           this.task.snapshotChanges().pipe(
-                finalize(() => {
-                    this.uploading = false;
-                    this.downloadURL = fileRef.getDownloadURL();
-                    this.downloadURL.subscribe(async (url) => {
-                        this.updatePhotoURL(url);
-                        this.sendMessage("sucess","Se actualizó con éxito la imagen de perfil");
-                    });
-                })
-            ).subscribe(); 
+                const fileRef = this.bucketStorage.ref(filePath);
+                this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');
+                this.uploadPercent = this.task.percentageChanges() as Observable<number>;
 
-        });
+                this.uploadPercent.pipe(
+                    map((a: any) => {
+                        return Number((a / 100).toFixed(2));
+                    })
+                ).subscribe((value) => {
+                    this.uploading = value != 0;
+                    this.uploadvalue = value;
+                })
+
+                // get notified when the download URL is available
+                this.task.snapshotChanges().pipe(
+                    finalize(() => {
+                        this.uploading = false;
+                        this.downloadURL = fileRef.getDownloadURL();
+                        this.downloadURL.subscribe(async (url) => {
+                            this.updatePhotoURL(url);
+                            this.sendMessage("sucess", "Se actualizó con éxito la imagen de perfil");
+                        });
+                    })
+                ).subscribe();
+            });
         }
     }
 
@@ -215,17 +190,11 @@ export class MyProfileComponent implements OnInit {
     }
 
     async updatePhotoURL(url: any) {
-
-      //  console.log("started updatePhotoURL with url: ", url);
-        //console.log(this.user.id);
         this.validateForm.controls['photoURL'].patchValue(url);
         if (this.userlevelAccess != "3") {
-           this.userService.updateUserAvatar(this.user.uid, url);
-        }  else
-        { this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");       
+            this.userService.updateUserAvatar(this.user.uid, url);
+        } else {
+            this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
         }
-        
-       
     }
-
 }

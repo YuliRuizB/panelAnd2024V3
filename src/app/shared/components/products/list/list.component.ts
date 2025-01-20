@@ -239,8 +239,6 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
           this.validateForm.controls['type'].setValue("Servicio");
           this.validateForm.controls['disable'].setValue(false);
           this.validateForm.controls['customerId'].setValue(this.accountId);
-
-          // console.log(this.validateForm.value);
           this.productsService.setProduct(this.accountId, this.validateForm.value).then(() => {
             this.resetForm();
             this.modalService.closeAll();
@@ -275,9 +273,7 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
         } else {
           this.sendMessage('error', "Hay valores requeridos para crear el producto, favor de validar.");
         }
-
       }
-
     }
   }
 
@@ -297,8 +293,7 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
       nzOkText: 'Yes',
       nzOkType: 'primary',
       nzOnOk: () => this.processtoDeactivateProduct(this.accountId, product.id, product.active),
-      nzCancelText: 'No',
-      nzOnCancel: () => console.log('Cancel')
+      nzCancelText: 'No'
     });
   }
 
@@ -348,14 +343,9 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
     return new Date(timestamp.seconds * 1000);
   }
 
-
   editProduct(item: any, editContent: TemplateRef<{}>) {
     this.resetForm();
-
-    // Populate the rangeWeeks group with existing data
-
     const valores = this.initializeRangeDatePicker(item.validFrom, item.validTo) ?? null;
-
     this.validateFormE.patchValue({
       active: item.active || false,
       category: item.category || null,
@@ -395,8 +385,6 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
     this.validateFormE.get('validTo')?.disable();
     this.validateFormE.get('isTaskIn')?.disable();
     this.validateFormE.get('isTaskOut')?.disable();
-
-
     const modal = this.modalService.create({
       nzTitle: 'Editar Producto / Servicio',
       nzContent: editContent,
@@ -443,10 +431,12 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
     this.previewImage = file.url || file.thumbUrl;
     this.previewVisible = true;
   };
+
   handlePreviewE = (file: NzUploadFile) => {
     this.previewImageE = file.url || file.thumbUrl;
     this.previewVisibleE = true;
   };
+
   handleChange(event: NzUploadChangeParam): void {
     const status = event.file.status;
     if (status !== 'uploading') {
@@ -455,10 +445,8 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
         this.getBase64(event.file.originFileObj, (img: string) => {
           const fileName = event.file.name;
           const filePath = `${this.bucketPath}/${fileName}`;
-
           const fileRef = this.bucketStorage.ref(filePath);
           this.task = this.bucketStorage.ref(filePath).putString(img, 'data_url');
-
           // observe percentage changes
           this.uploadPercent = this.task.percentageChanges() as Observable<number>;
           this.uploadPercent.pipe(
@@ -469,7 +457,6 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
             this.uploading = value != 0;
             this.uploadvalue = value;
           });
-
           // get notified when the download URL is available
           this.task.snapshotChanges().pipe(
             finalize(() => {
@@ -490,7 +477,6 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
       }
     }
   }
-
 
   handleChange2(event: NzUploadChangeParam): void {
     const status = event.file.status;
@@ -540,7 +526,7 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => callback(reader.result as string);
-    reader.onerror = error => console.log('Error: ', error);
+    reader.onerror = error => this.sendMessage('error', error.toString());
   }
 
   async updateAdvanceURL(url: string, info: string) {
@@ -625,11 +611,9 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
 
   getEndOfWeek(date: Date): Date {
     const startOfWeek = this.getStartOfWeek(date);
-    // startOfWeek.setDate(startOfWeek.getDate() +7);
     startOfWeek.setUTCDate(startOfWeek.getUTCDate() + 4);
     return new Date(startOfWeek.setUTCHours(23, 59, 59, 999));
   }
-
 
   getItems(searchbar: any) {
     const q = searchbar;
@@ -641,7 +625,5 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
     this.productsList = this.productsListLoaded.filter((object: any) => {
       return object.description.toLowerCase().includes(text);
     }); 
-
   }
-
 }

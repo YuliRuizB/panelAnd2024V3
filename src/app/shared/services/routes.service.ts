@@ -46,7 +46,6 @@ export class RoutesService {
     .where('transportType', '==', transportType)
     .where('routeId', '==', routeId));
     return info.snapshotChanges();
-
   }
 
 
@@ -262,9 +261,7 @@ export class RoutesService {
   }
 
   setPolyline(vert: any, customerId:string, routeId: string) {
-    const key = this.afs.createId();
-   console.log(key);
-   
+    const key = this.afs.createId();   
     const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('polyline').doc(key);
     return route.set(vert);
   }

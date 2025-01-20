@@ -39,8 +39,6 @@ export class SharedUsersCredentialsQRCodesComponent implements OnInit, OnDestroy
         return { id, ...data }
       })),
       tap((users:any) => {
-        console.log('users', users);
-        
         this.userCredentials = users;
         return users;
       })

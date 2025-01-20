@@ -85,8 +85,6 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     private fb: UntypedFormBuilder) {
     this.authService.user.subscribe((user) => {
       this.user = user;
-      //console.log(this.user);
-      
       this.authService.user.subscribe((user) => {
         this.user = user;
         if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
@@ -107,13 +105,9 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
             })
           ).subscribe();
         }
-      });
-  
+      });  
     });
-
   }
-
-
 
   ngOnInit() {
     const routesObservable: Observable<any>  = this.accountId$.pipe(
@@ -125,22 +119,18 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     const rolSuscription: Observable<any>  = this.accountId$.pipe(
       switchMap(accountId => this.afs.collection('roles', ref => ref.where('active', '==', true)).valueChanges({ idField: 'uid' })
       ));
-
     usersObservable.subscribe((usersByAccount: any) => {
       this.usersByAccount = usersByAccount;
     })
-
     rolSuscription.subscribe((roles: any) => {
       this.roles = roles;
     });
     this.getUsersList();
     this.getDriversList();
-
     this.validateEditForm = this.fb.group({
       rolId: [''],
       roles: ['']
     });
-
   }
 
   ngOnDestroy() {
@@ -182,9 +172,9 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
       });
     }
   }
+
   getDriversList() {
     this.isLoadingDrivers = true;
-
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       this.driversCollection = this.afs.collection<any>('drivers', ref => ref
       .where('customerId', '==', this.user.customerId)
@@ -219,6 +209,7 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
       this.loadedDevicesList = this.devicesList;
     }
   }
+
   loadDrivers(drivers: any) {
     if (this.loadedDevicesListDrive.length <= 1) {
       this.displayDataDriver = drivers;
@@ -270,7 +261,6 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     this.isBoardingPassSelected = false;
     this.accountId$.next(this.currentUserSelected.customerId);
     this.isUserSelected = true;
-    // this.isDriverSelected = false;
   }
 
   driverSelected(data: any) {
@@ -286,7 +276,6 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
           this.infoLoad = item;
           this.rolesperUser = this.infoLoad.name;
         });
-
       }
     }
     if (data.vendorId != undefined) {
@@ -303,8 +292,6 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     }
     this.isBoardingPassSelected = false;
     this.isDriverSelected = true;
-    // select vendor vendorId
-    //console.log(data);
   }
 
   setUserDisabled(disabled: any) {
@@ -316,8 +303,6 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
   }
 
   nzClicOptionSegment(currentUser : any){
-    // get info og segment
-    // Fill segments 
     this.customersService.getAllSegments().pipe(
       map((actions:any) => actions.map((a:any) => {
         const id = a.payload.doc.id;
@@ -325,49 +310,37 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
         return { id: id, ...data }
       }))
     ).subscribe((segment:any) => {
-      console.log(segment);
       this.segmentList = segment;
       const selectedSegment = this.segmentList.find((segment: any) => segment.id === currentUser.idSegment);
       if (selectedSegment) {
         this.selectedSegmentName =  selectedSegment.nivel;
       }    
-
     });
     if (currentUser !== null && currentUser.idSegment !== undefined) {
-      //console.log(currentUser.idSegment);
-     this.selectedSegmentId = currentUser.idSegment;
-    
+     this.selectedSegmentId = currentUser.idSegment;    
     }
   }
   onSegmentSelected(segment: any) {
-    //console.log('Segment selected:', segment);
     this.selectedSegmentName = segment.nivel;
     this.selectedSegmentId = segment.id;
   }
 
   log(): void {
-    console.log('click dropdown button');
   }
 
   showModalEditUser(currentUserSelected: any) {
     this.isEditUserVisible = true;
-    //console.log(currentUserSelected);
   }
 
   saveSegment(currentUserSelected: any) {  
-    //console.log(currentUserSelected);s
-    // save the Segment Value  
-    // this.selectedSegmentId 
     this.customersService.saveSegmentId(currentUserSelected.id,this.selectedSegmentId);
   }
 
   showModalEditDriver(currentUserSelected: any) {
     this.isEditUserVisible = false;
-    console.log(currentUserSelected);
   }
 
   showModalCustomer() {
-    // this.isCustomersVisible = true;
   }
 
   showModal(): void {
@@ -375,17 +348,13 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
   }
 
   handleCancel(): void {
-    console.log("cancel");
     this.isEditUserVisible = false;
-    // this.isCustomersVisible = false;
   }
 
   submitForm(): void {
-
   }
 
   submitEditForm(): void {
-   // console.log(this.validateEditForm);
     const rolId = this.validateEditForm.controls['rolId'].value == undefined ? "" : this.validateEditForm.controls['rolId'].value;
     const uid = this.currentUserSelected.uid;
     let validForm: boolean = true;
@@ -393,14 +362,12 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
       uid: uid,
       rolId: rolId
     };
-   // console.log(data);
-
     if (validForm) {
       if (this.userlevelAccess != "3") {
         this.rolService.updateUserRol(this.currentUserSelected.uid, data)
           .then((success) => {
             this.isEditUserVisible = false;
-          }).catch((err) => { console.log("error: " + err); });
+          }).catch((err) => { this.msg.error(err) });
       } else {
         this.msg.error("El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
       }
@@ -409,8 +376,8 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
       this.msg.success("El Formulario no es valido favor de validar");
     }
   }
-  submitCustomerForm(): void {
 
+  submitCustomerForm(): void {
   }
 }
 

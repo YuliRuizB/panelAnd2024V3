@@ -15,6 +15,7 @@ import { AuthenticationService } from '../../../shared/services/authentication.s
 import { UsersService } from '../../../shared/services/users.service';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { globalImputs } from '../../../shared/directives/global-imputs';
+import { NzMessageService } from 'ng-zorro-antd/message';
 /* Chart code */
 // Themes begin
 am4core.useTheme(am4themes_animated);
@@ -45,6 +46,7 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
   usersColumnDefs;
 
   constructor(
+    private messageService: NzMessageService,
     private zone: NgZone   
   ) {
     this.columnDefs = [
@@ -169,17 +171,20 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.authService.user.subscribe((user: any) => {
-      this.getSubscriptions(user.vendorId);
+    this.authService.user.subscribe((user: any) => {     
+      this.getSubscriptions();     
       this.user = user;
     });
 
   }
 
+  sendMessage(type: string, message: string): void {
+    this.messageService.create(type, message);
+  }
+
   ngOnDestroy() {
     this.stopSubscription$.next(undefined);
     this.stopSubscription$.complete();
-
     this.zone.runOutsideAngular(() => {
       if (this.chart) {
         this.chart.dispose();
@@ -187,11 +192,10 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
     });
   }
 
-  getSubscriptions(vendorId: string) {
-    this.usersService.getBoardingPassesByRoute(vendorId).pipe(
+  getSubscriptions() {
+    this.usersService.getBoardingPassesByRoute().pipe(
       takeUntil(this.stopSubscription$)
-    ).subscribe(data => {
-      console.log(data);
+    ).subscribe(data => {      
       this.rowData = data;
       this.createNestedTableData(data);
       this.createChart(data);
@@ -210,8 +214,7 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
         data[i].passes[x].customerName = data[i].customerName;
         this.usersList.push(data[i].passes[x]);
       }
-    }
-    console.log(data);
+    }    
     this.routesList = data;
   }
 
@@ -220,26 +223,22 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
       let chart = am4core.create("chartdiv", am4plugins_forceDirected.ForceDirectedTree);
       let networkSeries = chart.series.push(new am4plugins_forceDirected.ForceDirectedSeries());
       networkSeries.maxLevels = 2;
-      networkSeries.minRadius = 20
-      networkSeries.maxRadius = 90
-
+      networkSeries.minRadius = 20;
+      networkSeries.maxRadius = 90;
       let chartData: any = [];
       chartData = [{
         name: 'Usuarios',
         children: []
       }];
       data.forEach((route: any) => {
-
         let object: any = {};
         const passes = route.passes;
-
         const round1 = _.filter(passes, (p: any) => {
           return p.round == 'Día'
         });
         const round2 = _.filter(passes, (p: any) => {
           return p.round == 'Tarde'
         });
-
         const stopsRound1 = _(round1)
           .groupBy('stopName')
           .map((items: string | any[], name: any) => ({ name, value: items.length }))
@@ -267,22 +266,17 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
       });
 
       chart.data = chartData;
-
       networkSeries.dataFields.value = "value";
       networkSeries.dataFields.name = "name";
       networkSeries.dataFields.children = "children";
       networkSeries.nodes.template.tooltipText = "{name}:{value}";
       networkSeries.nodes.template.fillOpacity = 1;
-
       networkSeries.nodes.template.label.text = "{name}"
       networkSeries.fontSize = 10;
-
       networkSeries.links.template.strokeWidth = 1;
-
       let hoverState = networkSeries.links.template.states.create("hover");
       hoverState.properties.strokeWidth = 3;
       hoverState.properties.strokeOpacity = 1;
-
       networkSeries.nodes.template.events.on("over", function (event) {
         event.target.dataItem.childLinks.each(function (link) {
           link.isHover = true;
@@ -290,9 +284,7 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
         if (event.target.dataItem.parentLink) {
           event.target.dataItem.parentLink.isHover = true;
         }
-
       })
-
       networkSeries.nodes.template.events.on("out", function (event) {
         event.target.dataItem.childLinks.each(function (link) {
           link.isHover = false;

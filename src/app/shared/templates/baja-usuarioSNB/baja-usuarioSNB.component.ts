@@ -53,12 +53,9 @@ export class BajaUsuarioSNBComponent implements OnInit {
             defaultRoute: data['defaultRoute'],
             defaultRouteName: data['defaultRouteName'],
             status: "in Progress"
-          }        
-          console.log(userObj);
-          this.customersService.createSystemDeleteUser(userObj);
-         
+          } 
+          this.customersService.createSystemDeleteUser(userObj);         
           const mensaje = "Gracias " + data['displayName'] + "  , la solicitud de baja sera enviada, en un periodo de 5 dias hábiles máximo sera completada la solicitud.";
-
           this.messageService.success('Información', mensaje);
         });
       });

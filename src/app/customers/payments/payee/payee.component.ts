@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CustomersService } from '../../services/customers.service';
-import {  UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { map, takeUntil, tap } from 'rxjs/operators';
 import { AuthenticationService } from '../../../shared/services/authentication.service';
 import { AccountsService } from '../../../shared/services/accounts.service';
@@ -194,53 +194,45 @@ export class PayeeComponent implements OnInit {
     private router: Router,
     private customersService: CustomersService,
     private fb: UntypedFormBuilder
-  ) { 
+  ) {
 
-    this.authService.user.subscribe(user => {   
+    this.authService.user.subscribe(user => {
       this.user = user;
-    // console.log(this.user); /idSegment
-        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) { 
-          
-          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-            takeUntil(this.stopSubscription$),
-            map((a:any) => {
-              const id = a.payload.id;
-              const data = a.payload.data() as any;
-              return { id, ...data }
-            }),
-            tap(record => {             
-              this.infoSegment = record;            
-              return record;
-            })
-          ).subscribe();
-        }      
+      if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
+        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+          takeUntil(this.stopSubscription$),
+          map((a: any) => {
+            const id = a.payload.id;
+            const data = a.payload.data() as any;
+            return { id, ...data }
+          }),
+          tap(record => {
+            this.infoSegment = record;
+            return record;
+          })
+        ).subscribe();
+      }
     });
-
   }
 
   ngOnInit() {
     this.sub = this.route.params.subscribe(params => {
       this.id = params['id'];
       this.customersService.getUser(this.id).valueChanges().subscribe(item => {
-        console.log(item);
         this.user = item;
         this.getLastPurchase(this.user.paymentId); // Shall change this name to purchaseId
       });
     });
-
-
-    
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       this.customersService.getRoutesByCustomer(this.user.customerId).pipe(
-        map((actions:any) => actions.map( (a: any) => {
+        map((actions: any) => actions.map((a: any) => {
           const data = a.payload.doc.data();
           const id = a.payload.doc.id;
           return { id, ...data };
         }))
-      ).subscribe( (routes: any) => {
+      ).subscribe((routes: any) => {
         this.routes = routes;
       });
-  
       this.validateForm = this.fb.group({
         route: [null, [Validators.required]],
         round: [null, [Validators.required]],
@@ -249,24 +241,21 @@ export class PayeeComponent implements OnInit {
       });
     } else {
       this.customersService.getRoutes().snapshotChanges().pipe(
-        map((actions:any) => actions.map( (a: any) => {
+        map((actions: any) => actions.map((a: any) => {
           const data = a.payload.doc.data();
           const id = a.payload.doc.id;
           return { id, ...data };
         }))
-      ).subscribe( (routes: any) => {
+      ).subscribe((routes: any) => {
         this.routes = routes;
       });
-  
       this.validateForm = this.fb.group({
         route: [null, [Validators.required]],
         round: [null, [Validators.required]],
         month: [8],
         paymentAmount: [1299, [Validators.required]]
       });
-}
-
-    
+    }
   }
 
   submitForm(): void {
@@ -278,10 +267,9 @@ export class PayeeComponent implements OnInit {
   }
 
   getLastPurchase(purchaseId: string) {
-    this.customersService.getLastPurchase(purchaseId).valueChanges().subscribe( purchase => {
+    this.customersService.getLastPurchase(purchaseId).valueChanges().subscribe(purchase => {
       this.lastPurchase = purchase;
       this.loadingLastPurchase = false;
     });
   }
-
 }

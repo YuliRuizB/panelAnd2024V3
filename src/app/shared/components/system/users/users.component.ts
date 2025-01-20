@@ -20,21 +20,17 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
 
   @Input() accountId: string = '';
   @Input() accountName: string = '';
-
   sub!: Subscription;
   usersList: any = [];
   columnDefs = columnDefs;
   rowGroupPanelShow = rowGroupPanelShow;
   popupParent: any;
-
   //Modal
   isVisible: boolean = false;
   isConfirmLoading: boolean = false;
-
   //Wizard
   current = 0;
   index = 'First-content';
-
   //Ngx CSV Parser
   csvRecords: any[] = [];
   header = true;
@@ -44,6 +40,7 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
   usersService = inject(CustomersService);
   constructor(
     private afs: AngularFirestore,
+    private messageService: NzMessageService,
     private msg: NzMessageService,
     private ngxCsvParser: NgxCsvParser,
     private fb: UntypedFormBuilder
@@ -62,7 +59,7 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
 
   getSubscriptions() {
     this.sub = this.usersService.getAccountSystemUsers(this.accountId, 'customer').pipe(
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id, ...data }
@@ -70,7 +67,6 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
     )
       .subscribe((users) => {
         this.usersList = users;
-        console.log(this.usersList)
       });
   }
 
@@ -107,49 +103,19 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
       const expectedUserLocation = this.afs.doc(`/users/${user.uid}`);
 
       if (user.uid == user.id) {
-        console.log('skipped user: ', user);
       } else {
         expectedUserLocation.set(user, { merge: true }).then(() => {
           currentUserLocation.delete();
         });
       }
-
     });
-
   }
-
- /*  getGridOptions(): GridOptions {
-    return {
-      columnDefs: columnDefs,
-      context: {
-        thisComponent: this
-      },
-      rowData: null,
-      rowSelection: 'single',
-      pagination: true,
-      defaultColDef: {
-        sortable: true,
-        filter: true,
-        // Add more default column properties as needed
-      },
-      statusBar: {
-        statusPanels: [
-          { statusPanel: 'agFilteredRowCountComponent' },
-          { statusPanel: 'agSelectedRowCountComponent' },
-          { statusPanel: 'agAggregationComponent' }
-        ]
-      },
-      enableRangeSelection: true,
-      paginationPageSize: 20,
-    };
-  } */
 
   getContextMenuItems(params: any) {
     var result = [
       {
         name: "Ver detalles de " + params.node.data.firstName,
         action: () => {
-          console.log(params);
           let context = params.context.thisComponent;
           const notification = context.afs.collection('testFCM').doc(params.value);
           notification.set({ name: 'hola' });
@@ -163,7 +129,6 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
         name: "Checked",
         checked: true,
         action: function () {
-          console.log("Checked Selected");
         },
         icon: '<img src="../images/skills/mac.png"/>'
       },
@@ -181,7 +146,6 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
   }
 
   handleOk(): void {
-    console.log('Button ok clicked!');
     this.isSavingUsers = false;
     this.isVisible = false;
     this.csvRecords = [];
@@ -190,7 +154,6 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
   }
 
   handleCancel(): void {
-    console.log('Button cancel clicked!');
     this.isVisible = false;
     this.csvRecords = [];
     this.current = 0;
@@ -211,13 +174,16 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
   done(): void {
     this.isSavingUsers = true;
     this.usersService.createSystemUser(this.makeUserObject(this.validateForm.value)).then(response => {
-      console.log(response);
     }).catch(err => {
-      console.log(err);
+      this.sendMessage('error', err);
     })
     this.isDone = true;
     this.isVisible = false;
     this.isSavingUsers = false;
+  }
+
+  sendMessage(type: string, message: string): void {
+    this.messageService.create(type, message);
   }
 
   makeUserObject(user: any) {
@@ -252,15 +218,13 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
       this.csvRecords = [];
     }
     if (status !== 'uploading') {
-      console.log(event.file, event.fileList, event);
+      this.sendMessage('info', event.file + ' ' + event.fileList + ' ' + event);
     }
     if (status === 'done') {
       this.msg.success(`${event.file.name} Se ha cargado con éxito.`);
-      console.log(event.file);
       if (event.file.originFileObj) {
-      this.parser(event.file.originFileObj);
+        this.parser(event.file.originFileObj);
       }
-
     } else if (status === 'error') {
       this.msg.error(`${event.file.name} no ha podido ser cargado.`);
     }
@@ -272,10 +236,8 @@ export class SharedSystemUsersListComponent implements OnInit, OnDestroy {
         .subscribe(
           (value: any[] | NgxCSVParserError) => { // Specify the union type for the value parameter //TODO
             if (value instanceof NgxCSVParserError) {
-              console.log('Error', value);
             } else {
               const result: any[] = value;
-              console.log('Result', result);
               this.csvRecords = result;
             }
           }

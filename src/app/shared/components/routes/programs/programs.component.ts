@@ -25,15 +25,14 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
   @Input() routeId!: string;
   loading: boolean = true;
   routesService = inject(RoutesService);
-  vendorsService= inject(VendorService);
+  vendorsService = inject(VendorService);
   rolService = inject(RolService);
   authService = inject(AuthenticationService);
-  userService= inject(UsersService);
+  userService = inject(UsersService);
   stopSubscription$: Subject<any> = new Subject();
   programsList: any = [];
   stopPointsList: any = [];
   vendorsList: any = [];
-
   isCreateVisible: boolean = false;
   isEditMode: boolean = false;
   currentSelectedId!: string;
@@ -43,14 +42,13 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
   userlevelAccess!: string;
   user: any;
 
-
   constructor(
-    private messageService: NzMessageService,     
+    private messageService: NzMessageService,
     private fb: UntypedFormBuilder
   ) {
     this.authService.user.subscribe((user) => {
       this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {           
+      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
         this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
           this.infoLoad = item;
           this.userlevelAccess = this.infoLoad.optionAccessLavel;
@@ -58,8 +56,8 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
       }
     });
     this.createForm();
-  
   }
+
   sendMessage(type: string, message: string): void {
     this.messageService.create(type, message);
   }
@@ -73,10 +71,9 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
   }
 
   getSubscriptions() {
-
     this.routesService.getRouteAssignments(this.accountId, this.routeId).pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IBaseProgram;
         const route = { ...data, id }; // Spread data and add id
@@ -89,7 +86,7 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
 
     this.routesService.getRouteStopPoints(this.accountId, this.routeId).pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IStopPoint;
         const route = { ...data, id }; // Spread data and add id
@@ -102,7 +99,7 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
 
     this.vendorsService.getVendors().pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IVendor;
         const route = { ...data, id }; // Spread data and add id
@@ -177,7 +174,7 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
       this.isCreateVisible = false;
       this.isEditMode = false;
     })
-      .catch(err => console.log(err));
+      .catch(err => this.sendMessage('error', err));
   }
 
   showCreateModal() {
@@ -186,17 +183,15 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
   }
 
   showModalDelete(data: any) {
-    console.log(data);
     if (this.userlevelAccess == "1") {
       this.routesService.deleteRouteAssignments(this.accountId, this.routeId, data.id).then(() => {
         this.isCreateVisible = false;
         this.isEditMode = false;
       })
-        .catch(err => console.log(err));
+        .catch(err => this.sendMessage('error', err));
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
-
   }
 
   showModalEdit(data: any) {
@@ -213,7 +208,6 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
   }
 
   createProgram() {
-    
     this.programForm.get('customerId')!.setValue(this.accountId);
     this.programForm.get('routeId')!.setValue(this.routeId);
     if (this.userlevelAccess != "3") {
@@ -222,36 +216,31 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
           this.isCreateVisible = false;
           this.isEditMode = false;
         })
-          .catch(err => console.log(err));
+          .catch(err => this.sendMessage('error', err));
       } else {
         this.routesService.updateRouteAssignment(this.accountId, this.routeId, this.currentSelectedId, this.programForm.value).then(() => {
           this.isCreateVisible = false;
           this.isEditMode = false;
           this.currentSelectedId = "";
         })
-          .catch(err => console.log(err));
+          .catch(err => this.sendMessage('error', err));
       }
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
     }
-
-
   }
 
   checkChange(formControl: string, event: boolean) {
     this.programForm.controls[formControl].setValue(event);
-    console.log(this.programForm.value);
   }
 
-  onStopPointSelected(event : any, field : any, time: any) {
+  onStopPointSelected(event: any, field: any, time: any) {
     if (event) {
       const recordArray = _.filter(this.stopPointsList, s => {
         return s.id == event;
       });
       const record = recordArray[0];
-      //console.log(record);
       let round = this.programForm.controls['round'].value;
-      //console.log(round);
       this.programForm.controls[field].setValue(record.name);
       switch (round) {
         case 'Día':
@@ -273,7 +262,6 @@ export class SharedRouteProgramsComponent implements OnInit, OnDestroy {
         return s.id == event;
       });
       const record = recordArray[0];
-     // console.log(record);
       this.programForm.controls[field].setValue(record.name);
     }
   }

@@ -26,41 +26,30 @@ export class DashboardService {
     return this.dashboardItems;
   }
   
-  sendtoDeviceMessage(infoToSend:any) {
-   // console.log('function');
-       const sendFCMNotification =  this.aff.httpsCallable('sendToDeviseMessage');
-       sendFCMNotification(infoToSend).toPromise().then((respone:any) => {
-        console.log(respone);
-      });
+  sendToDeviceMessage(infoToSend: any) {
+    const sendFCMNotification = this.aff.httpsCallable('sendToDeviseMessage');
+    sendFCMNotification(infoToSend).subscribe({
+      next: (response: any) => {
+      },
+      error: (err: any) => {
+      }
+    });
   }
-
-  setChatMessage(data:object) {
-    console.log("shetchatmsj");
-    
-    console.log(data);
+  setChatMessage(data:object) {    
     const key = this.afs.createId();
-    console.log('key '+ key );
-
     const sendChatMessage = this.afs.collection('chatMessages').doc(key);
     return sendChatMessage.set(data);
   }
-  setMessage(data:object,idUser:string) {
-    console.log(data);
-    console.log("idUser" + idUser);
-    
-
+  setMessage(data:object,idUser:string) { 
    const key = this.afs.createId();
-    //console.log('key '+ key );
     const sendMessage = this.afs.collection('users').doc(idUser).collection('messages').doc(key);
     return sendMessage.set(data);
   } 
 
   getUserChatMessages(userId:string, limit?: number){
-    //console.log('userChatMessages:'+userId);
     return this.afs.collection('chatMessages', (ref) => 
     ref
     .where('uid', '==', userId)
-   // .limit(limit).orderBy('createdAt')
     ).snapshotChanges().pipe(
       map((actions:any) => actions.map((a: any) => {
         const id = a.payload.doc.id;

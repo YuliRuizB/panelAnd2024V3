@@ -50,7 +50,6 @@ export class SharedUsersQRCodesComponent implements OnInit, OnDestroy {
     users.forEach((user: any) => {
       return this.usersService.getLastValidBoardingPass(user.id).pipe(
         tap((boardingPasses:any) => {
-          // console.log({ user: user, boardingPass: boardingPasses[0] || {} });
           this.userBoardingPass.push({ user: user, boardingPass: boardingPasses[0] });
           return boardingPasses;
         })

@@ -42,7 +42,6 @@ export class VehiclesService {
     }).catch( (err) => {
       this.message.remove();
       this.message.error('Hubo un error: ', err);
-      console.log(err)
     })
   }
 

@@ -34,8 +34,7 @@ export class SharedVendorAssignmentsComponent implements OnInit, OnDestroy {
   }
 
   getSubscriptions() {
-   
-    this.assignmentSubscription = this.assignmentsService.getActiveAssignmentsRoute(this.vendorId, this.routeId).pipe(
+      this.assignmentSubscription = this.assignmentsService.getActiveAssignmentsRoute(this.routeId).pipe(
       takeUntil(this.stopSubscription$),
       map((actions:any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
@@ -43,10 +42,9 @@ export class SharedVendorAssignmentsComponent implements OnInit, OnDestroy {
         return { id, ...data }
       }))
     ).subscribe( (assignments: any) => {
-      this.assignmentList = assignments;
-   //   console.log(assignments);
+      this.assignmentList = assignments;   
       this.loading = false;
     });
+       
   }
-
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
 import { increment, serverTimestamp } from 'firebase/firestore';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { Subscription, map } from 'rxjs';
 
 @Injectable({
@@ -12,7 +13,8 @@ export class AccountsService {
   usersCollection: AngularFirestoreCollection<any> | undefined;
   userSubscription: Subscription | undefined;
   
-  constructor(private afs: AngularFirestore) { }
+  constructor(private afs: AngularFirestore , private messageService: NzMessageService
+  ) { }
 
   getAccounts() {
     const accounts = this.afs.collection('customers', ref => 
@@ -69,20 +71,15 @@ export class AccountsService {
     return account.update(updatedAccount);
   }
 
-
   updateAvatarAccount(accountId: string, url: any) {
-
     const accRef = this.afs.collection('customers').doc(accountId);
     accRef.update({imageUrl : url }).then( () => {
     }).catch( (err) => {
-      console.log(err)
+      this.sendMessage('error', err);
     })
   }
 
-
-  setAccount(account: any,cusCons :string) {
-    
-    
+  setAccount(account: any,cusCons :string) {  
     const docId = this.afs.createId();  
     const last_updated = serverTimestamp();
     const newAccountRef = this.afs.collection('customers').doc(docId);
@@ -93,7 +90,6 @@ export class AccountsService {
     batch.set(newAccountRef.ref, account);
     batch.set(newPublicAccountRef.ref, { name: account.name, active: false , custConsecutive: account.custConsecutive});
     //batch.set(stats.ref, { currentAccounts: increment(1), last_updated }, {merge: true});
-
     return batch.commit();
   }
 
@@ -128,8 +124,7 @@ export class AccountsService {
   }
 
   deleteAccount(accountId: string ) {
-    const docId = accountId;
-   
+    const docId = accountId;   
     const last_updated = serverTimestamp();
     const accountRef = this.afs.collection('customers').doc(docId);
     const publicAccountRef = this.afs.collection('pCustomers').doc(docId);
@@ -163,7 +158,6 @@ export class AccountsService {
   }
 
   getUserAccountDeleteByData(defaultRoute: string) {
-    console.log("Entro");
     this.usersCollection = this.afs.collection<any>('users', ref => 
       ref.where('customerId', '==', '2SneRDolNMtXg4DIuIfN')
          .where('defaultRoute', '==', defaultRoute)
@@ -175,21 +169,23 @@ export class AccountsService {
         const data = a.payload.doc.data() as any;
         return { id, ...data };
       }))
-    ).subscribe(users => {
-      console.log(users);
-      
+    ).subscribe(users => {      
       // Eliminar cada usuario individualmente
       users.forEach((user: any) => {
         const accountRef = this.afs.collection('user').doc(user['uid']);
-        accountRef.delete().then(() => {
-          console.log(`Usuario ${user['uid']} eliminado.`);
+        accountRef.delete().then(() => {          
+          this.sendMessage('sucess',`Usuario ${user['uid']} eliminado.`);
         }).catch(error => {
-          console.error(`Error al eliminar el usuario ${user['uid']}: `, error);
+          this.sendMessage('error', error);          
         });
       });
     });
   }
 
+  sendMessage(type: string, message: string): void {
+    this.messageService.create(type, message);
+  }
+  
   toggleAccountActive(accountId: string, active: boolean) {
     const docId = accountId;
     const accountRef = this.afs.collection('customers').doc(docId);
@@ -200,7 +196,5 @@ export class AccountsService {
     return batch.commit();
   }
 }
-function decrement(arg0: number) {
-  throw new Error('Function not implemented.');
-}
+
 

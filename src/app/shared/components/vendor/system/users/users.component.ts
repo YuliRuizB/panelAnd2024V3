@@ -34,11 +34,9 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
   //Modal
   isVisible: boolean = false;
   isConfirmLoading: boolean = false;
-
   //Wizard
   current = 0;
   index = 'First-content';
-
   //Ngx CSV Parser
   csvRecords: any[] = [];
   header = true;
@@ -82,17 +80,17 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
   }
 
   getSubscriptions() {
+    if (this.vendorId != '') {    
     this.sub = this.usersService.getAccountSystemUsers(this.vendorId, 'vendor').pipe(
       map((actions:any) => actions.map((a:any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id, ...data }
-      }))
-    )
+      })))
       .subscribe((users) => {
-        this.usersList = users;
-        console.log(this.usersList)
+        this.usersList = users;     
       });
+    }
   }
 
   createForm() {
@@ -126,15 +124,12 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
 
       const currentUserLocation = this.afs.doc(`/users/${user.id}`);
       const expectedUserLocation = this.afs.doc(`/users/${user.uid}`);
-
       if (user.uid == user.id) {
-        console.log('skipped user: ', user);
       } else {
         expectedUserLocation.set(user, { merge: true }).then(() => {
           currentUserLocation.delete();
         });
       }
-
     });
 
   }
@@ -145,7 +140,6 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
       {
         name: "Ver detalles de " + params.node.data.firstName,
         action: () => {
-          console.log(params);
           let context = params.context.thisComponent;
           const notification = context.afs.collection('testFCM').doc(params.value);
           notification.set({ name: 'hola' });
@@ -159,7 +153,6 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
         name: "Checked",
         checked: true,
         action: function () {
-          console.log("Checked Selected");
         },
         icon: '<img src="../images/skills/mac.png"/>'
       },
@@ -177,7 +170,6 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
   }
 
   handleOk(): void {
-    console.log('Button ok clicked!');
     this.isSavingUsers = false;
     this.isVisible = false;
     this.csvRecords = [];
@@ -186,7 +178,6 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
   }
 
   handleCancel(): void {
-    console.log('Button cancel clicked!');
     this.isVisible = false;
     this.csvRecords = [];
     this.current = 0;
@@ -209,9 +200,8 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
 
     if (this.userlevelAccess != "3") {
       this.usersService.createSystemUser(this.makeUserObject(this.validateForm.value)).then(response => {
-        console.log(response);
       }).catch(err => {
-        console.log(err);
+        this.sendMessage('error',err);
       })
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
@@ -253,11 +243,9 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
       this.csvRecords = [];
     }
     if (status !== 'uploading') {
-      console.log(event.file, event.fileList, event);
     }
     if (status === 'done') {
-      this.msg.success(`${event.file.name} Se ha cargado con éxito.`);
-      console.log(event.file);
+      this.msg.success(`${event.file.name} Se ha cargado con éxito.`);      
       if (event.file.originFileObj) {
       this.parser(event.file.originFileObj);
       }
@@ -273,10 +261,9 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
         .subscribe(
           (value: any[] | NgxCSVParserError) => { // Specify the union type for the value parameter
             if (value instanceof NgxCSVParserError) {
-              console.log('Error', value);
+              this.sendMessage('error',value.toString());
             } else {
               const result: any[] = value;
-              console.log('Result', result);
               this.csvRecords = result;
             }
           }

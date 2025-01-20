@@ -44,10 +44,8 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     private fb: UntypedFormBuilder
   ) {
     this.authService.user.subscribe(user => {   
-      this.user = user;
-     // console.log(this.user); /idSegment
-        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) { 
-          
+      this.user = user;     
+        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {           
           this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
             takeUntil(this.stopSubscription$),
             map((a:any) => {
@@ -62,25 +60,21 @@ export class AssignmentComponent implements OnInit, OnDestroy {
           ).subscribe();
         }      
     });
-
     this.createForm();
   }
 
-  ngOnInit() {
-   
+  ngOnInit() {   
     this.authService.user.subscribe( (user:any) => {
-      this.user = user;
-     // console.log(this.user);
+      this.user = user;    
      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-      this.getSubscriptions(this.user.vendorId);
+      this.getSubscriptions();
       }
     })
   }
 
   ngOnDestroy(): void {
     this.stopSubscriptions$.next(false);
-    this.stopSubscriptions$.complete();
-    
+    this.stopSubscriptions$.complete();    
   }
 
   createForm() {
@@ -125,17 +119,16 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     this.isVisible = false;
   }
 
-  getSubscriptions(vendorId: string) {
-    this.vendorRoutesSubscription = this.usersService.getBoardingPassesByRoute(vendorId).pipe(
+  getSubscriptions() {     
+    this.vendorRoutesSubscription = this.usersService.getBoardingPassesByRoute().pipe(
       takeUntil(this.stopSubscriptions$)
     ).subscribe(data => {     
       this.createNestedTableData(data);
-    })
+    })   
   }
 
   createNestedTableData(data: any) {
     this.vendorRoutesList = [];
-
     this.usersService.getActiveCustomers().pipe(
       takeUntil(this.stopSubscription$),
       map((actions:any) => actions.map((a: any) => {
@@ -162,12 +155,10 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       .filter(customerName => _.includes(_.map(this.customersActiveList, 'name'), customerName))
       .value();
     }
-
     for (let i = 0; i < data.length; ++i) {
       data[i].routeName = data[i].passes[0].routeName;
       data[i].routeId = data[i].passes[0].routeId;
-    }
-    console.log(data);
+    }    
       this.vendorRoutesList = data;
     })  
   }
@@ -202,5 +193,4 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     });
     this.refreshStatus();
   }
-
 }

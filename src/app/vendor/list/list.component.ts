@@ -38,8 +38,6 @@ export class ListComponentVendor implements OnInit {
 
     this.authService.user.subscribe((user) => {
       this.user = user;
-      console.log(this.user);
-
       if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined && this.user.idSegment !== undefined) {
         this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
           this.infoLoad = item;
@@ -59,7 +57,6 @@ export class ListComponentVendor implements OnInit {
               return record;
             })
           ).subscribe();
-
         });
       }
     });
@@ -89,15 +86,10 @@ export class ListComponentVendor implements OnInit {
   ngOnDestroy() {
     this.stopSubscription$.next(false);
     this.stopSubscription$.complete();
-
   }
 
   getSubscriptions() {
-
-
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) {
-      console.log(this.user.customerId);
-
       this.vendorService.getVendorRoutesAccessByCustomer(this.user.customerId).pipe(
         takeUntil(this.stopSubscription$),
         map((actions: any) => actions.map((a: any) => {
@@ -106,22 +98,16 @@ export class ListComponentVendor implements OnInit {
           return { id, ...data }
         })))
         .subscribe((data: any) => {
-
           if (data && data.length > 0) {
-            const firstVendorId = data[0].vendorId;
-            console.log(firstVendorId);
+            const firstVendorId = data[0].vendorId;            
             this.vendorService.getVendor(firstVendorId).
               subscribe((data: any) => {
                 const vendorData = data.payload.data();
-                console.log(vendorData);
-
-                // Convert the object to an array
                 this.vendorList = [vendorData];
                 this.vendorListLoad = this.vendorList;
               });
           }
         });
-
     }
     else {
       this.vendorService.getVendors().pipe(
@@ -130,8 +116,7 @@ export class ListComponentVendor implements OnInit {
           const data = a.payload.doc.data() as any;
           return { id: id, ...data }
         }))
-      ).subscribe((vendors) => {
-        //  console.log(vendors);
+      ).subscribe((vendors) => {        
         this.vendorList = vendors;
         this.vendorListLoad = this.vendorList;
       })

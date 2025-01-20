@@ -41,7 +41,6 @@ export class OrganigramaComponent implements OnInit {
   products: any;
   rowDataPay: any = [];
   rowData: any = [];
-  //columnDefsPagosGenerados;
   users: any;
   customerSubscription: Subscription | undefined;
   userSubscription: Subscription | undefined;
@@ -62,35 +61,28 @@ export class OrganigramaComponent implements OnInit {
   infoSegment: any = [];
   selectedRoute: any;
   initialDataSet: any;
-
   dataSet = [
     { time: '', lunes: 0, martes: 0, miercoles: 0, jueves: 0, viernes: 0 }
   ];
-
   dataSetEnd = [
     { time: '', lunes: 0, martes: 0, miercoles: 0, jueves: 0, viernes: 0 },
   ];
-
   lunesP: number = 0;
   martesP: number = 0;
   miercolesP: number = 0;
   juevesP: number = 0;
   viernesP: number = 0;
-
   lunesE: number = 0;
   martesE: number = 0;
   miercolesE: number = 0;
   juevesE: number = 0;
   viernesE: number = 0;
-
   totalLunes: number = 0;
   totalMartes: number = 0;
   totalMiercoles: number = 0;
   totalJueves: number = 0;
   totalViernes: number = 0;
   grantotal: number = 0;
-
-
   LunesFinal: number = 0;
   MartesFinal: number = 0;
   MiercolesFinal: number = 0;
@@ -116,61 +108,19 @@ export class OrganigramaComponent implements OnInit {
   transportType: string = "";
   camioneta: string = 'Camioneta';
   camion: string = 'Camión';
-
   listOfColumns: ColumnItem[] = [
-    {
-      name: 'Turno',
-      sortOrder: null,
-      sortFn: (a: DataItem, b: DataItem) => a.turno.localeCompare(b.turno),
-      listOfFilter: [],
-      filterFn: (list: string[], item: DataItem) =>
-        list.some(name => item.turno.indexOf(name) !== -1)
-    },
-    {
-      name: 'Tipo de Viaje',
-      sortOrder: null,
-      sortFn: (a: DataItem, b: DataItem) => a.roundTrip.localeCompare(b.roundTrip),
-      listOfFilter: [],
-      filterFn: (list: string[], item: DataItem) =>
-        list.some(name => item.roundTrip.indexOf(name) !== -1)
-    },
-    {
-      name: 'Nombre',
-      sortOrder: null,
-      sortFn: (a: DataItem, b: DataItem) => a.displayName.localeCompare(b.displayName),
-      listOfFilter: [],
-      filterFn: (list: string[], item: DataItem) =>
-        list.some(name => item.displayName.indexOf(name) !== -1)
-    },
-    {
-      name: 'Identificación',
-      sortOrder: null,
-      sortFn: null,
-      listOfFilter: [],
-      filterFn: null
-    },
-    {
-      name: 'Telefono',
-      sortOrder: null,
-      sortFn: null,
-      listOfFilter: [],
-      filterFn: null
-    },
-    {
-      name: 'Email',
-      sortOrder: null,
-      sortFn: null,
-      listOfFilter: [],
-      filterFn: null
-    },
-    {
-      name: 'Estatus',
-      sortOrder: null,
-      sortFn: null,
-      listOfFilter: [],
-      filterFn: null
-    },
+    { name: 'Turno', sortOrder: null,  sortFn: (a: DataItem, b: DataItem) => a.turno.localeCompare(b.turno),
+      listOfFilter: [], filterFn: (list: string[], item: DataItem) =>  list.some(name => item.turno.indexOf(name) !== -1)    },
+    { name: 'Tipo de Viaje', sortOrder: null, sortFn: (a: DataItem, b: DataItem) => a.roundTrip.localeCompare(b.roundTrip),
+      listOfFilter: [], filterFn: (list: string[], item: DataItem) => list.some(name => item.roundTrip.indexOf(name) !== -1)    },
+    { name: 'Nombre', sortOrder: null, sortFn: (a: DataItem, b: DataItem) => a.displayName.localeCompare(b.displayName),
+      listOfFilter: [], filterFn: (list: string[], item: DataItem) => list.some(name => item.displayName.indexOf(name) !== -1)   },
+    { name: 'Identificación', sortOrder: null, sortFn: null, listOfFilter: [], filterFn: null },
+    { name: 'Telefono', sortOrder: null, sortFn: null, listOfFilter: [], filterFn: null  },
+    { name: 'Email', sortOrder: null, sortFn: null, listOfFilter: [], filterFn: null  },
+    { name: 'Estatus', sortOrder: null, sortFn: null,listOfFilter: [], filterFn: null  },
   ];
+
   constructor(private afs: AngularFirestore,
     private messageService: NzMessageService,
     private fb: UntypedFormBuilder
@@ -193,11 +143,9 @@ export class OrganigramaComponent implements OnInit {
         ).subscribe();
       }
     });
-
   }
 
   ngOnInit() {
-
     this.validateForm = this.fb.group({
       customerId: ['', [Validators.required]],
       customerName: [],
@@ -205,7 +153,6 @@ export class OrganigramaComponent implements OnInit {
       routeName: ['', [Validators.required]],
       round: ['', [Validators.required]]
     });
-
     this.validateFormP = this.fb.group({
       customerId: ['', [Validators.required]],
       customerName: [],
@@ -251,11 +198,9 @@ export class OrganigramaComponent implements OnInit {
         }))
       ).subscribe(customers => {
         this.customers = customers;
-
         const carruselCustomers = this.customers.filter((customer: any) => customer.isCarrusel);
         if (carruselCustomers.length > 0) {
           this.isMederos = true;
-          //  console.log(carruselCustomers);
           this.customerMed = carruselCustomers;
           this.getRoutesForMed(this.customerMed);
         }
@@ -263,11 +208,8 @@ export class OrganigramaComponent implements OnInit {
     }
   }
   getRoutesForMed(customer: any) {
-    //console.log(customer[0].name);
-
     this.validateFormM.controls['customerName'].setValue(customer[0].name);
     this.validateFormM.controls['customerId'].setValue(customer[0].id);
-
     this.routesService.getRoutes(customer[0].id).pipe(
       takeUntil(this.stopSubscription$),
       map((actions: any) => actions.map((a: any) => {
@@ -277,7 +219,6 @@ export class OrganigramaComponent implements OnInit {
       })))
       .subscribe((routes: IStopPoint[]) => {
         this.routesM = routes;
-      //  console.log(this.routesM);
       });
 
     this.productsService.getActiveProducts(customer[0].id).pipe(
@@ -289,7 +230,6 @@ export class OrganigramaComponent implements OnInit {
       })))
       .subscribe((prod: any) => {
         this.products = prod;
-
       });
   }
 
@@ -297,8 +237,7 @@ export class OrganigramaComponent implements OnInit {
     this.carro = this.validateFormM.get('asientos')?.value;  
     if (this.validateFormM.valid) {
       let customerId = this.validateFormM.get('customerId')?.value;
-      let routeId = this.validateFormM.get('routeId')?.value;  
-      
+      let routeId = this.validateFormM.get('routeId')?.value;      
       if (!this.chkBoardingP) {        
         this.routesService.getQuotesByRouteandProgram(customerId, routeId, this.transportType).pipe(
           takeUntil(this.stopSubscription$),
@@ -308,7 +247,6 @@ export class OrganigramaComponent implements OnInit {
             return { ...data, id };
           })))
           .subscribe((data: any) => {
-            // console.log(data);
             if (data.length == 0) {
               this.sendMessage("info", "No existen registros con estos criterios.");
             }
@@ -324,7 +262,6 @@ export class OrganigramaComponent implements OnInit {
             return { ...data, id };
           })),
           map((data: any[]) => {
-            // Filter data to include only those with the matching transportType in quotesData
             return data.filter(item => 
               item.quotesData && 
               Array.isArray(item.quotesData) && 
@@ -332,25 +269,19 @@ export class OrganigramaComponent implements OnInit {
             );
           }),
           map((filteredData: any[]) => {
-            // Extract quotesData arrays and flatten them into a single array
             return filteredData.reduce((acc, item) => {
               const quotes = item.quotesData.filter((quote: any) => quote.transportType === this.transportType);
               return acc.concat(quotes);
             }, []);
           })
         )
-        .subscribe((flattenedQuotesData: any[]) => {
-          console.log("Pases activos:");
-          console.log(flattenedQuotesData);
-        
+        .subscribe((flattenedQuotesData: any[]) => {        
           if (flattenedQuotesData.length === 0) {
             this.sendMessage("info", "No existen registros con estos criterios.");
           } else {
             this.createDataSet(flattenedQuotesData);
           }
         });
-        
-       // this.sendMessage("info", "check" + this.chkBoardingP);
       }
     } else {
       this.sendMessage("error", "Datos invalidos favor de validar");
@@ -360,21 +291,15 @@ export class OrganigramaComponent implements OnInit {
     this.messageService.create(type, message);
   }
 
-  onCheckboxChange(event: any) {
-   // console.log(event);
-    
+  onCheckboxChange(event: any) {   
     this.chkBoardingP = this.validateFormM.get('chkBoardingP')?.value;
-    //console.log('Checkbox value:', this.chkBoardingP);
   }
 
   createDataSet(data: any) {
     const endTimes = this.selectedRoute.initialEnd;
     const initialTimes = this.selectedRoute.initialStart;
-
     let endDataSet: any[] = [];
     let initialDataSet: any[] = [];
-
-
     initialDataSet = initialTimes.map((time: string) => ({
       time,
       lunes: 0,
@@ -383,7 +308,6 @@ export class OrganigramaComponent implements OnInit {
       jueves: 0,
       viernes: 0,
     }));
-
     endDataSet = endTimes.map((time: string) => ({
       time,
       lunes: 0,
@@ -392,7 +316,6 @@ export class OrganigramaComponent implements OnInit {
       jueves: 0,
       viernes: 0,
     }));
-
     data.forEach((item: any) => {
       item.daysHour.forEach((hour: any) => {
         const dataSetEntry = initialDataSet.find(entry => entry.time === hour.startInit);
@@ -439,13 +362,8 @@ export class OrganigramaComponent implements OnInit {
               break;
           }
         }
-        //console.log(dataSetEntry);
       });
     });
-    //console.log("end");
-
-    //console.log(initialDataSet);
-
     this.dataSet = initialDataSet;
     this.dataSetEnd = endDataSet;
     this.calculateTotals();
@@ -456,16 +374,11 @@ export class OrganigramaComponent implements OnInit {
   }
 
   onRoutesSelect(routeId: string): void {
-   // console.log(routeId);
     const selectedRoute = this.routesM.find((route: any) => route.id === routeId);
     if (selectedRoute) {
       this.selectedRoute = selectedRoute;
     }
-
-    //console.log( this.selectedRoute);
-    
   }
-
 
   calculateTotals(): void {
     this.totalLunes = this.dataSet.reduce((acc, data) => acc + data.lunes, 0);
@@ -509,18 +422,13 @@ export class OrganigramaComponent implements OnInit {
         return r.id == event;
       });
       const record = recordArray[0];
-
       this.validateForm.controls['customerName'].setValue(record.name);
       this.validateForm.controls['customerId'].setValue(record.id);
       this.fillCustomerRoute(record.id);
     }
 
   }
-  onCustomerSelectedP(event: null, customers: any) {
-    //this.routesP = [];    
-      console.log(event);
-    console.log(this.userRouteP);
-    
+  onCustomerSelectedP(event: null, customers: any) {    
     if (event != null && !this.userRouteP) {
       this.userRouteP = true;
       this.routesP = [];
@@ -531,12 +439,10 @@ export class OrganigramaComponent implements OnInit {
         return r.id == event;
       });
       const record = recordArray[0];
-
       this.validateFormP.controls['customerName'].setValue(record.name);
       this.validateFormP.controls['customerId'].setValue(record.id);
       this.fillCustomerRouteP(record.id);
     }
-
   }
 
   calculateRemaining(value: number): number {
@@ -574,7 +480,6 @@ export class OrganigramaComponent implements OnInit {
       });
   }
 
-
   onRouteSelected(event: string, routes: any) {
     this.routeId$.next(event);
     const recordArray = _.filter(routes, r => {
@@ -582,7 +487,6 @@ export class OrganigramaComponent implements OnInit {
     });
     const record = recordArray[0];
     this.validateForm.controls['routeName'].setValue(record.name);
-
   }
   onRouteSelectedP(event: string, routesP: any) {
     this.routeId$.next(event);
@@ -591,7 +495,6 @@ export class OrganigramaComponent implements OnInit {
     });
     const record = recordArray[0];
     this.validateFormP.controls['routeName'].setValue(record.name);
-
   }
 
   submitFormUnPaid(): void {
@@ -654,7 +557,6 @@ export class OrganigramaComponent implements OnInit {
 
   onRoundSelected(): void {
     if (this.submitPayment) {
-
       this.submitPayment = false;
       this.userRouteP = false;
       this.rowData = [];
@@ -670,7 +572,6 @@ export class OrganigramaComponent implements OnInit {
       } else {
         defaultRoundValue = "Nocturno";
       }
-
       this.usersCollection = this.afs.collection<any>('users', ref =>
         ref.where('customerId', '==', customerID)
           .where('defaultRound', '==', defaultRoundValue)
@@ -698,9 +599,6 @@ export class OrganigramaComponent implements OnInit {
           ref.where('active', '==', true).limit(1) // Limita a 1 documento para eficiencia
         ).get().subscribe(boardingPassessDetailSnapshot => {
           if (!boardingPassessDetailSnapshot.empty) {
-            // El usuario tiene una subcolección 'boardingPassessDetail' con al menos un documento 'active' = true
-            // Realiza la acción necesaria aquí (puede ser agregar a otra lista, etc.)
-            console.log(`El usuario con ID ${userId} tiene un boardingPassessDetail activo.`);
             this.rowDataPush.push({ ...user });
           }
         });
@@ -714,7 +612,6 @@ export class OrganigramaComponent implements OnInit {
     this.submitPayment = true;
     this.rowDataPre = this.rowDataPush;
     this.loadUsersP(this.rowDataPre);
-
   }
 
   organigrama(numero: number, c1: number, c2: number, c3: number) {
@@ -723,7 +620,6 @@ export class OrganigramaComponent implements OnInit {
     let contenedor36 = 0;
     let sobrante = 0;
     let contenedorinicial: boolean = false;
-
     while (numero > 0) {
       if (numero >= c3) {
         contenedor36++;
@@ -739,35 +635,28 @@ export class OrganigramaComponent implements OnInit {
         break; // Salir del bucle ya que no se puede almacenar más en contenedores
       }
     }
-
     let contenedor = '';
-
     if (contenedor13 > 0) {
       contenedor += `${contenedor13} camiones de 14 pasajeros, `;
       contenedorinicial = true;
     }
-
     if (contenedor17 > 0) {
       contenedor += `${contenedor17} camiones de 19 pasajeros, `;
       contenedorinicial = true;
     }
-
     if (contenedor36 > 0) {
       contenedor += `${contenedor36} camiones de 40 pasajeros, `;
       contenedorinicial = true;
     }
-
     if (sobrante > 0) {
       contenedor += `y restan ${sobrante} pasajeros sin asignacion, `;
     }
-
     if (contenedor !== '') {
       if (!contenedorinicial) {
         contenedor = `Se necesitan 0 camiones  ${contenedor} en total.`;
       } else {
         contenedor = `Se necesitan ${contenedor} en total.`;
       }
-
     } else {
       contenedor = 'No se necesitan camiones.';
     }
@@ -775,36 +664,9 @@ export class OrganigramaComponent implements OnInit {
   }
 
   resetFilters(): void {
-    /*  this.listOfColumns.forEach(item => {
-       if (item.name === 'Name') {
-         item.listOfFilter = [
-           { text: 'Joe', value: 'Joe' },
-           { text: 'Jim', value: 'Jim' }
-         ];
-       } else if (item.name === 'Address') {
-         item.listOfFilter = [
-           { text: 'London', value: 'London' },
-           { text: 'Sidney', value: 'Sidney' }
-         ];
-       }
-     }); */
   }
   resetFiltersPay(): void {
-    /*  this.listOfColumns.forEach(item => {
-       if (item.name === 'Name') {
-         item.listOfFilter = [
-           { text: 'Joe', value: 'Joe' },
-           { text: 'Jim', value: 'Jim' }
-         ];
-       } else if (item.name === 'Address') {
-         item.listOfFilter = [
-           { text: 'London', value: 'London' },
-           { text: 'Sidney', value: 'Sidney' }
-         ];
-       }
-     }); */
   }
-
 
   trackByName(_: number, item: ColumnItem): string {
     return item.name;
@@ -813,25 +675,10 @@ export class OrganigramaComponent implements OnInit {
     return item.name;
   }
 
-
   sortBPay(): void {
-    /*  this.listOfColumns.forEach(item => {
-       if (item.name === 'Age') {
-         item.sortOrder = 'descend';
-       } else {
-         item.sortOrder = null;
-       }
-     }); */
   }
 
   sortBy(): void {
-    /*  this.listOfColumns.forEach(item => {
-       if (item.name === 'Age') {
-         item.sortOrder = 'descend';
-       } else {
-         item.sortOrder = null;
-       }
-     }); */
   }
 
 }

@@ -215,19 +215,16 @@ export class RoutesComponentVendor implements OnInit {
   }
 
   getRoutes() {
-    console.log(this.user.customerId);
     this.routesService.getRoutes(this.user.customerId).pipe(
       map((actions:any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id: id, ...data }
       }))
-    ).subscribe((routes) => {
-    
+    ).subscribe((routes) => {    
       this.routesList = routes;
     });
   }
-
 }
 
 function currencyFormatter(params: any) {

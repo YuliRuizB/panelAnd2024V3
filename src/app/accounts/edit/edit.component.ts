@@ -63,7 +63,6 @@ export class EditComponent implements OnInit, OnDestroy {
         })
       ).subscribe( (account) => {
         this.record = account;
-       // console.log(this.record);
       })
     }
  

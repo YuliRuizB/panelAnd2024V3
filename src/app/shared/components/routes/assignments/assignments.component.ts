@@ -26,21 +26,17 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
   @Input() accountId!: string;
   rolService = inject(RolService);
   authService = inject(AuthenticationService);
-  vendorsService= inject(VendorService);
+  vendorsService = inject(VendorService);
   routesService = inject(RoutesService);
   //temp var
   routeId: any;
-
-
   loading: boolean = true;
   pageSize: number = 10;
-
   stopSubscription$: Subject<any> = new Subject();
   programsList: any = [];
   routesList: any = [];
   stopPointsList: any = [];
   vendorsList: any = [];
-
   isCreateVisible: boolean = false;
   isEditMode: boolean = false;
   currentSelectedId!: string;
@@ -56,21 +52,19 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
 
   constructor(
     private notification: NzNotificationService,
-    private messageService: NzMessageService,     
+    private messageService: NzMessageService,
     private fb: UntypedFormBuilder
   ) {
     this.authService.user.subscribe((user) => {
       this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {           
+      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
         this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
           this.infoLoad = item;
           this.userlevelAccess = this.infoLoad.optionAccessLavel;
         });
       }
     });
-
     this.createForm();
-    //console.log(this.assigmentType);
   }
 
   ngOnInit() {
@@ -83,10 +77,9 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
   }
 
   getSubscriptions() {
-
     this.routesService.getRoutes(this.accountId).pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id, ...data }
@@ -98,20 +91,19 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
 
     this.routesService.getCustomerVendorAssignments(this.accountId).pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IBaseProgram;
         return { ...data, id }; // Include id property only once  
       })))
       .subscribe((programs: IBaseProgram[]) => {
         this.programsList = programs;
-        //console.log(programs);
         this.loading = false;
       });
 
     this.vendorsService.getVendors().pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IVendor;
         return { ...data, id }; // Include id property only once  
@@ -123,7 +115,6 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
   }
 
   getRouteName(routeId: string) {
-
     let routeName = '';
     if (this.routesList.length > 0) {
       let selectedRoute = _.filter(this.routesList, r => {
@@ -168,12 +159,8 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
   }
 
   patchForm(data: any) {
-
     const stopBeginHourArray = data.stopBeginHour.split(':');
     const stopEndHourArray = data.stopEndHour.split(':');
-    //console.log("aqui");
-    //console.log(set(data.time.toDate(), { hours: stopBeginHourArray[0], minutes: stopBeginHourArray[1] }));
-
     this.programForm.patchValue({
       active: data.active,
       acRequired: data.acRequired,
@@ -193,7 +180,7 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
       stopEndId: data.stopEndId,
       stopEndName: data.stopEndName,
       stopEndHour: data.stopEndHour,
-      stopEndHourT:  data.stopEndHour,//set(data.time.toDate(), { hours: stopEndHourArray[0], minutes: stopEndHourArray[1] }),
+      stopEndHourT: data.stopEndHour,//set(data.time.toDate(), { hours: stopEndHourArray[0], minutes: stopEndHourArray[1] }),
       time: data.time,// (data.time).toDate(),
       type: data.type,
       customerName: data.customerName,
@@ -209,7 +196,7 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
       this.isCreateVisible = false;
       this.isEditMode = false;
     })
-      .catch(err => console.log(err));
+      .catch(err => this.sendMessage('error', err));
   }
 
   showCreateModal() {
@@ -218,30 +205,28 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
     this.currentSelectedId = "";
     this.currentSelected = null;
   }
+
   sendMessage(type: string, message: string): void {
     this.messageService.create(type, message);
-}
+  }
 
   showModalDelete(data: any) {
-   // console.log(data);
+
     if (this.userlevelAccess == "1") {
       this.routesService.deleteRouteAssignments(this.accountId, data.routeId, data.id).then(() => {
         this.isCreateVisible = false;
         this.isEditMode = false;
       })
-        .catch(err => console.log(err));
+        .catch(err => this.sendMessage('error', err));
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
-   
   }
 
   showModalEdit(data: any) {
     this.currentSelectedId = data.id;
     this.currentSelected = data;
     this.patchForm(data);
-    //console.log(data);
-
     setTimeout(() => {
       this.isCreateVisible = true;
     }, 100);
@@ -258,16 +243,13 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
     if (this.programForm !== null && this.programForm !== undefined) {
       this.programForm.get('customerId')!.setValue(this.accountId);
     }
-  
     const stopBeginHourDate = new Date(this.programForm.controls['stopBeginHourT'].value);
     const stopEndHourDate = new Date(this.programForm.controls['stopEndHourT'].value);
     const stopBeginHour = [stopBeginHourDate.getHours(), String(stopBeginHourDate.getMinutes()).padStart(2, '0')].join(':');
     const stopEndHour = [stopEndHourDate.getHours(), String(stopEndHourDate.getMinutes()).padStart(2, '0')].join(':');
-  
+
     this.programForm.controls['stopBeginHour'].setValue(stopBeginHour);
     this.programForm.controls['stopEndHour'].setValue(stopEndHour);
-  
-   // console.log(stopBeginHour, stopEndHour); 
     const stopBeginHour1: any = this.programForm.get('stopBeginHour');
     const stopEndHour1: any = this.programForm.get('stopEndHour');
     if (stopBeginHour1 == '' || stopEndHour1 == '') {
@@ -278,17 +260,16 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
       );
       return; // Add return statement here
     }
-  
+
     if (!this.isEditMode) {
-      if (this.userlevelAccess != "3") {     
+      if (this.userlevelAccess != "3") {
         const routeIdControl: any = this.programForm.get('routeId');
         if (routeIdControl) {
           this.routesService.setRouteAssignments(this.accountId, routeIdControl.value, this.programForm.value).then(() => {
             this.isCreateVisible = false;
             this.isEditMode = false;
           })
-          .catch(err => console.log(err));
-         // console.log(this.programForm.value);
+            .catch(err => this.sendMessage('error', err));
           return; // Add return statement here
         }
       } else {
@@ -298,33 +279,31 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
     } else {
       if (this.userlevelAccess != "3") {
         const routeIdControl: any = this.programForm.get('routeId');
-        if (routeIdControl) {       
+        if (routeIdControl) {
           this.routesService.updateRouteAssignment(this.accountId, routeIdControl, this.currentSelectedId, this.programForm.value).then(() => {
             this.isCreateVisible = false;
             this.isEditMode = false;
             this.currentSelectedId = "";
           })
-          .catch(err => console.log(err));
-        //  console.log(this.programForm.value);
+            .catch(err => this.sendMessage('error', err));
           return; // Add return statement here
         }
       } else {
         this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
         return; // Add return statement here
-      }      
+      }
     }
   }
-  
+
 
   checkChange(formControl: string, event: boolean) {
     this.programForm.controls[formControl].setValue(event);
-   // console.log(this.programForm.value);
   }
 
   onRouteSelected(routeId: string) {
     this.routesService.getRouteStopPoints(this.accountId, routeId).pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IStopPoint;
         return { ...data, id }; // Include id property only once       
@@ -336,10 +315,7 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
   }
 
   onStopPointSelected(event: any, field: any, timeSelection: any) {
-
-    //console.log(this.currentSelected);
     const commitmentTime = this.programForm.controls['time'].value;
-    //console.log(commitmentTime);
     const program = this.programForm.controls['program'].value;
     const selector = field;
     let time = '';
@@ -357,18 +333,13 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
       }
     }
 
-   // console.log(commitmentTime, program, event, field, time);
-
     if (event) {
       const recordArray = _.filter(this.stopPointsList, s => {
         return s.id == event;
       });
       const record = recordArray[0];
-
-     // console.log(record);
       let round = this.programForm.controls['round'].value;
-      //console.log(round);
-      this.programForm.controls[field].setValue(record.name);     
+      this.programForm.controls[field].setValue(record.name);
 
       switch (round) {
         case 'Día':
@@ -393,7 +364,6 @@ export class SharedCustomerVendorAssignmentsComponent implements OnInit {
         return s.id == event;
       });
       const record = recordArray[0];
-    //  console.log(record);
       this.programForm.controls[field].setValue(record.name);
     }
   }

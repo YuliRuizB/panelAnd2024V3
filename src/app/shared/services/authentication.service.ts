@@ -67,7 +67,7 @@ export class AuthenticationService {
           }
         });
       }).catch((error) => {
-        this.notification.create('error', '¡Oops!, algo salió mal ...', error.message);
+        this.notification.create('error', 'Error..', error.message);
       });
   }
 
@@ -113,11 +113,8 @@ export class AuthenticationService {
       .then((result) => {
         /* Call the SendVerificaitonMail() function when new user sign
         up and returns promise */
-       // console.log(result);
         this.setUserData(result.user, form);
-        this.sendVerificationMail();
-
-        
+        this.sendVerificationMail();        
       }).catch((error) => {
         this.notification.create('error', 'Error de creación de Usuario', error);
       });
@@ -178,7 +175,6 @@ export class AuthenticationService {
   sign up with username/password and sign in with social auth
   provider in Firestore database using AngularFirestore + AngularFirestoreDocument service */
   setUserData(user : any, form?: any) {
-   // console.log(form);
     const userRef: AngularFirestoreDocument<any> = this.afs.doc(`users/${user.uid}`);
     const userData = {
       uid: user.uid,
@@ -210,7 +206,7 @@ export class AuthenticationService {
     }).then( (result) => {
       this.updateUserProfile(form);
     })
-    .catch( err => console.log('err: ', err));
+    .catch( err =>    this.notification.create('error', 'Error..', err));
   }
 
   getUserFromDatabase(user: any) {
@@ -230,21 +226,11 @@ export class AuthenticationService {
     return userRef.set(userData, {
       merge: true
     })
-    .then( response => console.log('ok', response))
-    .catch( err => console.log('err: ', err));
+    .then( (response : any)  =>   this.notification.create('sucess', 'Resultado..', response))
+    .catch( err =>     this.notification.create('error', 'Error..', err));
   }
 
   updateUserProfile(form: { fullName: string | null | undefined; }) {
-    /* const currentUser = firebase.auth().currentUser;
-    currentUser.updateProfile({
-      displayName: form && form.fullName ? form.fullName : null,
-      photoURL: 'https://example.com/jane-q-user/profile.jpg',
-    }).then(function() {
-      console.log('update successfull');
-    }).catch(function(error) {
-      console.log('an error happened; ', error);
-    }); */
-
     const auth = getAuth();
     const user: User | null = auth.currentUser;
   
@@ -253,12 +239,12 @@ export class AuthenticationService {
         displayName: form && form.fullName ? form.fullName : null,
         photoURL: 'https://example.com/jane-q-user/profile.jpg',
       }).then(() => {
-        console.log('Update successful');
-      }).catch((error) => {
-        console.log('An error occurred:', error);
+        this.notification.create('sucess', 'Info ..', 'Actualizacion correcta' );
+      }).catch((error) => {        
+        this.notification.create('error', 'Error ..', error );
       });
     } else {
-      console.log('No user is currently signed in.');
+      this.notification.create('error', 'Error ..', 'No Existe un usuario loggeado en la aplicación' );
     }
   }
 

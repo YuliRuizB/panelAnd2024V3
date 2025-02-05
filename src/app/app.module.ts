@@ -307,7 +307,8 @@ const icons: IconDefinition[] = Object.keys(antDesignIcons).map(key => {
     NzInputNumberModule,
     NzProgressModule,
     NzTimePickerModule,
-    NzPopconfirmModule
+    NzPopconfirmModule,
+    AgGridModule,
   ],
   providers: [
     provideClientHydration(),

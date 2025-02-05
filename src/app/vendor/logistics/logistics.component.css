@@ -26,3 +26,8 @@
   .inactive-icon {
     color: red; /* Color para el estado inactivo */
   }
+
+  .red-cell {
+    background-color: #ffcccc; /* Light red */
+    color: #000;
+  }

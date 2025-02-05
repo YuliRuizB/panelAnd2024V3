@@ -7,34 +7,34 @@ import * as firebase from 'firebase/app';
 export interface IActivityLog {
     actualKey?: string;
     code?: string;
-    created?: string;
-    description?: string;
+    created: string;
+    description: string;
     driver?: string;
-    event?: string;
+    event: string;
     format?: string;
     icon?: string;
     location?: string;
-    program?: string;
-    round?: string;
-    route?: string;
-    studentId?: string;
-    studentName?: string;
-    type?: string;
+    program: string;
+    round: string;
+    route: string;
+    studentId: string;
+    studentName: string;
+    type: string;
     updateData?: boolean;
     valid?: boolean;
     validUsage?: boolean;
     vehicle?: string;
     customerName?: string;
     time?: string;
-    routeName?:string;
+    routeName:string;
     routeid?:string;
-    vehicleName?:string;
+    vehicleName:string;
     driverName?:string;
     customerId?:string;
     id?:string;
     endedAt?:string;
     startedAt?:string;
-    allowedOnBoard?:boolean;
+    allowedOnBoard:boolean;
   }
 
   export interface IFileInfo {
@@ -45,23 +45,24 @@ export interface IActivityLog {
   }
 
   export var ColumnDefs = [
-    { headerName: 'Fecha', field: 'created', cellRenderer: (params: any ) => { 
+    { headerName: 'Fecha',  floatingFilter:true,   filter:true, field: 'created', cellRenderer: (params: any ) => { 
       if (params && params.value) {
         return format( fromUnixTime(params.value.seconds), 'MM/dd/yyyy HH:mm', { locale: esLocale })
       } else { return ''}
     }},
     // { headerName: 'Fecha', field: 'created' },
-    { headerName: 'Alumno', field: 'studentName', sortable: true },
-    { headerName: 'Identificación', field: 'studentId', sortable: true, enableValue: true, allowedAggFuncs: ['count'] },
-    { headerName: 'Ingreso con', field: 'studentId', sortable: true, enableValue: true, allowedAggFuncs: ['count'] },
-    { headerName: 'Evento', field: 'event', sortable: true, enableRowGroup: true },
-    { headerName: 'Tipo', field: 'type', sortable: true, enableRowGroup: true },
-    { headerName: 'Descripción', field: 'description', sortable: true },
-    { headerName: 'Operación', field: 'route', enableRowGroup: true },
-    { headerName: 'Turno', field: 'round', enableRowGroup: true },
-    { headerName: 'Programa', field: 'program', enableRowGroup: true },
-    { headerName: 'Vehículo', field: 'vehicle', enableRowGroup: true },
-    { headerName: '¿Subió?', field: 'allowedOnBoard', enableRowGroup: true }
+    { headerName: 'Alumno', floatingFilter:true, field: 'studentName', sortable: true ,filter:true},
+    { headerName: 'Identificación',  floatingFilter:true, field: 'studentId', sortable: true, filter:true, enableValue: true, allowedAggFuncs: ['count'] },
+   // { headerName: 'Ingreso con',flex: 4, field: 'studentId', sortable: true, enableValue: true, filter:true, allowedAggFuncs: ['count'] },
+    { headerName: 'Evento',field: 'event', floatingFilter:true,  filter:true, sortable: true   
+    },
+   // { headerName: 'Tipo',flex: 3, field: 'type', sortable: true,filter:true, enableRowGroup: true },
+   // { headerName: 'Descripción', flex: 6, field: 'description', filter:true, sortable: true },
+    { headerName: 'Operación',field: 'route',rowGroup: true, filter:true,  floatingFilter:true },
+    { headerName: 'Turno', field: 'round', filter:true,  floatingFilter:true },
+    { headerName: 'Programa', field: 'program',filter:true,  floatingFilter:true },
+    //{ headerName: 'Vehículo', flex: 4,field: 'vehicle', filter:true, enableRowGroup: true },
+    { headerName: '¿Subió?',  field: 'allowedOnBoard',filter:true, floatingFilter:true}
   ];
  export var LiveProgramColumnsDef =[
   { headerName: '--',width:90, cellStyle: {color: 'blue'}, field: 'editMode',pinned: 'left', 

@@ -513,6 +513,11 @@ export class UsersService {
     return InfoUser.snapshotChanges();
 
   }
+  getUserByCustomerInfo(customeId:string){
+    const usersCollection = this.afs.collection("users", ref => ref.where('customerId', '==', customeId));
+    return usersCollection.snapshotChanges();
+   }
+   
   getUserInfoByEmail(email:string) {
     const usersCollection = this.afs.collection("users", ref => ref.where('email', '==', email));
   return usersCollection.snapshotChanges();
@@ -569,21 +574,27 @@ export class UsersService {
     .where('customerId','==', customerId)
       .orderBy('dateTime','desc')
     );
-    return getpre.valueChanges();
+    return getpre.valueChanges({ idField: 'uid' });
   }
   getTransferInfo() {
     const getpre = this.afs.collectionGroup('transfers', ref => 
     ref.where('status','!=','complete')  
       .orderBy('dateTime','desc')
     );
-    return getpre.valueChanges();
+    return getpre.valueChanges({ idField: 'uid' });
   }
-  updateTransfer(uidTransfer: any , status: any) {   
-    const vendorRef = this.afs.collection('transfers').doc(uidTransfer);   
-    vendorRef.update({status: status}).then( () => {      
-    }).catch( (err) => {
-      this.message.error('Hubo un error: ', err);      
-    })
+
+  updateTransfer(uidTransfer: string, userId: string, status: string): Promise<boolean> {   
+    return this.afs.collection('users')
+      .doc(userId)
+      .collection('transfers')
+      .doc(uidTransfer)
+      .update({ status: status })
+      .then(() => Promise.resolve(true)) 
+      .catch((err) => {
+        this.message.error('Hubo un error: ' + err);  
+        return Promise.resolve(false); 
+      });
   }
 
 

@@ -50,6 +50,7 @@ export class AdminPaymentsComponent implements OnInit {
   size: NzButtonSize = 'large';
   @ViewChild('searchBar', { static: false }) searchbar: any;
   @ViewChild('searchBarE', { static: false }) searchbarE: any;
+  @ViewChild('searchBarC', { static: false }) searchbarC: any;
   listOfCustomer: any;
   readytoGenerateBoardinPass: boolean = false;
   currentUserSelected: any = [];
@@ -107,6 +108,7 @@ export class AdminPaymentsComponent implements OnInit {
     this.viewDetalle = this.fb.group({
       status: [''],
       id: [''],
+      name: [''],
       customerId: [''],
       customerName: [''],
       email: [''],
@@ -226,7 +228,8 @@ export class AdminPaymentsComponent implements OnInit {
       } else {
         this.usersService.getTransferInfo().subscribe((data) => {
           this.dataTransfer = data as any[];
-          this.dataTransferList = this.dataTransfer;
+          console.log(this.dataTransfer);
+          this.dataTransferList = this.dataTransfer;          
           this.cCollection = this.afs.collection<any>('customers', ref => ref.where('active', '==', true));
           this.customerSubscription = this.cCollection.snapshotChanges().pipe(
             map((actions: any) => actions.map((a: any) => {
@@ -298,25 +301,30 @@ export class AdminPaymentsComponent implements OnInit {
     this.isEditModal = true;
   }
 
-  openModal(userid: any) {
+  openModal(userid: any, custName:string, opName:string , round:string ) {
     this.isViewInfo = true;
     this.usersService.getUserInfo(userid).subscribe(action => {
       const data = action.payload.data() as UserData;
       this.currentUserSelected = data;
-      if (data) {
+      if (data) {        
         const userObj = {
           id: data['displayName'],
+          name: data ['displayName'],
           studentId: data['studentId'],
           phoneNumber: data['phoneNumber'],
           email: data['email'],
-          customerName: data['customerName'],
+          customerName: custName,
           customerId: data['customerId'],
-          defaultRouteName: data['defaultRouteName'],
-          defaultRound: data['defaultRound']
+          defaultRouteName: opName,
+          defaultRound: round
         };
         this.viewDetalle.patchValue({ ...userObj });
       }
     });
+  }
+
+  searchUser(){
+ 
   }
 
   handleCancelEdit() {
@@ -391,7 +399,7 @@ export class AdminPaymentsComponent implements OnInit {
     if (!q) {
       this.dataTransfer = this.dataTransferList.slice();
       return;
-    }
+    }    
     const text = q.toLowerCase();
     this.dataTransfer = this.dataTransferList.filter((object: any) => {
       return Object.values(object).some((value: any) => {
@@ -400,13 +408,23 @@ export class AdminPaymentsComponent implements OnInit {
     });
   }
 
-  validarPago(data: any) {
-    this.usersService.updateTransfer(data, "accepted");
-    this.readytoGenerateBoardinPass = true;
+  async validarPago(uidTransfer: any, uidUser:any) {
+    const resultado = await  this.usersService.updateTransfer(uidTransfer, uidUser, "accepted");
+    if (resultado) {
+      this.sendMessage("sucess", "Se valido el pago. Ahora puedes generar el pase de abordar.");
+      this.readytoGenerateBoardinPass = true;
+    } else {
+      this.readytoGenerateBoardinPass = false;
+    }
   }
-  rechazarPago(data: any) {
-    this.usersService.updateTransfer(data.uid, "rejected");
-    this.readytoGenerateBoardinPass = false;
+ async rechazarPago(uidTransfer: any, uidUser: any) {
+    const resultado = await this.usersService.updateTransfer(uidTransfer, uidUser , "rejected");
+    if (resultado) {
+      this.sendMessage("sucess", "Se rechazo el pago.");
+      this.readytoGenerateBoardinPass = false;
+    } else {
+    this.readytoGenerateBoardinPass = true;
+    }
   }
 
   onAmountChange(amount: number) {
@@ -569,7 +587,8 @@ export class AdminPaymentsComponent implements OnInit {
             this.customersService.saveBoardingPassDetailToUserPurchaseCollection(this.currentUserSelected.uid, routes[0].id, send)
               .then(() => {
                 this.customersService.createPurchaseCloud(send, this.currentUserSelected, routes[0].id);
-                this.usersService.updateTransfer(this.currentLine, "complete");
+                //TODO
+                //this.usersService.updateTransfer(this.currentLine,  , "complete");
               }).catch((err) => {
                 this.sendMessage('error', err);
               });

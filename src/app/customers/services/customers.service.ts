@@ -7,6 +7,7 @@ import { of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ICredential } from '../classes/customers';
 import { AngularFireFunctions } from '@angular/fire/compat/functions';
+import { log } from 'node:console';
 
 @Injectable({
   providedIn: 'root'
@@ -300,6 +301,17 @@ export class CustomersService {
         ref.limit(limit).orderBy('creation_date', 'desc')
       );
     return this.userBoardingPassesDetailCollection.snapshotChanges();
+  }
+
+  getUserTransferInfo(userId: string) {
+    console.log(userId);
+    
+    const getpre = this.afs.collection('users')
+      .doc(userId)
+      .collection('transfers', ref => 
+        ref.orderBy('dateTime', 'desc')
+      );
+    return getpre.valueChanges({ idField: 'uid' });
   }
 
   getLatestValidUserPurchases(uid: string, limit: number = 10) {

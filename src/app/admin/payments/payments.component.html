@@ -8,12 +8,14 @@
   </div>
   <div class="body">
       <nz-tabset>
-          <nz-tab nzTitle="Usuarios">     
-          <div class="chat-list">                          
+        <nz-tab nzTitle="Validaciones" ></nz-tab>
+          <nz-tab nzTitle="Usuarios">
+          <div class="chat-list">
             <div class="chat-user-tool">
               <a nz-button  nzType="primary" (click)="fillData()">Cargar Usuarios</a>     
               <i nz-icon  nzTheme="outline" class="search-icon p-r-10 font-size-20"></i>
               <input placeholder="Buscar" #searchBar (keyup)="getItems(searchBar.value)">
+              <a nz-button  nzType="primary" (click)="searchUser()">Buscar Usuario</a>     
             </div>
             <div>
               <nz-table #basicTable [nzData]="dataUsuarios" ngSkipHydration >
@@ -79,12 +81,13 @@
               <div class="chat-user-tool">
                 <a nz-button  nzType="primary" (click)="fillDataT()">Cargar Comprobantes</a> 
                 <i nz-icon  nzTheme="outline" class="search-icon p-r-10 font-size-20"></i>
-                <input placeholder="Buscar" #searchBarE (keyup)="getItemsT(searchBarE.value)">
+                <input placeholder="Buscar" #searchBarC (keyup)="getItemsT(searchBarC.value)">
               </div>
               <div>
                 <nz-table #basicTable2 [nzData]="dataTransfer" ngSkipHydration >
                   <thead>
                       <tr>
+                        <th>Fecha</th>
                         <th>Empresa</th>
                         <th>Producto</th>
                         <th>Costo Producto</th>
@@ -95,10 +98,20 @@
                     </thead>
                     <tbody>
                       <tr *ngFor="let data of basicTable2.data">    
+                        <td>{{ data.date }}</td>
                         <td>{{ data.customerName }}</td>
                         <td>{{ data.product.description }}</td>
                         <td>{{ data.product.price }}</td> 
-                        <td>{{ data.status }}</td>
+                        <td>
+                          <nz-tag *ngIf="data.status === 'rejected'" [nzColor]="'red'">{{data.status}}
+                          </nz-tag>
+                          <nz-tag *ngIf="data.status === 'complete'" [nzColor]="'green'">{{data.status}}
+                          </nz-tag>
+                          <nz-tag *ngIf="data.status === 'accepted'" [nzColor]="'blue'">{{data.status}}
+                          </nz-tag>     
+                          <nz-tag *ngIf="data.status === 'pending'" [nzColor]="'gray'">{{data.status}}
+                          </nz-tag>                          
+                        </td>
                         <td>
                         <a href="{{data.url}}"  target="_blank">Ver Comprobante</a>                           
                         </td>
@@ -108,9 +121,9 @@
                           </a>
                           <nz-dropdown-menu #chatSetting="nzDropdownMenu">
                             <ul nz-menu>
-                              <li nz-menu-item (click)="openModal(data.userId)">Ver Detalle</li>
-                              <li nz-menu-item (click)="validarPago(data.uid)">Validar Pago</li>
-                              <li nz-menu-item (click)="rechazarPago(data)">Rechazar Pago</li>
+                              <li nz-menu-item (click)="openModal(data.userId, data.customerName ,data.stopInfo.routeName, data.stopInfo.round) ">Ver Usuario</li>                              
+                              <li nz-menu-item (click)="validarPago(data.uid, data.userId)">Validar Pago</li>
+                              <li nz-menu-item (click)="rechazarPago(data.uid, data.userId)">Rechazar Pago</li>
                               <li *ngIf="readytoGenerateBoardinPass" nz-menu-item (click)="generarPase(data.userId, data.uid)">Generar Pase</li>
                             </ul>
                           </nz-dropdown-menu>
@@ -265,55 +278,98 @@
 </ng-template>
 </nz-modal>
 
-<nz-modal [(nzVisible)]="isViewInfo" nzTitle="Detalle Pago "
-nzWidth="500px" (nzOnCancel)="handleCancelView()" [nzFooter]="modalFooterEdit1" [nzContent]="modalContent3">
-<ng-template #modalContent3>
-<div>
-  <form nz-form [formGroup]="viewDetalle">       
-    <nz-form-item>
-      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Cliente</nz-form-label>
-      <nz-form-control [nzSm]="16" [nzXs]="24" >       
-        <input id="customerName" formControlName="customerName">
-      </nz-form-control>
-    </nz-form-item>
-    <nz-form-item>
-      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Operacion</nz-form-label>
-      <nz-form-control [nzSm]="16" [nzXs]="24" >       
-        <input id="defaultRouteName" formControlName="defaultRouteName">    
-      </nz-form-control>
-    </nz-form-item>
-    <nz-form-item>
-      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Horario</nz-form-label>
-      <nz-form-control [nzSm]="16" [nzXs]="24" >       
-        <input id="defaultRound" formControlName="defaultRound">    
-      </nz-form-control>
-    </nz-form-item>
-    <nz-form-item>
-      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Telefono</nz-form-label>
-      <nz-form-control [nzSm]="16" [nzXs]="24" >        
-        <input id="phoneNumber" formControlName="phoneNumber">
-      </nz-form-control>
-    </nz-form-item>
-    <nz-form-item>
-      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Correo</nz-form-label>
-      <nz-form-control [nzSm]="16" [nzXs]="24" >
-        <input id="email" formControlName="email">
-      </nz-form-control>
-    </nz-form-item>
-    <nz-form-item>
-      <nz-form-label [nzSm]="8" [nzXs]="24" nzFor="status">Identificacion</nz-form-label>
-      <nz-form-control [nzSm]="16" [nzXs]="24" >      
-        <input id="email" formControlName="studentId">      
-      </nz-form-control>
-    </nz-form-item>
+<nz-modal [(nzVisible)]="isViewInfo" nzTitle="Detalle Usuario"
+  nzWidth="600px" (nzOnCancel)="handleCancelView()"
+  [nzFooter]="modalFooterEdit1" [nzContent]="modalContent3">
+  
+  <ng-template #modalContent3>
+    <div>
+      <form nz-form [formGroup]="viewDetalle">  
+        
+        <nz-row [nzGutter]="16">
+          <nz-col nzSpan="6">
+            <nz-form-label nzFor="customerName">Cliente</nz-form-label>
+          </nz-col>
+          <nz-col nzSpan="18">
+            <nz-form-control>
+              <input nz-input id="customerName" formControlName="customerName">
+            </nz-form-control>
+          </nz-col>
+        </nz-row>
 
-  </form>
-</div>
-</ng-template>
-<ng-template #modalFooterEdit1>
-  <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleCancelView()" >Aceptar</button> 
-</ng-template>
+        <nz-row [nzGutter]="16">
+          <nz-col nzSpan="6">
+            <nz-form-label nzFor="defaultRouteName">Operación</nz-form-label>
+          </nz-col>
+          <nz-col nzSpan="18">
+            <nz-form-control>
+              <input nz-input id="defaultRouteName" formControlName="defaultRouteName">
+            </nz-form-control>
+          </nz-col>
+        </nz-row>
+        <nz-row [nzGutter]="16">
+        <nz-col nzSpan="6">
+          <nz-form-label nzFor="name">Nombre</nz-form-label>
+        </nz-col>
+        <nz-col nzSpan="18">
+          <nz-form-control>
+            <input nz-input id="name" formControlName="name">
+          </nz-form-control>
+        </nz-col>
+      </nz-row>
+        <nz-row [nzGutter]="16">
+          <nz-col nzSpan="6">
+            <nz-form-label nzFor="defaultRound">Horario</nz-form-label>
+          </nz-col>
+          <nz-col nzSpan="18">
+            <nz-form-control>
+              <input nz-input id="defaultRound" formControlName="defaultRound">
+            </nz-form-control>
+          </nz-col>
+        </nz-row>
+
+        <nz-row [nzGutter]="16">
+          <nz-col nzSpan="6">
+            <nz-form-label nzFor="phoneNumber">Teléfono</nz-form-label>
+          </nz-col>
+          <nz-col nzSpan="18">
+            <nz-form-control>
+              <input nz-input id="phoneNumber" formControlName="phoneNumber">
+            </nz-form-control>
+          </nz-col>
+        </nz-row>
+
+        <nz-row [nzGutter]="16">
+          <nz-col nzSpan="6">
+            <nz-form-label nzFor="email">Correo</nz-form-label>
+          </nz-col>
+          <nz-col nzSpan="18">
+            <nz-form-control>
+              <input nz-input id="email" formControlName="email">
+            </nz-form-control>
+          </nz-col>
+        </nz-row>
+
+        <nz-row [nzGutter]="16">
+          <nz-col nzSpan="6">
+            <nz-form-label nzFor="studentId">Identificación</nz-form-label>
+          </nz-col>
+          <nz-col nzSpan="18">
+            <nz-form-control>
+              <input nz-input id="studentId" formControlName="studentId">
+            </nz-form-control>
+          </nz-col>
+        </nz-row>
+      </form>
+    </div>
+  </ng-template>
+
+  <ng-template #modalFooterEdit1>
+    <button nz-button style="background-color: #4F6F57; color: #f6f3ea;" (click)="handleCancelView()">Aceptar</button>
+  </ng-template>
+
 </nz-modal>
+
 
 <nz-modal [(nzVisible)]="isEditModal" nzTitle="Editar Usuarios "
 nzWidth="500px" (nzOnCancel)="handleCancelEdit()" [nzFooter]="modalFooterEdit" [nzContent]="modalContent2">

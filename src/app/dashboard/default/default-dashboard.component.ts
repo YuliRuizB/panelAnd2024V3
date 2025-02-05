@@ -86,6 +86,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   sendUser: any;
   idBoardingPass!: string;
   isCollapsed = true;
+  dataTransfer: any[] = [] ;
   listOfSelection = [
     {
       text: 'Seleccionar todas las páginas',
@@ -161,6 +162,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   loadingUserCredentials = false;
   loadingLatestPurchases = false;
   loadinglatestPurRequest = false;
+  loadinglatestTransfer= false;
   isVisible = false;
   isProductVisible = false;
   isEditUserVisible = false;
@@ -628,9 +630,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.getUsersList();
   }
   getUsersList() {
-    this.isLoadingUsers = true;
-    console.log(this.selectedOption);
-    
+    this.isLoadingUsers = true;   
     this.afs
   .collection('users', (ref) =>
     ref.where('customerId', '==', this.selectedOption)
@@ -642,8 +642,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       snapshot.forEach((doc) => {
         users.push(doc.data());
       });
-      console.log(users);
-      
       this.loadUsers(users);
       this.isCollapsed = false;
       this.isLoadingUsers = false;
@@ -1917,6 +1915,20 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     if (this.productsReference !== null) {
       this.getLatestPurchaseDetail(this.currentUserSelected.uid, this.productsReference.id);
     }
+  }
+  nzClicTransfer() {
+    console.log("this.currentUserSelected", this.currentUserSelected);
+    
+    this.loadinglatestTransfer = true;  
+    
+    this.customersService.getUserTransferInfo(this.currentUserSelected.uid).subscribe((data) => {       
+      this.dataTransfer = data.length ? data : [];
+      this.loadinglatestTransfer = false;  
+    }, (error) => {
+      console.error("Error al obtener transferencias", error);
+      this.dataTransfer = []; 
+      this.loadinglatestTransfer = false;
+    });
   }
 
   nzClicOptionInformacion() {

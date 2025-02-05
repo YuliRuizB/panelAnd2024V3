@@ -1,9 +1,9 @@
-import { Component, OnInit, ViewChild, ElementRef, NgZone, inject } from '@angular/core'
+import { Component, OnInit, ViewChild, ElementRef, NgZone, inject, PLATFORM_ID, Inject } from '@angular/core'
 import { takeUntil, map, tap } from 'rxjs/operators';
 import { startOfToday, endOfToday, format, fromUnixTime } from 'date-fns';
 import esLocale from 'date-fns/locale/es';
 import * as _ from 'lodash';
-import { IActivityLog, LiveProgramColumnDefs } from "../../logistics/classes";
+import { ColumnDefs, IActivityLog, LiveProgramColumnDefs } from "../../logistics/classes";
 import { GeoJson } from '../../logistics/map';
 import { UntypedFormGroup, UntypedFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
@@ -14,10 +14,30 @@ import { Subject, Subscription } from 'rxjs';
 import { AuthenticationService } from '../../shared/services/authentication.service';
 import { RoutesService } from '../../shared/services/routes.service';
 import { IStopPoint } from '../../shared/interfaces/route.type';
-import { GoogleMap, MapPolyline, MapMarker } from '@angular/google-maps';
 import { log } from 'node:console';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzTableFilterFn, NzTableFilterList, NzTableSortFn, NzTableSortOrder } from 'ng-zorro-antd/table';
+
+import { isPlatformBrowser } from '@angular/common';
+import { AgGridAngular } from 'ag-grid-angular';
+import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css'
+import { HttpClient } from '@angular/common/http';
+
 class GeoPoint {
   constructor(public _lat: number, public _long: number) { }
+}
+
+interface ColumnItem {
+  name: string;
+  sortOrder: NzTableSortOrder | null;
+  sortFn: NzTableSortFn<IActivityLog> | null;
+  listOfFilter: NzTableFilterList;
+  filterFn: NzTableFilterFn<IActivityLog> | null;
+  filterMultiple: boolean;
+  sortDirections: NzTableSortOrder[];
 }
 
 
@@ -27,9 +47,8 @@ class GeoPoint {
   styleUrls: ['./logistics.component.css']
 })
 export class LogisticsComponent implements OnInit {
-
+  isBrowser: boolean;
   @ViewChild('map', { static: true }) mapElement!: ElementRef;
-
   dateRangeForm: UntypedFormGroup;
   dateRangeFormA: UntypedFormGroup;
   dateRangeFormAct: UntypedFormGroup;
@@ -42,6 +61,7 @@ export class LogisticsComponent implements OnInit {
   startDateAct: Date;
   endDateAct: Date;
   customerIdSelected: string = "";
+  customersList: any[] = [];
 
   visible = false;
   vMessage = false;
@@ -68,13 +88,6 @@ export class LogisticsComponent implements OnInit {
     streetViewControl: false,
     rotateControl: false,
     fullscreenControl: false,
-
-    // mapTypeId: 'hybrid',
-    // styles:  map3,
-    /* 	center: {
-        lat: 25.6489848,
-        lng: -100.4738091
-      } */
   }
 
   vertices: google.maps.LatLngLiteral[] = [];
@@ -92,6 +105,7 @@ export class LogisticsComponent implements OnInit {
   sourceLiveVehicles: any;
   markers: any;
   rowData!: IActivityLog[];
+  filteredData!: IActivityLog[];
   rowFleetData!: any[];
   activityList!: IActivityLog[];
   chartData: any;
@@ -117,15 +131,171 @@ export class LogisticsComponent implements OnInit {
   activeRoute : string = "False" ;
   round : string = "";
   vehicleName : string = "";
-
-
+  selectedOption: any;
   logisticsService = inject(LogisticsService);
   liveService = inject(LiveService);
   accountsService = inject(AccountsService);
   authService = inject(AuthenticationService);
   routesService = inject(RoutesService);
+  // estructura de la tabla.
+  listOfColumns: ColumnItem[] = [
+    {
+      name: 'Fecha',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.created.localeCompare(b.created),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.created.indexOf(name) !== -1)
+    },
+    {
+      name: 'Alumno',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.studentName.localeCompare(b.studentName),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.studentName.indexOf(name) !== -1)
+    },
+    {
+      name: 'Identificación',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.studentId.localeCompare(b.studentId),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.studentId.indexOf(name) !== -1)
+    },
+    {
+      name: 'Ingreso con',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.studentId.localeCompare(b.studentId),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.studentId.indexOf(name) !== -1)
+    },
+    {
+      name: 'Evento',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.event.localeCompare(b.event),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.event.indexOf(name) !== -1)
+    },
+    {
+      name: 'Tipo',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.type.localeCompare(b.type),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.type.indexOf(name) !== -1)
+    },
+    {
+      name: 'Descripción',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.description.localeCompare(b.description),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.description.indexOf(name) !== -1)
+    },
+    {
+      name: 'Operación',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.route.localeCompare(b.route),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.route.indexOf(name) !== -1)
+    },
+    {
+      name: 'Turno',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.round.localeCompare(b.round),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.round.indexOf(name) !== -1)
+    },
+    {
+      name: 'Programa',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.program.localeCompare(b.program),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.program.indexOf(name) !== -1)
+    },
+    {
+      name: 'Vehículo',
+      sortOrder: null,
+      sortFn: (a: IActivityLog, b: IActivityLog) => a.vehicleName.localeCompare(b.vehicleName),
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Joe', value: 'Joe' },
+        { text: 'Jim', value: 'Jim', byDefault: true }
+      ],
+      filterFn: (list: string[], item: IActivityLog) => list.some(name => item.vehicleName.indexOf(name) !== -1)
+    },
+    {
+      name: '¿Subió?',
+      sortOrder: null,
+      sortFn:null,
+      sortDirections: ['ascend', 'descend', null],
+      filterMultiple: true,
+      listOfFilter: [
+        { text: 'Si', value: true },
+        { text: 'No', value: false, byDefault: true }
+      ],
+      filterFn: null 
+    }
+
+  ];
+  columnDefs : ColDef[];
+
+  public defaultColDef: ColDef = {
+    flex: 1,
+    minWidth: 100,
+  };
+
   constructor(
+    @Inject(PLATFORM_ID) private platformId: object,
     private notification: NzNotificationService,
+    private afs: AngularFirestore, 
     private fb: UntypedFormBuilder,
     private zone: NgZone
   ) {
@@ -138,10 +308,12 @@ export class LogisticsComponent implements OnInit {
     this.endDateAct = endOfToday();    
     this.startAt = startOfToday();
     this.driverConfirmationAt = null;
+    
 
     this.dateRangeForm = this.fb.group({
       startDate: [startOfToday()], // Default to the start of today
-      endDate: [endOfToday()]     // Default to the end of today
+      endDate: [endOfToday()] ,    // Default to the end of today
+      selectedOption: [null]
     });
 
     this.dateRangeFormA = this.fb.group({
@@ -189,12 +361,66 @@ export class LogisticsComponent implements OnInit {
           }),
           tap(record => {
             this.infoSegment = record;
+            this.getCustomersList();
             return record;
           })
         ).subscribe();
       }
     });
+    this.isBrowser = isPlatformBrowser(this.platformId);
 
+
+    this.columnDefs = [
+    { headerName: 'Fecha', floatingFilter: true, filter:true, field: 'created', cellRenderer: (params: any ) => { 
+      if (params && params.value) {
+        return format( fromUnixTime(params.value.seconds), 'MM/dd/yyyy HH:mm', { locale: esLocale })
+      } else { return ''}
+    }},   
+    { headerName: 'Alumno',field: 'studentName', filter:true , floatingFilter: true},
+    { headerName: 'Identificación',  field: 'studentId', filter:true  , floatingFilter: true},
+    { headerName: 'Ingreso con', field: 'studentId', floatingFilter: true, enableValue: true, filter:true, allowedAggFuncs: ['count'] },
+    { headerName: 'Evento',field: 'event', filter:true  , floatingFilter: true },
+   { headerName: 'Tipo', field: 'type',filter:true,  floatingFilter: true},
+   { headerName: 'Descripción', field: 'description', filter:true, floatingFilter: true},
+    { headerName: 'Operación',field: 'route', filter:true , floatingFilter: true},
+   { headerName: 'Turno', field: 'round', filter:true  , floatingFilter: true} ,
+    { headerName: 'Programa', field: 'program',filter:true , floatingFilter: true},
+   { headerName: 'Vehículo', field: 'vehicle', filter:true, floatingFilter: true},
+    { headerName: '¿Subió?', field: 'allowedOnBoard', filter:true , floatingFilter: true}
+  ]; 
+  }
+
+    getCustomersList() {
+    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
+      const customersCollection = this.afs.collection('customers', ref => ref
+        .where('customerId', '==', this.user.customerId).orderBy('name'));
+      customersCollection.snapshotChanges().pipe(
+        takeUntil(this.stopSubscription$),
+        map((actions: any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data }
+        })),
+        tap((customers: any) => {
+          this.customersList = customers;
+          return customers;
+        })
+      ).subscribe();
+    } else {
+      const customersCollection = this.afs.collection('customers', ref => ref.orderBy('name'));
+      customersCollection.snapshotChanges().pipe(
+        takeUntil(this.stopSubscription$),
+        map((actions: any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data }
+        })),
+        tap((customers: any) => {         
+          this.customersList = customers;
+          return customers;
+        })
+      ).subscribe();
+    }
   }
 
   moveMap(event: google.maps.MapMouseEvent) {  
@@ -457,7 +683,10 @@ export class LogisticsComponent implements OnInit {
   }
 
   ngOnInit() {
-
+    if (this.isBrowser) {
+      // Aquí va el código relacionado con Ag-Grid o window
+      console.log('Esto se ejecuta solo en el navegador');
+    }
   }
 
   open(): void {
@@ -558,6 +787,8 @@ export class LogisticsComponent implements OnInit {
         })
       ).subscribe((result: IActivityLog[]) => {        
         this.rowData = result;
+       console.log(this.rowData);
+       
         this.activityList = this.rowData.slice(0, 5);
         this.chartData = _.map(this.rowData, (x: any) => {
           return { country: x.vehicle, visits: x.studentId }
@@ -580,6 +811,7 @@ export class LogisticsComponent implements OnInit {
         })
       ).subscribe((result: IActivityLog[]) => {
         this.rowData = result;
+        console.log(this.rowData);
         this.activityList = this.rowData.slice(0, 5);
         this.chartData = _.map(this.rowData, (x: any) => { // Correct usage of _.map()
           return { country: x.vehicle, visits: x.studentId }
@@ -645,5 +877,7 @@ export class LogisticsComponent implements OnInit {
       return "No";
     }
   }
+
+
 
 }

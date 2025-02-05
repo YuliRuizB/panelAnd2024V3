@@ -61,6 +61,8 @@ export interface IBoardingPass {
     customerId: string;
     defaultRouteName: string;
     defaultRound: string;
+    turno:string;
+    name:string;
   }
   
   

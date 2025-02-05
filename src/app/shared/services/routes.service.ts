@@ -246,11 +246,17 @@ export class RoutesService {
   }
 
   getCustomersRoutesbyCustomer(customerId:string, routeId:string) {  
-    const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('stops');
+    const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('stops', ref => ref.where('active','==', true).orderBy('order','asc'));
       return customerbyRoute.snapshotChanges();
   }
   
+  getCustomersPolyLineCustomer(customerId:string, routeId:string) {  
+    const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('polyline');
+      return customerbyRoute.snapshotChanges();
+  }
+
   public getDirectionsWithStops(stopPoints: any): Observable<any> {
+    
     const httpOptions = {
       headers: new HttpHeaders({ 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }),
     };
@@ -260,10 +266,16 @@ export class RoutesService {
     );
   }
 
-  setPolyline(vert: any, customerId:string, routeId: string) {
-    const key = this.afs.createId();   
-    const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('polyline').doc(key);
-    return route.set(vert);
+  setPolyline(vert: any, customerId:string, routeId: string, polyline: any) {    
+ 
+    if (polyline.length < 2) {      
+      const key = this.afs.createId();     
+      const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('polyline').doc(key);
+      return route.set(vert);
+    } else {      
+      const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('polyline').doc(polyline);
+      return route.update(vert);
+    }  
   }
 
   setAuthorizedRoutes(vendorId: string, record: any) {

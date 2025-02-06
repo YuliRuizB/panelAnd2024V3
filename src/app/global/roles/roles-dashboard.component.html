@@ -31,8 +31,7 @@
           <nz-content style="background-color:#f9fbfd;">
             <nz-transfer [nzDataSource]="list" 
             [nzDisabled]="disabled" 
-            [nzListStyle]="{ 'width.px': 300, 'height.px': 1200 }"
-           
+            [nzListStyle]="{ 'width.px': 300, 'height.px': 400, 'overflow': 'auto' }"           
              (nzSelectChange)="select($event)" (nzChange)="change($event)">
               <ng-template #render let-item>
                 <span nz-icon></span>

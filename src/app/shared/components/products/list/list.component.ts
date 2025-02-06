@@ -76,12 +76,14 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
     private fb: UntypedFormBuilder) {
 
     this.authService.user.subscribe((user: any) => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe((item: any) => {
-          this.infoLoad = item;
-          this.userlevelAccess = this.infoLoad.optionAccessLavel;
-        });
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+          this.rolService.getRol(this.user.rolId).valueChanges().subscribe((item: any) => {
+            this.infoLoad = item;
+            this.userlevelAccess = this.infoLoad.optionAccessLavel;
+          });
+        }
       }
     });
 
@@ -621,9 +623,9 @@ export class SharedProductsListComponent implements OnInit, OnDestroy {
       this.productsList = this.productsListLoaded.slice();
       return;
     }
-    const text = q.toLowerCase();   
+    const text = q.toLowerCase();
     this.productsList = this.productsListLoaded.filter((object: any) => {
       return object.description.toLowerCase().includes(text);
-    }); 
+    });
   }
 }

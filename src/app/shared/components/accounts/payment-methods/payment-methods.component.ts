@@ -20,26 +20,27 @@ export class SharedAccountPaymentMethodsComponent implements OnInit {
   paymentMethodsList: any = [];
   accountPaymentMethods: any = [];
   infoLoad: any = [];
-  userlevelAccess:string | undefined;
- user: any;
+  userlevelAccess: string | undefined;
+  user: any;
 
- paymentMethodsService = inject(PaymentMethodsService);
- authService = inject(AuthenticationService);
+  paymentMethodsService = inject(PaymentMethodsService);
+  authService = inject(AuthenticationService);
 
-  constructor(   
-   private messageService: NzMessageService,    
+  constructor(
+    private messageService: NzMessageService,
 
-  ) { 
+  ) {
     this.authService.user.subscribe((user: any) => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {           
+      if (user) {
+        if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+          this.user = user;
           this.rolService.getRol(this.user.rolId).valueChanges().subscribe((item: any) => {
-              this.infoLoad = item;
-              this.userlevelAccess = this.infoLoad.optionAccessLavel;                 
+            this.infoLoad = item;
+            this.userlevelAccess = this.infoLoad.optionAccessLavel;
           });
+        }
       }
-  });
-
+    });
   }
 
   ngOnInit() {
@@ -54,20 +55,20 @@ export class SharedAccountPaymentMethodsComponent implements OnInit {
 
   sendMessage(type: string, message: string): void {
     this.messageService.create(type, message);
-}
+  }
 
 
   getSubscriptions() {
     this.paymentMethodsService.getAccountPaymentMethods(this.accountId).pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id, ...data }
       })),
-      tap((paymentMethods:any) => {
+      tap((paymentMethods: any) => {
         this.accountPaymentMethods = paymentMethods;
-        if(paymentMethods.length == 0) {
+        if (paymentMethods.length == 0) {
           this.createDefaultPaymentMethods();
         }
         return paymentMethods;

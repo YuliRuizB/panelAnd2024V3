@@ -65,14 +65,16 @@ export class MyProfileComponent implements OnInit {
 
 
         this.authService.user.subscribe((user) => {
-            this.user = user;
-            if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-                this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-                    this.infoLoad = item;
-                    this.userRol = this.infoLoad.description;
-                    this.userlevelAccess = this.infoLoad.optionAccessLavel;
-                    this.fillInfo();
-                });
+            if (user) {
+                this.user = user;
+                if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+                    this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+                        this.infoLoad = item;
+                        this.userRol = this.infoLoad.description;
+                        this.userlevelAccess = this.infoLoad.optionAccessLavel;
+                        this.fillInfo();
+                    });
+                }
             }
         });
     }

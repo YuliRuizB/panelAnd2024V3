@@ -258,9 +258,10 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     private msg: NzMessageService
   ) {
 
-    this.authService.user.subscribe(user => {
-      this.user = user;
-      if (this.user) {
+    this.authService.user.subscribe(user => {    
+      if (user) {
+        this.user = user;
+        
         this.userCustomerId = this.user.customerId;
         this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
           map((a: any) => {
@@ -630,6 +631,13 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.getUsersList();
   }
   getUsersList() {
+
+    if (!this.selectedOption) {
+      console.error('Error: selectedOption es null o undefined');
+      return;
+    }
+
+
     this.isLoadingUsers = true;   
     this.afs
   .collection('users', (ref) =>

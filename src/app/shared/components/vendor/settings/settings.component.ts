@@ -44,24 +44,26 @@ export class SharedVendorSettingsComponent implements OnInit, OnDestroy {
     public message: NzMessageService
   ) {
     this.authService.user.subscribe((user) => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-          this.infoLoad = item;
-          this.userlevelAccess = this.infoLoad.optionAccessLavel;
-        });
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            return record;
-          })
-        ).subscribe();
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+          this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+            this.infoLoad = item;
+            this.userlevelAccess = this.infoLoad.optionAccessLavel;
+          });
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              return record;
+            })
+          ).subscribe();
+        }
       }
     });
   }
@@ -107,8 +109,8 @@ export class SharedVendorSettingsComponent implements OnInit, OnDestroy {
         next: (routes: any[]) => {
           this.allRoutesList = routes;
         },
-        error: (err) => {          
-          this.sendMessage('error',err);
+        error: (err) => {
+          this.sendMessage('error', err);
           this.loading = false;
         },
       });
@@ -118,7 +120,7 @@ export class SharedVendorSettingsComponent implements OnInit, OnDestroy {
           this.allRoutesList = routes;
         },
         error: (err) => {
-          this.sendMessage('error',err);
+          this.sendMessage('error', err);
           this.loading = false;
         },
       });

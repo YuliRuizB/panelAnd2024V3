@@ -79,20 +79,22 @@ export class AdminPaymentsComponent implements OnInit {
 
   ngOnInit() {
     this.authService.user.subscribe(user => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            return record;
-          })
-        ).subscribe();
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              return record;
+            })
+          ).subscribe();
+        }
       }
     });
     this.signupForm = this.fb.group({
@@ -229,7 +231,7 @@ export class AdminPaymentsComponent implements OnInit {
         this.usersService.getTransferInfo().subscribe((data) => {
           this.dataTransfer = data as any[];
           console.log(this.dataTransfer);
-          this.dataTransferList = this.dataTransfer;          
+          this.dataTransferList = this.dataTransfer;
           this.cCollection = this.afs.collection<any>('customers', ref => ref.where('active', '==', true));
           this.customerSubscription = this.cCollection.snapshotChanges().pipe(
             map((actions: any) => actions.map((a: any) => {
@@ -301,15 +303,15 @@ export class AdminPaymentsComponent implements OnInit {
     this.isEditModal = true;
   }
 
-  openModal(userid: any, custName:string, opName:string , round:string ) {
+  openModal(userid: any, custName: string, opName: string, round: string) {
     this.isViewInfo = true;
     this.usersService.getUserInfo(userid).subscribe(action => {
       const data = action.payload.data() as UserData;
       this.currentUserSelected = data;
-      if (data) {        
+      if (data) {
         const userObj = {
           id: data['displayName'],
-          name: data ['displayName'],
+          name: data['displayName'],
           studentId: data['studentId'],
           phoneNumber: data['phoneNumber'],
           email: data['email'],
@@ -323,8 +325,8 @@ export class AdminPaymentsComponent implements OnInit {
     });
   }
 
-  searchUser(){
- 
+  searchUser() {
+
   }
 
   handleCancelEdit() {
@@ -399,7 +401,7 @@ export class AdminPaymentsComponent implements OnInit {
     if (!q) {
       this.dataTransfer = this.dataTransferList.slice();
       return;
-    }    
+    }
     const text = q.toLowerCase();
     this.dataTransfer = this.dataTransferList.filter((object: any) => {
       return Object.values(object).some((value: any) => {
@@ -408,8 +410,8 @@ export class AdminPaymentsComponent implements OnInit {
     });
   }
 
-  async validarPago(uidTransfer: any, uidUser:any) {
-    const resultado = await  this.usersService.updateTransfer(uidTransfer, uidUser, "accepted");
+  async validarPago(uidTransfer: any, uidUser: any) {
+    const resultado = await this.usersService.updateTransfer(uidTransfer, uidUser, "accepted");
     if (resultado) {
       this.sendMessage("sucess", "Se valido el pago. Ahora puedes generar el pase de abordar.");
       this.readytoGenerateBoardinPass = true;
@@ -417,13 +419,13 @@ export class AdminPaymentsComponent implements OnInit {
       this.readytoGenerateBoardinPass = false;
     }
   }
- async rechazarPago(uidTransfer: any, uidUser: any) {
-    const resultado = await this.usersService.updateTransfer(uidTransfer, uidUser , "rejected");
+  async rechazarPago(uidTransfer: any, uidUser: any) {
+    const resultado = await this.usersService.updateTransfer(uidTransfer, uidUser, "rejected");
     if (resultado) {
       this.sendMessage("sucess", "Se rechazo el pago.");
       this.readytoGenerateBoardinPass = false;
     } else {
-    this.readytoGenerateBoardinPass = true;
+      this.readytoGenerateBoardinPass = true;
     }
   }
 

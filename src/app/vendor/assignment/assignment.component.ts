@@ -16,21 +16,21 @@ import { AccountsService } from '../../shared/services/accounts.service';
 })
 export class AssignmentComponent implements OnInit, OnDestroy {
   authService = inject(AuthenticationService);
-  usersService= inject(UsersService);
+  usersService = inject(UsersService);
   //tableSvc = inject(TableService);
-  
+
   allChecked: boolean = false;
   indeterminate: boolean = false;
   search: any;
   displayData: any = [];
   recordId: string = 'bKLBasJLckghzlqhbjIx';
   user: any = [];
-  stopSubscriptions$:Subject<boolean> = new Subject();
+  stopSubscriptions$: Subject<boolean> = new Subject();
   vendorRoutesSubscription!: Subscription;
   vendorRoutesList: any[] = [];
   customersList: any[] = [];
   customersActiveList: any[] = [];
-  loading:boolean = true;
+  loading: boolean = true;
   objectForm!: UntypedFormGroup;
 
   assignmentsList!: IAssignment[];
@@ -39,42 +39,41 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   infoSegment: any = [];
   accountsService = inject(AccountsService);
   stopSubscription$: Subject<boolean> = new Subject();
-  
-  constructor(  
+
+  constructor(
     private fb: UntypedFormBuilder
   ) {
-    this.authService.user.subscribe(user => {   
-      this.user = user;     
-        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {           
+    this.authService.user.subscribe(user => {
+      if (user) {
+        this.user = user;        
+        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
+          if ( this.user.rolId !== undefined){
+          this.getSubscriptions();
+          }
           this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
             takeUntil(this.stopSubscription$),
-            map((a:any) => {
+            map((a: any) => {
               const id = a.payload.id;
               const data = a.payload.data() as any;
               return { id, ...data }
             }),
-            tap(record => {             
-              this.infoSegment = record;            
+            tap(record => {
+              this.infoSegment = record;
               return record;
             })
           ).subscribe();
-        }      
+        }
+      }
     });
     this.createForm();
   }
 
-  ngOnInit() {   
-    this.authService.user.subscribe( (user:any) => {
-      this.user = user;    
-     if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-      this.getSubscriptions();
-      }
-    })
+  ngOnInit() {
   }
 
   ngOnDestroy(): void {
     this.stopSubscriptions$.next(false);
-    this.stopSubscriptions$.complete();    
+    this.stopSubscriptions$.complete();
   }
 
   createForm() {
@@ -119,52 +118,52 @@ export class AssignmentComponent implements OnInit, OnDestroy {
     this.isVisible = false;
   }
 
-  getSubscriptions() {     
+  getSubscriptions() {
     this.vendorRoutesSubscription = this.usersService.getBoardingPassesByRoute().pipe(
       takeUntil(this.stopSubscriptions$)
-    ).subscribe(data => {     
+    ).subscribe(data => {
       this.createNestedTableData(data);
-    })   
+    })
   }
 
   createNestedTableData(data: any) {
     this.vendorRoutesList = [];
     this.usersService.getActiveCustomers().pipe(
       takeUntil(this.stopSubscription$),
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id, ...data }
       }))
-    ).subscribe( customersActiveList => {           
-      this.customersActiveList = customersActiveList; 
-    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual  
-      
-      const filteredData = data.filter((item: any) => item.customerId === this.user.customerId);
-     // Extract unique customerName values from the filtered data
-     this.customersList = _.chain(filteredData)
-     .map('customerName')
-     .uniq()
-     .filter(customerName => _.includes(_.map(this.customersActiveList, 'name'), customerName))
-     .value();
+    ).subscribe(customersActiveList => {
+      this.customersActiveList = customersActiveList;
+      if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual  
 
-    } else {
-      this.customersList = _.chain(data)
-      .map('customerName')
-      .uniq()
-      .filter(customerName => _.includes(_.map(this.customersActiveList, 'name'), customerName))
-      .value();
-    }
-    for (let i = 0; i < data.length; ++i) {
-      data[i].routeName = data[i].passes[0].routeName;
-      data[i].routeId = data[i].passes[0].routeId;
-    }    
+        const filteredData = data.filter((item: any) => item.customerId === this.user.customerId);
+        // Extract unique customerName values from the filtered data
+        this.customersList = _.chain(filteredData)
+          .map('customerName')
+          .uniq()
+          .filter(customerName => _.includes(_.map(this.customersActiveList, 'name'), customerName))
+          .value();
+
+      } else {
+        this.customersList = _.chain(data)
+          .map('customerName')
+          .uniq()
+          .filter(customerName => _.includes(_.map(this.customersActiveList, 'name'), customerName))
+          .value();
+      }
+      for (let i = 0; i < data.length; ++i) {
+        data[i].routeName = data[i].passes[0].routeName;
+        data[i].routeId = data[i].passes[0].routeId;
+      }
       this.vendorRoutesList = data;
-    })  
+    })
   }
 
   sort(sortAttribute: any) {
-   // this.displayData = this.tableSvc.sort(sortAttribute, this.assignmentsList);
+    // this.displayData = this.tableSvc.sort(sortAttribute, this.assignmentsList);
   }
 
   currentPageDataChange($event: Array<{

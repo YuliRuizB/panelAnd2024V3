@@ -31,20 +31,22 @@ export class RouteEditComponent implements OnInit, OnDestroy {
     private fb: UntypedFormBuilder
   ) {
     this.authService.user.subscribe(user => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            return record;
-          })
-        ).subscribe();
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              return record;
+            })
+          ).subscribe();
+        }
       }
     });
 

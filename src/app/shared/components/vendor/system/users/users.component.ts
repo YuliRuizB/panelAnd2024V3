@@ -14,7 +14,7 @@ import { RolService } from '../../../../services/roles.service';
 import { AuthenticationService } from '../../../../services/authentication.service';
 import { CustomersService } from '../../../../../customers/services/customers.service';
 
-@Component({  
+@Component({
   selector: 'app-shared-vendor-users-list',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.css']
@@ -50,22 +50,24 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
   constructor(
     private afs: AngularFirestore,
     private msg: NzMessageService,
-    private ngxCsvParser: NgxCsvParser,     
+    private ngxCsvParser: NgxCsvParser,
     private fb: UntypedFormBuilder
   ) {
     this.authService.user.subscribe((user) => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {         
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-          this.infoLoad = item;
-          this.userlevelAccess = this.infoLoad.optionAccessLavel;
-        });
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+          this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+            this.infoLoad = item;
+            this.userlevelAccess = this.infoLoad.optionAccessLavel;
+          });
+        }
       }
     });
     this.popupParent = document.querySelector("body");
   }
 
-  
+
   sendMessage(type: string, message: string): void {
     this.msg.create(type, message);
   }
@@ -80,16 +82,16 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
   }
 
   getSubscriptions() {
-    if (this.vendorId != '') {    
-    this.sub = this.usersService.getAccountSystemUsers(this.vendorId, 'vendor').pipe(
-      map((actions:any) => actions.map((a:any) => {
-        const id = a.payload.doc.id;
-        const data = a.payload.doc.data() as any;
-        return { id, ...data }
-      })))
-      .subscribe((users) => {
-        this.usersList = users;     
-      });
+    if (this.vendorId != '') {
+      this.sub = this.usersService.getAccountSystemUsers(this.vendorId, 'vendor').pipe(
+        map((actions: any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data }
+        })))
+        .subscribe((users) => {
+          this.usersList = users;
+        });
     }
   }
 
@@ -201,7 +203,7 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
     if (this.userlevelAccess != "3") {
       this.usersService.createSystemUser(this.makeUserObject(this.validateForm.value)).then(response => {
       }).catch(err => {
-        this.sendMessage('error',err);
+        this.sendMessage('error', err);
       })
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
@@ -245,9 +247,9 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
     if (status !== 'uploading') {
     }
     if (status === 'done') {
-      this.msg.success(`${event.file.name} Se ha cargado con éxito.`);      
+      this.msg.success(`${event.file.name} Se ha cargado con éxito.`);
       if (event.file.originFileObj) {
-      this.parser(event.file.originFileObj);
+        this.parser(event.file.originFileObj);
       }
 
     } else if (status === 'error') {
@@ -261,7 +263,7 @@ export class SharedVendorUsersListComponent implements OnInit, OnDestroy {
         .subscribe(
           (value: any[] | NgxCSVParserError) => { // Specify the union type for the value parameter
             if (value instanceof NgxCSVParserError) {
-              this.sendMessage('error',value.toString());
+              this.sendMessage('error', value.toString());
             } else {
               const result: any[] = value;
               this.csvRecords = result;

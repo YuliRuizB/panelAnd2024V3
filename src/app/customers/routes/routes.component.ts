@@ -73,35 +73,36 @@ export class RoutesComponents implements OnInit, OnDestroy {
     private fb: UntypedFormBuilder,
     private modal: NzModalModule
   ) {
-    this.authService.user.subscribe(user => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            this.getSubscriptions();
-            return record;
-          })
-        ).subscribe();
-        this.authService.user.subscribe(user => {
-          this.user = user;
-          if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-            this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-              this.infoLoad = item;
-              this.userlevelAccess = this.infoLoad.optionAccessLavel;
-
-            });
-          }
-        });
+    this.authService.user.subscribe(user => {      
+      if (user) { // Ensure user is not null or undefined
+        this.user = user;    
+        // Load segment level if idSegment exists
+        if (this.user.idSegment) {
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data };
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              this.getSubscriptions();
+            })
+          ).subscribe();
+        }
+    
+        // Load role information if rolId exists
+        if (this.user.rolId) {
+          this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+            this.infoLoad = item;
+            this.userlevelAccess = this.infoLoad.optionAccessLavel;
+          });
+        }
+      } else {
+        console.warn("Usuario no autenticado o datos aún no disponibles.");
       }
     });
-
   }
 
   ngOnInit() {

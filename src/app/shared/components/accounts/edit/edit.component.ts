@@ -57,42 +57,44 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
     private fb: UntypedFormBuilder
   ) {
     this.authService.user.subscribe((user) => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-          this.infoLoad = item;
-          this.userlevelAccess = this.infoLoad.optionAccessLavel;
-        });
-        this.accountsSubscription = this.accountsService.getJobType().pipe(
-          map((actions: any) => actions.map((a: any) => {
-            const id = a.payload.doc.id;
-            const data = a.payload.doc.data() as any;
-            return { id: id, ...data }
-          }))
-        ).subscribe((jobTypeList) => {
-          this.jobType = jobTypeList;
-        });
-        this.accountsSubscription = this.accountsService.getUsersByCustomer(this.accountId).pipe(
-          map((actions: any) => actions.map((a: any) => {
-            const id = a.payload.doc.id;
-            const data = a.payload.doc.data() as any;
-            return { id: id, ...data }
-          }))
-        ).subscribe((usersList) => {
-          this.usersList = usersList;
-        });
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            return record;
-          })
-        ).subscribe();
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+          this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+            this.infoLoad = item;
+            this.userlevelAccess = this.infoLoad.optionAccessLavel;
+          });
+          this.accountsSubscription = this.accountsService.getJobType().pipe(
+            map((actions: any) => actions.map((a: any) => {
+              const id = a.payload.doc.id;
+              const data = a.payload.doc.data() as any;
+              return { id: id, ...data }
+            }))
+          ).subscribe((jobTypeList) => {
+            this.jobType = jobTypeList;
+          });
+          this.accountsSubscription = this.accountsService.getUsersByCustomer(this.accountId).pipe(
+            map((actions: any) => actions.map((a: any) => {
+              const id = a.payload.doc.id;
+              const data = a.payload.doc.data() as any;
+              return { id: id, ...data }
+            }))
+          ).subscribe((usersList) => {
+            this.usersList = usersList;
+          });
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              return record;
+            })
+          ).subscribe();
+        }
       }
     });
   }
@@ -233,16 +235,17 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
     }
   }
-  
+
   sendMessage(type: string, message: string): void {
     this.messageService.create(type, message);
   }
 
   onSubmit() {
     if (this.userlevelAccess != "3") {
-      this.accountsService.updateAccount(this.accountId, this.objectForm.value).then(() => {        
-      }, err => { this.sendMessage('error',err);
-      }).catch((err) => this.sendMessage('error',err))
+      this.accountsService.updateAccount(this.accountId, this.objectForm.value).then(() => {
+      }, err => {
+        this.sendMessage('error', err);
+      }).catch((err) => this.sendMessage('error', err))
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para actualizar datos, favor de contactar al administrador.");
     }

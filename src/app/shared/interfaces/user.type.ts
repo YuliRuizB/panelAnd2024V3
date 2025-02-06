@@ -25,6 +25,7 @@ export interface User1 {
     customerName?:string;
     customerId?:string;
     round?:string;
+    vendorId?:string;
   }
 
    export enum Role {

@@ -8,7 +8,7 @@ import { GeoJson } from '../../logistics/map';
 import { UntypedFormGroup, UntypedFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { LogisticsService } from '../../logistics/services.service';
-import { LiveService } from '../../shared/services/live.service'; 
+import { LiveService } from '../../shared/services/live.service';
 import { AccountsService } from '../../shared/services/accounts.service';
 import { Subject, Subscription } from 'rxjs';
 import { AuthenticationService } from '../../shared/services/authentication.service';
@@ -121,16 +121,16 @@ export class LogisticsComponent implements OnInit {
   sumD: string = "0";
   sumT: string = "0";
   sumN: string = "0";
-  sumTotalUsers : number = 0;
-  sumTotalUsersRange : number = 0;
+  sumTotalUsers: number = 0;
+  sumTotalUsersRange: number = 0;
   cardTitle: string = '';
   descriptionRoute: string = "";
-  driverName: string= "";
+  driverName: string = "";
   driverConfirmationAt: | Date | undefined | null = null;
-  startAt :| Date | undefined | null = null;
-  activeRoute : string = "False" ;
-  round : string = "";
-  vehicleName : string = "";
+  startAt: | Date | undefined | null = null;
+  activeRoute: string = "False";
+  round: string = "";
+  vehicleName: string = "";
   selectedOption: any;
   logisticsService = inject(LogisticsService);
   liveService = inject(LiveService);
@@ -274,18 +274,18 @@ export class LogisticsComponent implements OnInit {
     {
       name: '¿Subió?',
       sortOrder: null,
-      sortFn:null,
+      sortFn: null,
       sortDirections: ['ascend', 'descend', null],
       filterMultiple: true,
       listOfFilter: [
         { text: 'Si', value: true },
         { text: 'No', value: false, byDefault: true }
       ],
-      filterFn: null 
+      filterFn: null
     }
 
   ];
-  columnDefs : ColDef[];
+  columnDefs: ColDef[];
 
   public defaultColDef: ColDef = {
     flex: 1,
@@ -295,7 +295,7 @@ export class LogisticsComponent implements OnInit {
   constructor(
     @Inject(PLATFORM_ID) private platformId: object,
     private notification: NzNotificationService,
-    private afs: AngularFirestore, 
+    private afs: AngularFirestore,
     private fb: UntypedFormBuilder,
     private zone: NgZone
   ) {
@@ -305,14 +305,14 @@ export class LogisticsComponent implements OnInit {
     this.startDateA = startOfToday()
     this.endDateA = endOfToday();
     this.startDateAct = startOfToday()
-    this.endDateAct = endOfToday();    
+    this.endDateAct = endOfToday();
     this.startAt = startOfToday();
     this.driverConfirmationAt = null;
-    
+
 
     this.dateRangeForm = this.fb.group({
       startDate: [startOfToday()], // Default to the start of today
-      endDate: [endOfToday()] ,    // Default to the end of today
+      endDate: [endOfToday()],    // Default to the end of today
       selectedOption: [null]
     });
 
@@ -349,48 +349,52 @@ export class LogisticsComponent implements OnInit {
     }
 
     this.authService.user.subscribe(user => {
-      this.user = user;      
-      if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
 
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            this.getCustomersList();
-            return record;
-          })
-        ).subscribe();
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              this.getCustomersList();
+              return record;
+            })
+          ).subscribe();
+        }
       }
     });
     this.isBrowser = isPlatformBrowser(this.platformId);
 
 
     this.columnDefs = [
-    { headerName: 'Fecha', floatingFilter: true, filter:true, field: 'created', cellRenderer: (params: any ) => { 
-      if (params && params.value) {
-        return format( fromUnixTime(params.value.seconds), 'MM/dd/yyyy HH:mm', { locale: esLocale })
-      } else { return ''}
-    }},   
-    { headerName: 'Alumno',field: 'studentName', filter:true , floatingFilter: true},
-    { headerName: 'Identificación',  field: 'studentId', filter:true  , floatingFilter: true},
-    { headerName: 'Ingreso con', field: 'studentId', floatingFilter: true, enableValue: true, filter:true, allowedAggFuncs: ['count'] },
-    { headerName: 'Evento',field: 'event', filter:true  , floatingFilter: true },
-   { headerName: 'Tipo', field: 'type',filter:true,  floatingFilter: true},
-   { headerName: 'Descripción', field: 'description', filter:true, floatingFilter: true},
-    { headerName: 'Operación',field: 'route', filter:true , floatingFilter: true},
-   { headerName: 'Turno', field: 'round', filter:true  , floatingFilter: true} ,
-    { headerName: 'Programa', field: 'program',filter:true , floatingFilter: true},
-   { headerName: 'Vehículo', field: 'vehicle', filter:true, floatingFilter: true},
-    { headerName: '¿Subió?', field: 'allowedOnBoard', filter:true , floatingFilter: true}
-  ]; 
+      {
+        headerName: 'Fecha', floatingFilter: true, filter: true, field: 'created', cellRenderer: (params: any) => {
+          if (params && params.value) {
+            return format(fromUnixTime(params.value.seconds), 'MM/dd/yyyy HH:mm', { locale: esLocale })
+          } else { return '' }
+        }
+      },
+      { headerName: 'Alumno', field: 'studentName', filter: true, floatingFilter: true },
+      { headerName: 'Identificación', field: 'studentId', filter: true, floatingFilter: true },
+      { headerName: 'Ingreso con', field: 'studentId', floatingFilter: true, enableValue: true, filter: true, allowedAggFuncs: ['count'] },
+      { headerName: 'Evento', field: 'event', filter: true, floatingFilter: true },
+      { headerName: 'Tipo', field: 'type', filter: true, floatingFilter: true },
+      { headerName: 'Descripción', field: 'description', filter: true, floatingFilter: true },
+      { headerName: 'Operación', field: 'route', filter: true, floatingFilter: true },
+      { headerName: 'Turno', field: 'round', filter: true, floatingFilter: true },
+      { headerName: 'Programa', field: 'program', filter: true, floatingFilter: true },
+      { headerName: 'Vehículo', field: 'vehicle', filter: true, floatingFilter: true },
+      { headerName: '¿Subió?', field: 'allowedOnBoard', filter: true, floatingFilter: true }
+    ];
   }
 
-    getCustomersList() {
+  getCustomersList() {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       const customersCollection = this.afs.collection('customers', ref => ref
         .where('customerId', '==', this.user.customerId).orderBy('name'));
@@ -415,7 +419,7 @@ export class LogisticsComponent implements OnInit {
           const data = a.payload.doc.data() as any;
           return { id, ...data }
         })),
-        tap((customers: any) => {         
+        tap((customers: any) => {
           this.customersList = customers;
           return customers;
         })
@@ -423,7 +427,7 @@ export class LogisticsComponent implements OnInit {
     }
   }
 
-  moveMap(event: google.maps.MapMouseEvent) {  
+  moveMap(event: google.maps.MapMouseEvent) {
   }
 
   move(event: google.maps.MapMouseEvent) {
@@ -458,13 +462,13 @@ export class LogisticsComponent implements OnInit {
 
   onDateRangeChangeMap(): void {
 
-    if ( this.dateRangeFormMap.get('routeId')!.value != undefined) {
+    if (this.dateRangeFormMap.get('routeId')!.value != undefined) {
       const recordArray = _.filter(this.routes, r => {
-        return r.id ==  this.dateRangeFormMap.get('routeId')!.value;
+        return r.id == this.dateRangeFormMap.get('routeId')!.value;
       });
       const record = recordArray[0];
       this.cardTitle = record.name;
-      this.descriptionRoute = record.description      
+      this.descriptionRoute = record.description
     }
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       this.markers = this.logisticsService.getliveBusses(this.dateRangeFormMap.get('customerId')!.value, this.dateRangeFormMap.get('routeId')!.value);
@@ -477,27 +481,27 @@ export class LogisticsComponent implements OnInit {
           });
         })
       ).subscribe((markers: any) => {
-        if (markers && markers.length > 0 && markers[0].geopoint) {        
-          this.driverName = markers[0].driver;          
+        if (markers && markers.length > 0 && markers[0].geopoint) {
+          this.driverName = markers[0].driver;
           this.driverConfirmationAt = markers[0].driverConfirmationAt;
           this.startAt = markers[0].startAt;
           this.activeRoute = markers[0].active;
           this.round = markers[0].round;
           this.vehicleName = markers[0].vehicleName;
           this.addGeoPointToMarkerPositions(markers[0].geopoint);
-        } else {        
+        } else {
           this.notification.create('warning', 'Información', 'No hay operaciones activas en este momento.');
-          this.driverName = "";          
+          this.driverName = "";
           this.driverConfirmationAt = null;
           this.startAt = null;
           this.activeRoute = "False";
-          this.round ="";
+          this.round = "";
           this.vehicleName = "";
           this.descriptionRoute = "";
           this.markerPositions = [];
         }
       })
-    } else {      
+    } else {
       this.markers = this.logisticsService.getliveBusses(this.dateRangeFormMap.get('customerId')!.value, this.dateRangeFormMap.get('routeId')!.value);
       this.markers.pipe(
         map((actions: any) => {
@@ -508,9 +512,9 @@ export class LogisticsComponent implements OnInit {
             return { id, arrayLatLng, ...data }
           });
         })
-      ).subscribe((markers: any) => {       
-        if (markers && markers.length > 0 && markers[0].geopoint) {  
-          this.driverName = markers[0].driver;          
+      ).subscribe((markers: any) => {
+        if (markers && markers.length > 0 && markers[0].geopoint) {
+          this.driverName = markers[0].driver;
           this.driverConfirmationAt = markers[0].driverConfirmationAt;
           this.startAt = markers[0].startAt;
           this.activeRoute = markers[0].active;
@@ -518,14 +522,14 @@ export class LogisticsComponent implements OnInit {
           this.vehicleName = markers[0].vehicleName;
 
           this.addGeoPointToMarkerPositions(markers[0].geopoint);
-        } else {          
+        } else {
           this.notification.create('warning', 'Información', 'No hay operaciones activas en este momento.');
           this.markerPositions = [];
-          this.driverName = "";          
+          this.driverName = "";
           this.driverConfirmationAt = null;
           this.startAt = null;
           this.activeRoute = "False";
-          this.round ="";
+          this.round = "";
           this.vehicleName = "";
           this.descriptionRoute = "";
           this.markerPositions = [];
@@ -537,9 +541,9 @@ export class LogisticsComponent implements OnInit {
     if (!timestamp) {
       return 'NA'; // Return 'NA' if the timestamp is null or undefined
     }
-  
+
     let date: Date;
-  
+
     if (timestamp instanceof Date) {
       // If it's a Date object, use it directly
       date = timestamp;
@@ -547,15 +551,15 @@ export class LogisticsComponent implements OnInit {
       // If it's a Firestore-like timestamp, convert it
       date = new Date(timestamp.seconds * 1000);
     }
-  
+
     // Extract hours and minutes
     const hours = date.getHours();
     const minutes = date.getMinutes();
-  
+
     // Format the time with leading zeros for minutes
     return `${hours}:${minutes < 10 ? '0' + minutes : minutes}`;
   }
-  addGeoPointToMarkerPositions(geoPoint: GeoPoint) {     
+  addGeoPointToMarkerPositions(geoPoint: GeoPoint) {
     this.markerPositions = [];
     if (geoPoint?._lat !== undefined && geoPoint?._long !== undefined) {
       this.markerPositions.push({ lat: geoPoint._lat, lng: geoPoint._long });
@@ -571,7 +575,7 @@ export class LogisticsComponent implements OnInit {
     return !!this.activeRoute;  // Si ya es booleano, se asegura de que sea true o false
   }
 
-  onDateRangeChangeAct(): void {    
+  onDateRangeChangeAct(): void {
     this.startDateAct = this.dateRangeFormAct.get('startDate')!.value;
     this.endDateAct = this.dateRangeFormAct.get('endDate')!.value;
     this.customerIdSelected = this.dateRangeFormAct.get('customerId')!.value;
@@ -590,18 +594,18 @@ export class LogisticsComponent implements OnInit {
 
       this.logisticsService.getUsersByCustomer(this.startDate, this.endDate, this.customerIdSelected).pipe(
         map((actions: any) => {
-          return actions.length; 
+          return actions.length;
         })
       ).subscribe((count: number) => {
-        this.sumTotalUsersRange = count;       
+        this.sumTotalUsersRange = count;
       });
 
-      this.logisticsService.getUsersByCustomerTot( this.customerIdSelected).pipe(
+      this.logisticsService.getUsersByCustomerTot(this.customerIdSelected).pipe(
         map((actions: any) => {
-          return actions.length;  
+          return actions.length;
         })
-      ).subscribe((count: number) => {    
-        this.sumTotalUsers  = count;  
+      ).subscribe((count: number) => {
+        this.sumTotalUsers = count;
       });
     }
     else {
@@ -624,7 +628,7 @@ export class LogisticsComponent implements OnInit {
       } else {
         roundSumsD[item.route] = item.value;
       }
-    }); 
+    });
     this.resultLiveRoundT.forEach((item: any) => {
       if (roundSumsT.hasOwnProperty(item.route)) {
         roundSumsT[item.route] += item.value;
@@ -661,7 +665,7 @@ export class LogisticsComponent implements OnInit {
           return { id, ...data }
         }))
       ).subscribe((accounts) => {
-        this.accountsList = accounts;       
+        this.accountsList = accounts;
       });
     }
     else {
@@ -674,7 +678,7 @@ export class LogisticsComponent implements OnInit {
             return { id, ...data }
           }),
           tap(record => {
-            this.accountsList = [record];          
+            this.accountsList = [record];
             return record;
           })
         ).subscribe();
@@ -785,10 +789,10 @@ export class LogisticsComponent implements OnInit {
             return data;
           });
         })
-      ).subscribe((result: IActivityLog[]) => {        
+      ).subscribe((result: IActivityLog[]) => {
         this.rowData = result;
-       console.log(this.rowData);
-       
+        console.log(this.rowData);
+
         this.activityList = this.rowData.slice(0, 5);
         this.chartData = _.map(this.rowData, (x: any) => {
           return { country: x.vehicle, visits: x.studentId }
@@ -839,7 +843,7 @@ export class LogisticsComponent implements OnInit {
         return r.id == event;
       });
       const record = recordArray[0];
-      this.cardTitle =  "";
+      this.cardTitle = "";
       if (this.fillCustomer == false) {
         this.fillCustomer = true;
         this.dateRangeFormMap.controls['customerName'].setValue(record.name);

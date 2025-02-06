@@ -157,9 +157,9 @@ export class ReportsDashboardComponent implements OnInit {
     this.validateForm.get('id')?.valueChanges.subscribe(selectedProductId => {
     });
 
-    this.authService.user.subscribe(user => {
-      this.user = user;
-      if (this.user) {
+    this.authService.user.subscribe(user => {      
+      if (user) {
+        this.user = user;
         this.userCustomerId = this.user.customerId;
         this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
           map((a: any) => {

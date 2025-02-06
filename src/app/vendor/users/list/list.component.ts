@@ -171,9 +171,11 @@ export class VendorUsersListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.authService.user.subscribe((user: any) => {     
+    this.authService.user.subscribe((user: any) => { 
+      if (user) {
+        this.user = user;    
       this.getSubscriptions();     
-      this.user = user;
+      }      
     });
 
   }

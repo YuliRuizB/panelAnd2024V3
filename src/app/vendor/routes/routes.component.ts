@@ -89,10 +89,11 @@ export class RoutesComponentVendor implements OnInit {
 
   constructor() {
     this.authService.user.subscribe((user: any) => {
+      if (user) {        
       this.user = user;     
       this.getRoutes();
       this.initializeGrid();
-     
+      }
     });
   }
 

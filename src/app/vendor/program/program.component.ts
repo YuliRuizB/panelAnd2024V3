@@ -165,8 +165,9 @@ export class ProgramComponent implements OnInit, OnDestroy {
     private nzMessageService: NzMessageService,
   ) {
     this.authService.user.subscribe(user => {
-      this.user = user;
-
+      if (user) {
+        this.user = user;
+        this.vendorID = user.vendorId || "";
       if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
         this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
           takeUntil(this.stopSubscription$),
@@ -180,7 +181,7 @@ export class ProgramComponent implements OnInit, OnDestroy {
             return record;
           })
         ).subscribe();
-      }
+      }}
     });
     this.markers = [] as GeoJson[];
     this.startDate = startOfToday();
@@ -412,12 +413,10 @@ export class ProgramComponent implements OnInit, OnDestroy {
 
   }
   getInfoAssigments() {
-    this.authService.user.subscribe((user: any) => {
-      this.user = user;
-      this.vendorID = user.vendorId;
-      this.getSubscriptions(user.vendorId);
-      this.onSelectDrivers(user.vendorId);
-    })
+    if (this.user) { 
+      this.getSubscriptions(this.user.vendorId);
+      this.onSelectDrivers(this.user.vendorId);
+    }
   }
 
   getAssignments() {

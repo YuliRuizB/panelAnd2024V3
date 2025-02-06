@@ -51,24 +51,26 @@ export class SharedVendorDriversComponent implements OnInit, OnDestroy {
     private fb: UntypedFormBuilder
   ) {
     this.authService.user.subscribe((user) => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-          this.infoLoad = item;
-          this.userlevelAccess = this.infoLoad.optionAccessLavel;
-        });
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            return record;
-          })
-        ).subscribe();
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+          this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+            this.infoLoad = item;
+            this.userlevelAccess = this.infoLoad.optionAccessLavel;
+          });
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              return record;
+            })
+          ).subscribe();
+        }
       }
     });
   }

@@ -42,20 +42,22 @@ export class LogisticsMainComponent implements OnInit {
     private zone: NgZone
   ) {
     this.authService.user.subscribe(user => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            return record;
-          })
-        ).subscribe();
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              return record;
+            })
+          ).subscribe();
+        }
       }
     });
     this.markers = [] as GeoJson[];
@@ -135,12 +137,12 @@ export class LogisticsMainComponent implements OnInit {
           });
         })
       ).subscribe((result: IActivityLog[]) => {
-          this.rowData = result;
-          this.activityList = this.rowData.slice(0, 5);
-          this.chartData = this.rowData.map(x => {//_.map(x => {
-            return { country: x.vehicle, visits: x.studentId }
-          })
-        });
+        this.rowData = result;
+        this.activityList = this.rowData.slice(0, 5);
+        this.chartData = this.rowData.map(x => {//_.map(x => {
+          return { country: x.vehicle, visits: x.studentId }
+        })
+      });
     }
   }
 

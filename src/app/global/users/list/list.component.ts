@@ -14,7 +14,7 @@ import { RoutesService } from '../../../shared/services/routes.service';
 import { CustomersService } from '../../../customers/services/customers.service';
 import { AccountsService } from '../../../shared/services/accounts.service';
 
-@Component({ 
+@Component({
   selector: 'app-list',
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.css']
@@ -71,52 +71,57 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
   userlevelAccess?: string;
   user: any;
   routesService = inject(RoutesService);
-  vendorService= inject(VendorService);
+  vendorService = inject(VendorService);
   accountsService = inject(AccountsService);
   stopSubscription$: Subject<any> = new Subject();
-  infoSegment: any  = [];
-  segmentList:any;
-  selectedSegmentId: any; 
-  selectedSegmentName: any; 
+  infoSegment: any = [];
+  segmentList: any;
+  selectedSegmentId: any;
+  selectedSegmentName: any;
+  isCollapsed = true;
+  customersList: any[] = [];
+  checkOptionsOne: any[] = [];
+  userCustomerId: string = "";
+  selectedOption: string = "";
 
   constructor(
-    private afs: AngularFirestore,   
-    private msg: NzMessageService, 
+    private afs: AngularFirestore,
+    private msg: NzMessageService,
     private fb: UntypedFormBuilder) {
     this.authService.user.subscribe((user) => {
-      this.user = user;
-      this.authService.user.subscribe((user) => {
+      if (user) {
         this.user = user;
         if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+          this.userCustomerId = this.user.customerId;
           this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
             this.infoLoad = item;
             this.userlevelAccess = this.infoLoad.optionAccessLavel;
           });
           this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
             takeUntil(this.stopSubscription$),
-            map((a:any) => {
+            map((a: any) => {
               const id = a.payload.id;
               const data = a.payload.data() as any;
               return { id, ...data }
             }),
-            tap(record => {             
-              this.infoSegment = record;            
+            tap(record => {
+              this.infoSegment = record;
               return record;
             })
           ).subscribe();
         }
-      });  
+      }
     });
   }
 
   ngOnInit() {
-    const routesObservable: Observable<any>  = this.accountId$.pipe(
+    const routesObservable: Observable<any> = this.accountId$.pipe(
       switchMap(accountId => this.afs.collection('customers').doc(accountId).collection('routes', ref => ref.where('active', '==', true)).valueChanges({ idField: 'routeId' })
       ));
-    const usersObservable: Observable<any>  = this.accountId$.pipe(
+    const usersObservable: Observable<any> = this.accountId$.pipe(
       switchMap(accountId => this.afs.collection('users', ref => ref.where('customerId', '==', accountId).orderBy('studentId')).valueChanges({ idField: 'uid' })
       ));
-    const rolSuscription: Observable<any>  = this.accountId$.pipe(
+    const rolSuscription: Observable<any> = this.accountId$.pipe(
       switchMap(accountId => this.afs.collection('roles', ref => ref.where('active', '==', true)).valueChanges({ idField: 'uid' })
       ));
     usersObservable.subscribe((usersByAccount: any) => {
@@ -125,12 +130,55 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     rolSuscription.subscribe((roles: any) => {
       this.roles = roles;
     });
-    this.getUsersList();
-    this.getDriversList();
+    //this.getUsersList();
+    //this.getDriversList();
     this.validateEditForm = this.fb.group({
       rolId: [''],
       roles: ['']
     });
+    this.getCustomersList();
+  }
+
+  getCustomersList() {
+    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual    
+      const customersCollection = this.afs.collection('customers').doc(this.userCustomerId);
+      customersCollection.snapshotChanges().pipe(
+        takeUntil(this.stopSubscription$),
+        map((action: any) => {
+          const id = action.payload.id;
+          const data = action.payload.data() as any;
+          return { id, ...data };
+        }),
+        tap((customer: any) => {
+          this.customersList = [customer];  // Asigna un array con un único objeto
+
+          this.checkOptionsOne = [{
+            value: customer.id,
+            label: customer.name
+          }];
+          return customer;
+        })
+      ).subscribe();
+
+    } else {
+      const customersCollection = this.afs.collection('customers', ref => ref.orderBy('name'));
+      customersCollection.snapshotChanges().pipe(
+        takeUntil(this.stopSubscription$),
+        map((actions: any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data }
+        })),
+        tap((customers: any) => {
+          this.customersList = customers;
+          this.checkOptionsOne = customers.map((customer: any) => ({
+            value: customer.id,
+            label: customer.name
+          }));
+          return customers;
+        })
+      ).subscribe();
+    }
   }
 
   ngOnDestroy() {
@@ -142,45 +190,64 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     this.devicesList = this.loadedDevicesList;
     this.devicesListDrive = this.loadedDevicesListDrive;
   }
+  getItemsByEmail(searchbar: string) {
+    this.isLoadingUsers = true;
+    this.afs
+      .collection('users', (ref) => ref.where('email', '==', searchbar))
+      .snapshotChanges()
+      .pipe(
+        map((actions) => {
+          return actions.map((a) => {
+            const id = a.payload.doc.id;
+            const data = a.payload.doc.data() as any;
+            return { id, ...data };
+          });
+        })
+      )
+      .subscribe(users => {
+        this.loadUsers(users);
+        this.isCollapsed = false;
+      });
+  }
+
 
   getUsersList() {
-    this.isLoadingUsers = true;
-    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-      this.usersCollection = this.afs.collection<any>('users', ref => ref
-      .where('customerId', '==', this.user.customerId)
-      .orderBy('displayName'));
-      this.users = this.usersCollection.snapshotChanges().pipe(
-        map((actions:any) => actions.map((a:any) => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data }
-        }))
-      ).subscribe(users => {
-        this.loadUsers(users);
-      });
-    } 
-    else {
-      this.usersCollection = this.afs.collection<any>('users', ref => ref.orderBy('displayName'));
-      this.users = this.usersCollection.snapshotChanges().pipe(
-        map((actions:any) => actions.map((a:any) => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data }
-        }))
-      ).subscribe(users => {
-        this.loadUsers(users);
-      });
+
+    if (!this.selectedOption) {
+      console.error('Error: selectedOption es null o undefined');
+      return;
     }
+    this.isLoadingUsers = true;
+    this.afs
+      .collection('users', (ref) =>
+        ref.where('customerId', '==', this.selectedOption)
+      )
+      .get()
+      .subscribe({
+        next: (snapshot) => {
+          const users: any[] = [];
+          snapshot.forEach((doc) => {
+            users.push(doc.data());
+          });
+          this.loadUsers(users);
+          this.isCollapsed = false;
+          this.isLoadingUsers = false;
+        },
+        error: (error: any) => {
+          console.error('Error al obtener usuarios:', error);
+          this.isLoadingUsers = false;
+        },
+      });
   }
 
   getDriversList() {
     this.isLoadingDrivers = true;
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       this.driversCollection = this.afs.collection<any>('drivers', ref => ref
-      .where('customerId', '==', this.user.customerId)
-      .orderBy('displayName'));
+        .where('customerId', '==', this.user.customerId)
+        .orderBy('displayName'));
       this.users = this.driversCollection.snapshotChanges().pipe(
-        map((actions:any) => actions.map((a: any) => {
+        map((actions: any) => actions.map((a: any) => {
           const id = a.payload.doc.id;
           const data = a.payload.doc.data() as any;
           return { id, ...data }
@@ -188,18 +255,18 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
       ).subscribe(drivers => {
         this.loadDrivers(drivers);
       });
-      } else {
-        this.driversCollection = this.afs.collection<any>('drivers', ref => ref.orderBy('displayName'));
-        this.users = this.driversCollection.snapshotChanges().pipe(
-          map((actions:any) => actions.map((a: any) => {
-            const id = a.payload.doc.id;
-            const data = a.payload.doc.data() as any;
-            return { id, ...data }
-          }))
-        ).subscribe(drivers => {
-          this.loadDrivers(drivers);
-        });
-      }   
+    } else {
+      this.driversCollection = this.afs.collection<any>('drivers', ref => ref.orderBy('displayName'));
+      this.users = this.driversCollection.snapshotChanges().pipe(
+        map((actions: any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data }
+        }))
+      ).subscribe(drivers => {
+        this.loadDrivers(drivers);
+      });
+    }
   }
 
   loadUsers(users: any) {
@@ -225,21 +292,21 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     const text = _.toLower(q);
     this.devicesList = filter(this.devicesList, (object) => {
       return some(object, (string: any) => {
-          return toLower(string).includes(text);
+        return toLower(string).includes(text);
       });
-  });
+    });
   }
 
   getItemsDrive(searchbarDrive: any) {
     this.initializeItems();
     const q = searchbarDrive;
     if (!q) { return; }
-    const text = _.toLower(q);    
+    const text = _.toLower(q);
     this.devicesListDrive = filter(this.devicesList, (object) => {
       return some(object, (string: any) => {
-          return toLower(string).includes(text);
+        return toLower(string).includes(text);
       });
-  });
+    });
   }
 
   userSelected(data: any) {
@@ -280,7 +347,7 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     }
     if (data.vendorId != undefined) {
       this.vendorService.getVendor(data.vendorId).pipe(
-        map((a:any) => {
+        map((a: any) => {
           const id = a.payload.id;
           const data = a.payload.data() as any;
           return { id: id, ...data }
@@ -302,22 +369,22 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     this.isBoardingPassSelected = false;
   }
 
-  nzClicOptionSegment(currentUser : any){
+  nzClicOptionSegment(currentUser: any) {
     this.customersService.getAllSegments().pipe(
-      map((actions:any) => actions.map((a:any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id: id, ...data }
       }))
-    ).subscribe((segment:any) => {
+    ).subscribe((segment: any) => {
       this.segmentList = segment;
       const selectedSegment = this.segmentList.find((segment: any) => segment.id === currentUser.idSegment);
       if (selectedSegment) {
-        this.selectedSegmentName =  selectedSegment.nivel;
-      }    
+        this.selectedSegmentName = selectedSegment.nivel;
+      }
     });
     if (currentUser !== null && currentUser.idSegment !== undefined) {
-     this.selectedSegmentId = currentUser.idSegment;    
+      this.selectedSegmentId = currentUser.idSegment;
     }
   }
   onSegmentSelected(segment: any) {
@@ -325,15 +392,16 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     this.selectedSegmentId = segment.id;
   }
 
-  log(): void {
+  log(value: any): void {
+    this.devicesList = [];
   }
 
   showModalEditUser(currentUserSelected: any) {
     this.isEditUserVisible = true;
   }
 
-  saveSegment(currentUserSelected: any) {  
-    this.customersService.saveSegmentId(currentUserSelected.id,this.selectedSegmentId);
+  saveSegment(currentUserSelected: any) {
+    this.customersService.saveSegmentId(currentUserSelected.id, this.selectedSegmentId);
   }
 
   showModalEditDriver(currentUserSelected: any) {
@@ -379,6 +447,11 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
 
   submitCustomerForm(): void {
   }
+
+  searchloadUsers() {
+    this.getUsersList();
+  }
+
 }
 
 

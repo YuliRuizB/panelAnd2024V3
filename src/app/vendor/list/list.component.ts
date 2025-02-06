@@ -37,27 +37,29 @@ export class ListComponentVendor implements OnInit {
     private fb: UntypedFormBuilder) {
 
     this.authService.user.subscribe((user) => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined && this.user.idSegment !== undefined) {
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-          this.infoLoad = item;
-          this.userlevelAccess = this.infoLoad.optionAccessLavel;
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined && this.user.idSegment !== undefined) {
+          this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+            this.infoLoad = item;
+            this.userlevelAccess = this.infoLoad.optionAccessLavel;
 
-          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-            takeUntil(this.stopSubscription$),
-            map((a: any) => {
-              const id = a.payload.id;
-              const data = a.payload.data() as any;
-              return { id, ...data }
-            }),
-            tap(record => {
-              this.infoSegment = record;
-              this.getSubscriptions();
-              this.createForm();
-              return record;
-            })
-          ).subscribe();
-        });
+            this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+              takeUntil(this.stopSubscription$),
+              map((a: any) => {
+                const id = a.payload.id;
+                const data = a.payload.data() as any;
+                return { id, ...data }
+              }),
+              tap(record => {
+                this.infoSegment = record;
+                this.getSubscriptions();
+                this.createForm();
+                return record;
+              })
+            ).subscribe();
+          });
+        }
       }
     });
 
@@ -99,7 +101,7 @@ export class ListComponentVendor implements OnInit {
         })))
         .subscribe((data: any) => {
           if (data && data.length > 0) {
-            const firstVendorId = data[0].vendorId;            
+            const firstVendorId = data[0].vendorId;
             this.vendorService.getVendor(firstVendorId).
               subscribe((data: any) => {
                 const vendorData = data.payload.data();
@@ -116,7 +118,7 @@ export class ListComponentVendor implements OnInit {
           const data = a.payload.doc.data() as any;
           return { id: id, ...data }
         }))
-      ).subscribe((vendors) => {        
+      ).subscribe((vendors) => {
         this.vendorList = vendors;
         this.vendorListLoad = this.vendorList;
       })

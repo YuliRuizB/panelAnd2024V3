@@ -109,16 +109,22 @@ export class OrganigramaComponent implements OnInit {
   camioneta: string = 'Camioneta';
   camion: string = 'Camión';
   listOfColumns: ColumnItem[] = [
-    { name: 'Turno', sortOrder: null,  sortFn: (a: DataItem, b: DataItem) => a.turno.localeCompare(b.turno),
-      listOfFilter: [], filterFn: (list: string[], item: DataItem) =>  list.some(name => item.turno.indexOf(name) !== -1)    },
-    { name: 'Tipo de Viaje', sortOrder: null, sortFn: (a: DataItem, b: DataItem) => a.roundTrip.localeCompare(b.roundTrip),
-      listOfFilter: [], filterFn: (list: string[], item: DataItem) => list.some(name => item.roundTrip.indexOf(name) !== -1)    },
-    { name: 'Nombre', sortOrder: null, sortFn: (a: DataItem, b: DataItem) => a.displayName.localeCompare(b.displayName),
-      listOfFilter: [], filterFn: (list: string[], item: DataItem) => list.some(name => item.displayName.indexOf(name) !== -1)   },
+    {
+      name: 'Turno', sortOrder: null, sortFn: (a: DataItem, b: DataItem) => a.turno.localeCompare(b.turno),
+      listOfFilter: [], filterFn: (list: string[], item: DataItem) => list.some(name => item.turno.indexOf(name) !== -1)
+    },
+    {
+      name: 'Tipo de Viaje', sortOrder: null, sortFn: (a: DataItem, b: DataItem) => a.roundTrip.localeCompare(b.roundTrip),
+      listOfFilter: [], filterFn: (list: string[], item: DataItem) => list.some(name => item.roundTrip.indexOf(name) !== -1)
+    },
+    {
+      name: 'Nombre', sortOrder: null, sortFn: (a: DataItem, b: DataItem) => a.displayName.localeCompare(b.displayName),
+      listOfFilter: [], filterFn: (list: string[], item: DataItem) => list.some(name => item.displayName.indexOf(name) !== -1)
+    },
     { name: 'Identificación', sortOrder: null, sortFn: null, listOfFilter: [], filterFn: null },
-    { name: 'Telefono', sortOrder: null, sortFn: null, listOfFilter: [], filterFn: null  },
-    { name: 'Email', sortOrder: null, sortFn: null, listOfFilter: [], filterFn: null  },
-    { name: 'Estatus', sortOrder: null, sortFn: null,listOfFilter: [], filterFn: null  },
+    { name: 'Telefono', sortOrder: null, sortFn: null, listOfFilter: [], filterFn: null },
+    { name: 'Email', sortOrder: null, sortFn: null, listOfFilter: [], filterFn: null },
+    { name: 'Estatus', sortOrder: null, sortFn: null, listOfFilter: [], filterFn: null },
   ];
 
   constructor(private afs: AngularFirestore,
@@ -126,21 +132,23 @@ export class OrganigramaComponent implements OnInit {
     private fb: UntypedFormBuilder
   ) {
     this.authService.user.subscribe(user => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            this.fillData();
-            return record;
-          })
-        ).subscribe();
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              this.fillData();
+              return record;
+            })
+          ).subscribe();
+        }
       }
     });
   }
@@ -234,11 +242,11 @@ export class OrganigramaComponent implements OnInit {
   }
 
   submitM() {
-    this.carro = this.validateFormM.get('asientos')?.value;  
+    this.carro = this.validateFormM.get('asientos')?.value;
     if (this.validateFormM.valid) {
       let customerId = this.validateFormM.get('customerId')?.value;
-      let routeId = this.validateFormM.get('routeId')?.value;      
-      if (!this.chkBoardingP) {        
+      let routeId = this.validateFormM.get('routeId')?.value;
+      if (!this.chkBoardingP) {
         this.routesService.getQuotesByRouteandProgram(customerId, routeId, this.transportType).pipe(
           takeUntil(this.stopSubscription$),
           map((actions: any) => actions.map((a: any) => {
@@ -253,7 +261,7 @@ export class OrganigramaComponent implements OnInit {
             this.createDataSet(data);
           });
       }
-      else {        
+      else {
         this.routesService.getQuotesByRouteByBoardingPass(customerId, routeId, this.transportType).pipe(
           takeUntil(this.stopSubscription$),
           map((actions: any) => actions.map((a: any) => {
@@ -262,9 +270,9 @@ export class OrganigramaComponent implements OnInit {
             return { ...data, id };
           })),
           map((data: any[]) => {
-            return data.filter(item => 
-              item.quotesData && 
-              Array.isArray(item.quotesData) && 
+            return data.filter(item =>
+              item.quotesData &&
+              Array.isArray(item.quotesData) &&
               item.quotesData.some((quote: any) => quote.transportType === this.transportType)
             );
           }),
@@ -275,13 +283,13 @@ export class OrganigramaComponent implements OnInit {
             }, []);
           })
         )
-        .subscribe((flattenedQuotesData: any[]) => {        
-          if (flattenedQuotesData.length === 0) {
-            this.sendMessage("info", "No existen registros con estos criterios.");
-          } else {
-            this.createDataSet(flattenedQuotesData);
-          }
-        });
+          .subscribe((flattenedQuotesData: any[]) => {
+            if (flattenedQuotesData.length === 0) {
+              this.sendMessage("info", "No existen registros con estos criterios.");
+            } else {
+              this.createDataSet(flattenedQuotesData);
+            }
+          });
       }
     } else {
       this.sendMessage("error", "Datos invalidos favor de validar");
@@ -291,7 +299,7 @@ export class OrganigramaComponent implements OnInit {
     this.messageService.create(type, message);
   }
 
-  onCheckboxChange(event: any) {   
+  onCheckboxChange(event: any) {
     this.chkBoardingP = this.validateFormM.get('chkBoardingP')?.value;
   }
 
@@ -428,7 +436,7 @@ export class OrganigramaComponent implements OnInit {
     }
 
   }
-  onCustomerSelectedP(event: null, customers: any) {    
+  onCustomerSelectedP(event: null, customers: any) {
     if (event != null && !this.userRouteP) {
       this.userRouteP = true;
       this.routesP = [];

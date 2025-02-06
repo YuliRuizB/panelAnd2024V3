@@ -9,44 +9,46 @@ import { Subject, map, takeUntil, tap } from 'rxjs';
     selector: 'app-header',
     templateUrl: './header.component.html',
     styleUrls: ['./header.component.css']
-    
+
 })
 
 export class HeaderComponent implements OnInit {
 
     user: any;
-    userRol:string = "";
+    userRol: string = "";
     SegmentName: string = "";
-    infoLoad:any = [];
-    infoSegment: any ;
+    infoLoad: any = [];
+    infoSegment: any;
     stopSubscription$: Subject<boolean> = new Subject();
     rolService = inject(RolService);
     authService = inject(AuthenticationService);
-    themeService= inject(ThemeConstantService);
+    themeService = inject(ThemeConstantService);
     accountsService = inject(AccountsService);
-    constructor(      
+    constructor(
     ) {
-        this.authService.user.subscribe( (user:any) => {
-            this.user = user;              
-            if(this.user != null){
-                if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) { 
-                this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {                    
-                    this.infoLoad = item;
-                    this.userRol = this.infoLoad.description;
-                   });
-                    this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-                      takeUntil(this.stopSubscription$),
-                      map((a:any) => {
-                        const id = a.payload.id;
-                        const data = a.payload.data() as any;
-                        return { id, ...data }
-                      }),
-                      tap(record => {             
-                        this.infoSegment = record;    
-                        this.SegmentName = this.infoSegment.nivel;        
-                        return record;
-                      })
-                    ).subscribe();                   
+        this.authService.user.subscribe((user: any) => {
+            if (user) {
+                this.user = user;
+                if (this.user != null) {
+                    if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
+                        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+                            this.infoLoad = item;
+                            this.userRol = this.infoLoad.description;
+                        });
+                        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+                            takeUntil(this.stopSubscription$),
+                            map((a: any) => {
+                                const id = a.payload.id;
+                                const data = a.payload.data() as any;
+                                return { id, ...data }
+                            }),
+                            tap(record => {
+                                this.infoSegment = record;
+                                this.SegmentName = this.infoSegment.nivel;
+                                return record;
+                            })
+                        ).subscribe();
+                    }
                 }
             }
         });

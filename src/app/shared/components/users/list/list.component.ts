@@ -54,14 +54,15 @@ export class SharedUsersListComponent implements OnInit, OnDestroy {
     private msg: NzMessageService,
     private ngxCsvParser: NgxCsvParser) {
 
-    this.authService.user.subscribe((user) => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+    this.authService.user.subscribe((user) => {      
+      if (user) {
+        this.user = user;
+      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {                
         this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
           this.infoLoad = item;
           this.userlevelAccess = this.infoLoad.optionAccessLavel;
         });
-      }
+      }}
     });
     this.popupParent = document.querySelector("body");
   }

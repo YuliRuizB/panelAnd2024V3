@@ -22,29 +22,29 @@ import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms
   styleUrls: ['./list.component.css']
 })
 export class SharedStopPointsListComponent implements OnInit, OnDestroy {
-  @ViewChild('download', { static: false }) download!: ElementRef;  
+  @ViewChild('download', { static: false }) download!: ElementRef;
   @Input() accountId: string = '';
   @Input() routeId: string = '';
   rolService = inject(RolService);
   routesService = inject(RoutesService);
-  userService= inject(UsersService);
+  userService = inject(UsersService);
   authService = inject(AuthenticationService);
   sub!: Subscription;
   stopPointsList: IStopPoint[] = [];
   loading = true;
   time = new Date();
   isEditing = false;
-  item: any ; //route record
+  item: any; //route record
   infoLoad: any = [];
   userlevelAccess!: string;
   user: any;
-  isPdfVisible:boolean = false;
-  pdfTitle:string = "";
-  pdfOrder:string = "";
-  pdfDescription:string= "";
-  stopId:string = "";
-  userId:string = "";
-  isEditVisible:boolean = false;
+  isPdfVisible: boolean = false;
+  pdfTitle: string = "";
+  pdfOrder: string = "";
+  pdfDescription: string = "";
+  stopId: string = "";
+  userId: string = "";
+  isEditVisible: boolean = false;
   accountsSubscription?: Subscription;
   stopSubscriptions$: Subject<boolean> = new Subject();
   usersCollection: AngularFirestoreCollection<any> | undefined;
@@ -55,16 +55,18 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   constructor(
     private fb: UntypedFormBuilder,
     public modalService: NzModalService,
-    public message: NzMessageService,      
+    public message: NzMessageService,
     private afs: AngularFirestore
   ) {
     this.authService.user.subscribe((user) => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {          
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-          this.infoLoad = item;
-          this.userlevelAccess = this.infoLoad.optionAccessLavel;
-        });
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+          this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+            this.infoLoad = item;
+            this.userlevelAccess = this.infoLoad.optionAccessLavel;
+          });
+        }
       }
     });
 
@@ -72,19 +74,19 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.getSubscriptions();
-    this.usersCollection = this.afs.collection<any>('users', ref => 
+    this.usersCollection = this.afs.collection<any>('users', ref =>
       ref.where('customerId', '==', this.accountId)
-     .where('email','==', 'internal').orderBy('customerName')
-    );    
+        .where('email', '==', 'internal').orderBy('customerName')
+    );
     this.userSubscription = this.usersCollection.snapshotChanges().pipe(
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
         return { id, ...data }
       }))
-    ).subscribe(users => {             
+    ).subscribe(users => {
       this.userId = users[0]['uid'];
-    }); 
+    });
 
   }
 
@@ -101,7 +103,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   }
 
   handleCancel() {
-     this.isPdfVisible = false;
+    this.isPdfVisible = false;
   }
 
   handleOkPDF() {
@@ -113,14 +115,14 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
         var width = pdf.internal.pageSize.getWidth();
         var height = canvas.height * width / canvas.width;
         pdf.addImage(contentDataURL, 'PNG', 10, 10, width, height);
-        const nameSave =  this.pdfOrder + "-" + this.pdfTitle + ".pdf";        
+        const nameSave = this.pdfOrder + "-" + this.pdfTitle + ".pdf";
         pdf.save(nameSave);
       });
       this.isPdfVisible = false; // Close the modal
     }
-    catch (e : any) {
-      this.sendMessage('error',e)
-    }  
+    catch (e: any) {
+      this.sendMessage('error', e)
+    }
   }
 
   toggleActive(data: any) {
@@ -128,13 +130,13 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   }
 
   openPanelPDF(data: any) {
-    this.isPdfVisible = true;   
+    this.isPdfVisible = true;
     this.pdfTitle = data.name;
-    this.pdfOrder =data.order;
+    this.pdfOrder = data.order;
     this.pdfDescription = data.description;
     this.stopId = data.id;
     //GetInfoData.
- 
+
 
   }
   sendMessage(type: string, message: string): void {
@@ -145,7 +147,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
     if (this.userlevelAccess == "1") {
       this.routesService.deleteRoute(data.customerId, data.routeId).then(() => {
       })
-        .catch(err =>   this.sendMessage('error',err));
+        .catch(err => this.sendMessage('error', err));
     } else {
       this.sendMessage('error', "El usuario no tiene permisos para borrar datos, favor de contactar al administrador.");
     }
@@ -153,7 +155,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
 
   getSubscriptions() {
     this.sub = this.routesService.getRouteStopPoints(this.accountId, this.routeId).pipe(
-      map((actions:any) => actions.map((a: any) => {
+      map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as IStopPoint;
         const route = { ...data, id }; // Spread data and add id
@@ -166,7 +168,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
 
     this.routesService.getRoute(this.accountId, this.routeId).pipe(
       takeUntil(this.stopSubscriptions$),
-      map((a:any) => {
+      map((a: any) => {
         const id = a.payload.id;
         const data = a.payload.data() as IStopPoint;
         const route = { ...data, id }; // Spread data and add id
@@ -183,7 +185,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
     this.isEditVisible = true;
     this.stopPoint = data;
     this.validateForm = this.fb.group({
-      id:[this.stopPoint.id],
+      id: [this.stopPoint.id],
       active: [this.stopPoint.active],
       name: [this.stopPoint.name, [Validators.required]],
       description: [this.stopPoint.description, [Validators.required]],
@@ -201,17 +203,17 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
     });
   }
 
-  handleOkEdit(){
-      this.routesService.updateStopPoint(this.accountId, this.routeId, this.validateForm.value).then(() => {    
-        this.isEditVisible = false;      
-        this.message.success('¡Listo!');
-      }).catch(err => {
-        this.isEditVisible = false;
-        this.message.error('Ocurrió un error: ', err);      
+  handleOkEdit() {
+    this.routesService.updateStopPoint(this.accountId, this.routeId, this.validateForm.value).then(() => {
+      this.isEditVisible = false;
+      this.message.success('¡Listo!');
+    }).catch(err => {
+      this.isEditVisible = false;
+      this.message.error('Ocurrió un error: ', err);
     });
   }
 
-  handleCancelEdit(){
+  handleCancelEdit() {
     this.isEditVisible = false;
   }
 
@@ -236,7 +238,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
           this.message.error('Ocurrió un error: ', err);
           resolve;
         })
-      })      
+      })
     });
   }
 

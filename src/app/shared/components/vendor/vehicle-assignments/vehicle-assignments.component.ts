@@ -50,13 +50,15 @@ export class SharedVehicleAssignmentsComponent implements OnInit, OnDestroy {
     private fb: UntypedFormBuilder
     ) { 
       this.authService.user.subscribe((user) => {
-        this.user = user;
-        if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-            this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
-                this.infoLoad = item;
-                this.userlevelAccess = this.infoLoad.optionAccessLavel;                 
-            });
-        }
+        if (user) {
+          this.user = user;
+          if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+              this.rolService.getRol(this.user.rolId).valueChanges().subscribe(item => {
+                  this.infoLoad = item;
+                  this.userlevelAccess = this.infoLoad.optionAccessLavel;                 
+              });
+          }
+        }        
     });
     }
 

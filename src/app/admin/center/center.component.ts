@@ -57,7 +57,7 @@ export class CenterComponent {
   selectHelpCenterIdTicket: string = "";
   selectedUidUser: string = "";
   customersList: any[] = [];
-  selectedOption: any; 
+  selectedOption: any;
 
   constructor(
     private afs: AngularFirestore,
@@ -66,24 +66,26 @@ export class CenterComponent {
     private fb: UntypedFormBuilder) {
 
     this.authService.user.subscribe((user: any) => {
-      this.user = user;
-      if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
-        this.rolService.getRol(this.user.rolId).valueChanges().subscribe((item: any) => {
-          this.infoLoad = item;
-          this.userlevelAccess = this.infoLoad.optionAccessLavel;
-        });
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            return record;
-          })
-        ).subscribe();
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
+          this.rolService.getRol(this.user.rolId).valueChanges().subscribe((item: any) => {
+            this.infoLoad = item;
+            this.userlevelAccess = this.infoLoad.optionAccessLavel;
+          });
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              return record;
+            })
+          ).subscribe();
+        }
       }
     });
 
@@ -118,7 +120,7 @@ export class CenterComponent {
     else {
       if (mode == "1") {
         const selectedOptionValue = this.dateFilterForm.get('selectedOption')!.value;
-        const statusSelected =  this.dateFilterForm.get('status')!.value;  
+        const statusSelected = this.dateFilterForm.get('status')!.value;
 
         if (selectedOptionValue && statusSelected) {
           this.programService.getHelpCenterAll("Mejora", selectedOptionValue, statusSelected).pipe(
@@ -138,7 +140,7 @@ export class CenterComponent {
             }
           });
 
-          this.programService.getHelpCenterAll("Felicitacion",selectedOptionValue , statusSelected).pipe(
+          this.programService.getHelpCenterAll("Felicitacion", selectedOptionValue, statusSelected).pipe(
             map((actions: any) => actions.map((a: any) => {
               const id = a.payload.doc.id;
               const data = a.payload.doc.data() as any;
@@ -159,8 +161,8 @@ export class CenterComponent {
         }
 
       } else if (mode == "2") {
-        const selectedOptionValue = this.dateFilterFormI.get('selectedOption')!.value;     
-        const statusSelected =  this.dateFilterFormI.get('status')!.value;
+        const selectedOptionValue = this.dateFilterFormI.get('selectedOption')!.value;
+        const statusSelected = this.dateFilterFormI.get('status')!.value;
         if (selectedOptionValue && statusSelected) {
           this.programService.getHelpCenterAll("Incidente", selectedOptionValue, statusSelected).pipe(
             map((actions: any) => actions.map((a: any) => {
@@ -178,14 +180,14 @@ export class CenterComponent {
               });
             } else {
               this.sendMessage("info", "No existen registros con estos criterios");
-            }  
+            }
           });
-        }else {
+        } else {
           this.sendMessage("error", "Los criterios son requeridos para la busqueda");
         }
       } else {
-        const selectedOptionValue = this.dateFilterFormO.get('selectedOption')!.value;     
-        const statusSelected =  this.dateFilterFormO.get('status')!.value;
+        const selectedOptionValue = this.dateFilterFormO.get('selectedOption')!.value;
+        const statusSelected = this.dateFilterFormO.get('status')!.value;
         if (selectedOptionValue && statusSelected) {
           this.programService.getHelpCenterAll("Objeto Perdido", selectedOptionValue, statusSelected).pipe(
             map((actions: any) => actions.map((a: any) => {
@@ -203,9 +205,9 @@ export class CenterComponent {
               });
             } else {
               this.sendMessage("info", "No existen registros con estos criterios");
-            }            
+            }
           });
-        }else {
+        } else {
           this.sendMessage("error", "Los criterios son requeridos para la busqueda");
         }
       }
@@ -218,27 +220,27 @@ export class CenterComponent {
         .where('customerId', '==', this.user.customerId).orderBy('name'));
       customersCollection.snapshotChanges().pipe(
         takeUntil(this.stopSubscription$),
-        map((actions:any) => actions.map((a:any) => {
+        map((actions: any) => actions.map((a: any) => {
           const id = a.payload.doc.id;
           const data = a.payload.doc.data() as any;
           return { id, ...data }
         })),
-        tap((customers:any) => {
+        tap((customers: any) => {
           this.customersList = customers;
           return customers;
         })
-      ).subscribe();        
+      ).subscribe();
     } else {
       const customersCollection = this.afs.collection('customers', ref => ref.orderBy('name'));
       customersCollection.snapshotChanges().pipe(
         takeUntil(this.stopSubscription$),
-        map((actions:any) => actions.map((a:any) => {
+        map((actions: any) => actions.map((a: any) => {
           const id = a.payload.doc.id;
           const data = a.payload.doc.data() as any;
           return { id, ...data }
         })),
-        tap((customers:any) => {
-          this.customersList = customers;          
+        tap((customers: any) => {
+          this.customersList = customers;
           return customers;
         })
       ).subscribe();
@@ -274,13 +276,13 @@ export class CenterComponent {
     this.selectedUserToken = token;
     this.selectHelpCenterIdTicket = ticketId;
     this.selectedUidUser = userId;
-    this.loadUserInfo(this.selectedUidUser);    
+    this.loadUserInfo(this.selectedUidUser);
   }
   handleOk(): void {
     if (!this.selectedStatus || !this.response) {
       this.errorMessage = 'Por favor, complete todos los campos antes de enviar.';
     } else {
-      this.errorMessage = null;     
+      this.errorMessage = null;
       // Add your submission logic here
       if (!this.selectedUserToken || !this.selectHelpCenterIdTicket || !this.selectedUidUser || !this.selectedDataUser) {
         this.errorMessage = 'Falta información por cargar. Validar nuevamente.';
@@ -307,14 +309,14 @@ export class CenterComponent {
             body: this.response,
             token: userNotificationToken,
             uid: this.selectedUidUser
-          }         
+          }
 
           this.dashboardService.setChatMessage(dataMessage);
           this.dashboardService.setMessage(notifMessage, this.selectedUidUser);
           this.isSeguimientoVisible = false;
           this.response = "";
-        } else {         
-          this.sendMessage("error",'Null token :' + this.selectedUidUser + "// " + this.modalDataUser.customerName);
+        } else {
+          this.sendMessage("error", 'Null token :' + this.selectedUidUser + "// " + this.modalDataUser.customerName);
         }
       }
     }
@@ -329,12 +331,12 @@ export class CenterComponent {
     this.selectedUidUser = "";
   }
 
-  loadProgramData(programId: string, customerId: string): void {    
+  loadProgramData(programId: string, customerId: string): void {
     this.programService.getProgrambyCustomer(programId, customerId).subscribe({
       next: (action) => {
         if (action.payload) {
           const data = action.payload.data() as { [key: string]: any }; // Type assertion for index signature
-       
+
           const startAt = data['startAt'] ? data['startAt'].toDate() : new Date(); // Ensure startAt is a Timestamp
           const endAt = data['endAt'] ? data['endAt'].toDate() : new Date();
           const formattedDate = this.datePipe.transform(startAt, 'dd-MM-yyyy HH:mm');
@@ -347,11 +349,11 @@ export class CenterComponent {
             endAt: formatendAt,
             vehicleName: data['vehicleName']
           };
-        } else {        
+        } else {
           this.sendMessage("error", "Registro no encontrado");
         }
       },
-      error: (error) => {      
+      error: (error) => {
         this.sendMessage("error", error);
       }
     });

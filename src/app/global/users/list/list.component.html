@@ -8,7 +8,38 @@
     </div>    
     <div class="container-fluid p-h-0">
       <nz-tabset  class="page-header-tab">
+        <nz-tab nzTitle="Perfiles"></nz-tab>
         <nz-tab nzTitle="Usuarios">
+          <div class="chat-header" style="background-color: #f9f9f9;">
+            <nz-collapse>
+              <nz-collapse-panel [nzHeader]="'Filtros avanzados'" [nzActive]="true">            
+                <div style="display: flex; align-items: center; gap: 15px;">            
+                  
+                  <nz-select [(ngModel)]="selectedOption" (ngModelChange)="log($event)" nzPlaceHolder="Selecciona un cliente" style="width: 450px;">                 
+                    <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                      {{ o.name }}
+                    </nz-option>
+                  </nz-select>
+                  <nz-input-group [nzSuffix]="suffixIconSearch" style="flex-grow: 1;">
+                    <input type="text" #searchInput nz-input placeholder="Buscar" (keyup)="getItems(searchInput.value)" />
+                  </nz-input-group>
+                  <ng-template #suffixIconSearch>
+                    <span nz-icon nzType="search"></span>
+                  </ng-template>
+  
+                  <nz-input-group [nzSuffix]="suffixIconSearch" style="flex-grow: 1;">
+                    <input type="text" #searchInputEmail nz-input placeholder="Buscar por Correo" (keyup.enter)="getItemsByEmail(searchInputEmail.value)" />
+                  </nz-input-group>
+                  <ng-template #suffixIconSearch>
+                    <span nz-icon nzType="search"></span>
+                  </ng-template>
+  
+                  <button class="m-r-10" nz-button nzType="primary" (click)="searchloadUsers()">Cargar Usuarios</button>
+                </div>
+                
+              </nz-collapse-panel>
+            </nz-collapse>
+          </div>
           <div class="chat chat-app row">
             <div class="chat-list">
               <div class="chat-user-tool">
@@ -106,7 +137,7 @@
                         </div>
                         <div>
                           <nz-button-group>
-                            <button nz-button (click)="log()">Segmentos</button>
+                            <button nz-button (click)="log(1)">Segmentos</button>
                             <button nz-button nz-dropdown [nzDropdownMenu]="menu1" nzPlacement="bottomRight">
                               <span nz-icon nzType="ellipsis"></span>
                             </button>                                                       

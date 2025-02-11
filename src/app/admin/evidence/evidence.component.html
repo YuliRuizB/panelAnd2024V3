@@ -7,7 +7,7 @@
     </nz-page-header>
   </div>
     <div class="body">
-      <nz-tabset>
+      <nz-tabset [nzSelectedIndex]="0">     
         <nz-tab nzTitle="Evidencias Generales">
           <div style="margin-bottom: 10px;" [formGroup]="dateFilterForm">
             <label for="selectedDate"> Selecciona una Fecha: </label>
@@ -15,7 +15,8 @@
           </div>
           <div>
             <nz-table #basicTable [nzData]="evidenceInfo" [nzLoading]="loadingevidenceInfo"
-              [nzLoadingDelay]="500" *ngIf="evidenceInfo">
+              [nzLoadingDelay]="500" *ngIf="evidenceInfo" 
+              [nzNoResult]="'No hay evidencias disponibles'">
               <thead>
                 <tr>
                   <th >PR</th>
@@ -42,7 +43,6 @@
                   </td>
                 </tr>
               </tbody>
-
             </nz-table>
           </div>
         </nz-tab>
@@ -70,7 +70,8 @@
           </div>
           <div>
             <nz-table #basicTableDriver [nzData]="evidenceInfoDriver"  [nzLoading]="loadingevidenceInfoDriver"
-              [nzLoadingDelay]="500" *ngIf="evidenceInfoDriver">
+              [nzLoadingDelay]="500" *ngIf="evidenceInfoDriver"
+              [nzNoResult]="'No hay evidencias disponibles'">
               <thead>
                 <tr>
                   <th >PR</th>
@@ -127,7 +128,7 @@
           </div>
           <div>
             <nz-table #basicTable [nzData]="evidenceInfoByProgram" ngSkipHydration
-              *ngIf="evidenceInfoByProgram">
+              *ngIf="evidenceInfoByProgram"  [nzNoResult]="'No hay evidencias disponibles'">
               <thead>
                 <tr>
                   <th >PR</th>
@@ -184,6 +185,7 @@
           </div>
           <div>
             <nz-table #basicTableR [nzData]="evidenceInfoByRoute" ngSkipHydration
+            [nzNoResult]="'No hay evidencias disponibles'"
               *ngIf="evidenceInfoByRoute">
               <thead>
                 <tr>

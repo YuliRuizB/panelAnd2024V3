@@ -40,6 +40,7 @@ export class RefaundComponent {
   isSeguimientoVisible = false;
   selectedDataUser: any = [];
   modalDataUser: any = {};
+  userCustomerId: string = "";
 
   constructor(
     private afs: AngularFirestore,
@@ -49,6 +50,7 @@ export class RefaundComponent {
     this.authService.user.subscribe((user: any) => {
       if (user) {
         this.user = user;
+        this.userCustomerId = this.user.customerId;
         if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
           this.rolService.getRol(this.user.rolId).valueChanges().subscribe((item: any) => {
             this.infoLoad = item;
@@ -63,6 +65,7 @@ export class RefaundComponent {
             }),
             tap(record => {
               this.infoSegment = record;
+              this.getCustomersList();
               return record;
             })
           ).subscribe();
@@ -73,7 +76,7 @@ export class RefaundComponent {
       selectedOption: [null], // 'selectedDate' is the name of the form control
       status: []
     });
-    this.getCustomersList();
+   
   }
 
   ngOnDestroy() {
@@ -86,17 +89,16 @@ export class RefaundComponent {
 
   getCustomersList() {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-      const customersCollection = this.afs.collection('customers', ref => ref
-        .where('customerId', '==', this.user.customerId).orderBy('name'));
+      const customersCollection = this.afs.collection('customers').doc(this.userCustomerId);
       customersCollection.snapshotChanges().pipe(
         takeUntil(this.stopSubscription$),
-        map((actions: any) => actions.map((a: any) => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data }
-        })),
+        map((action: any) => {
+          const id = action.payload.id;
+          const data = action.payload.data() as any;
+          return { id, ...data };
+        }),
         tap((customers: any) => {
-          this.customersList = customers;
+          this.customersList = [customers];
           return customers;
         })
       ).subscribe();

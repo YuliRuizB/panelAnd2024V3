@@ -106,6 +106,7 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
             }),
             tap(record => {
               this.infoSegment = record;
+              this.getCustomersList();
               return record;
             })
           ).subscribe();
@@ -136,12 +137,11 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
       rolId: [''],
       roles: ['']
     });
-    this.getCustomersList();
   }
 
   getCustomersList() {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual    
-      const customersCollection = this.afs.collection('customers').doc(this.userCustomerId);
+      const customersCollection = this.afs.collection('customers').doc(this.user.customerId);
       customersCollection.snapshotChanges().pipe(
         takeUntil(this.stopSubscription$),
         map((action: any) => {

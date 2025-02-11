@@ -599,18 +599,16 @@ export class DashboardComponents implements OnInit, OnDestroy {
 
   getCustomersList() {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-      const customersCollection = this.afs.collection('customers', ref => ref
-        .where('customerId', '==', this.user.customerId)
-        .orderBy('name'));
+      const customersCollection = this.afs.collection('customers').doc(this.user.customerId);
       customersCollection.snapshotChanges().pipe(
         takeUntil(this.stopSubscription$),
-        map((actions: any) => actions.map((a: any) => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data }
-        })),
+        map((action: any) => {
+          const id = action.payload.id;
+          const data = action.payload.data() as any;
+          return { id, ...data };
+        }),
         tap((customers: any) => {
-          this.customersList = customers;
+          this.customersList = [customers];
           return customers;
         })
       ).subscribe();

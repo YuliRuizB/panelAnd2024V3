@@ -24,7 +24,7 @@ interface Customer {
 export class RoutesService {
 
   joined$: Observable<any> | undefined;
- 
+
 
   constructor(private afs: AngularFirestore, private http: HttpClient) { }
 
@@ -35,29 +35,29 @@ export class RoutesService {
 
   getInternalCustomer(customerId: string) {
     const routes = this.afs.collection('users', ref => ref
-    .where('customerId', '==', customerId)
-    .where('status','==','internal'));
+      .where('customerId', '==', customerId)
+      .where('status', '==', 'internal'));
     return routes.snapshotChanges();
   }
 
-  getQuotesByRouteandProgram(customerId: string, routeId:string,transportType:string){
+  getQuotesByRouteandProgram(customerId: string, routeId: string, transportType: string) {
     const info = this.afs.collection('quotes', ref => ref
-    .where('customerId', '==', customerId)
-    .where('transportType', '==', transportType)
-    .where('routeId', '==', routeId));
+      .where('customerId', '==', customerId)
+      .where('transportType', '==', transportType)
+      .where('routeId', '==', routeId));
     return info.snapshotChanges();
   }
 
 
-  getQuotesByRouteByBoardingPass(customerId: string, routeId:string,transportType:string){
+  getQuotesByRouteByBoardingPass(customerId: string, routeId: string, transportType: string) {
     const info = this.afs.collectionGroup('boardingPasses', ref => ref
-    .where('customerId', '==', customerId)    
-    .where('routeId', '==', routeId));
+      .where('customerId', '==', customerId)
+      .where('routeId', '==', routeId));
     return info.snapshotChanges();
   }
 
   getProducts(customerId: string) {
-    const routes =this.afs.collection('customers').doc(customerId).collection('products', ref => 
+    const routes = this.afs.collection('customers').doc(customerId).collection('products', ref =>
       ref.where('active', '==', true));
     return routes.snapshotChanges();
   }
@@ -68,16 +68,16 @@ export class RoutesService {
     const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(key);
     return route.set(routeObj);
   }
-  setRoute2(key:any, customerId: string, routeObj: any) {
-  
+  setRoute2(key: any, customerId: string, routeObj: any) {
+
     routeObj.routeId = key;
     const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(key);
     return route.set(routeObj);
   }
 
   duplicateRouteWithStops(routeSource: any) {
-    let routeObj = { ...routeSource};
-    const key = this.afs.createId();   
+    let routeObj = { ...routeSource };
+    const key = this.afs.createId();
     const newRoute = {
       customerId: routeObj.duplicateCustomerId,
       customerName: routeObj.newCustomerName,
@@ -86,20 +86,20 @@ export class RoutesService {
       name: routeObj.name,
       routeId: key,
       initialStart: routeObj.initialStart
-    }   
+    }
     routeObj.routeId = key;
-    const route = this.afs.collection('customers').doc(routeObj.duplicateCustomerId).collection('routes').doc(key);  
+    const route = this.afs.collection('customers').doc(routeObj.duplicateCustomerId).collection('routes').doc(key);
     const stops = this.afs.collection('customers').doc(routeSource.customerId).collection('routes').doc(routeSource.routeId).collection('stops');
-    return stops.get().toPromise().then((querySnapShot:any) => {    
+    return stops.get().toPromise().then((querySnapShot: any) => {
       return route.set(newRoute).then(() => {
         if (!querySnapShot.empty) {
           const newStopsRef = this.afs.collection('customers').doc(routeObj.duplicateCustomerId).collection('routes').doc(key).collection('stops');
           const docs = querySnapShot.docs;
-          const promises: Promise<DocumentReference<any>>[] = docs.map((doc:any) => {
+          const promises: Promise<DocumentReference<any>>[] = docs.map((doc: any) => {
             const document = doc.data();
             return newStopsRef.add(document);
           });
-    
+
           return Promise.all(promises) as unknown as Promise<void>;
         }
         return Promise.resolve();
@@ -111,7 +111,7 @@ export class RoutesService {
     const ruteVendor = this.afs.collectionGroup('routesAccess', ref => ref
       .where('customerId', '==', customerId)
       .where('routeId', '==', routeId));
-  
+
     return ruteVendor.get().toPromise().then(querySnapshot => {
       if (!querySnapshot) {
         throw new Error('Query snapshot is undefined.');
@@ -129,7 +129,7 @@ export class RoutesService {
 
   toggleActiveRoute(customerId: string, routeId: string, routeObj: any) {
     const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId);
-    return route.update({ active: !routeObj.active});
+    return route.update({ active: !routeObj.active });
   }
 
   deleteRoute(customerId: string, routeId: string) {
@@ -143,25 +143,25 @@ export class RoutesService {
   }
 
   getRoutesByCustomer() {
-    this.joined$ = this.afs.collection('customers', ref => ref.orderBy('name')).valueChanges({ idField: 'id'})
+    this.joined$ = this.afs.collection('customers', ref => ref.orderBy('name')).valueChanges({ idField: 'id' })
       .pipe(
-        switchMap((customers:any) => {
-          const customersIds = uniq(customers.map((c:any) => c.id))
+        switchMap((customers: any) => {
+          const customersIds = uniq(customers.map((c: any) => c.id))
           return combineLatest(
             of(customers),
             combineLatest(
-              customersIds.map( (customerId: any) =>  //TODO
-                this.afs.collection('customers').doc(customerId).collection('routes', ref => ref.orderBy('name')).valueChanges({ idField: 'id'}).pipe(
+              customersIds.map((customerId: any) =>  //TODO
+                this.afs.collection('customers').doc(customerId).collection('routes', ref => ref.orderBy('name')).valueChanges({ idField: 'id' }).pipe(
                   map((routes: any) => {
-                    return {...routes, customerId }
+                    return { ...routes, customerId }
                   })
                 )
               )
             )
           )
         }),
-        map(([customers, routes]: [any[], any[]]) => {        
-          return routes.map((route:any) => {
+        map(([customers, routes]: [any[], any[]]) => {
+          return routes.map((route: any) => {
             const customer = _.filter(customers, (c) => {
               return route.customerId === c.id
             })
@@ -174,34 +174,34 @@ export class RoutesService {
           });
         })
       )
-      return this.joined$;
+    return this.joined$;
   }
 
-  getAuthorizedRoutes(vendorId: string) {   
-    this.joined$ = this.afs.collection('vendors').doc(vendorId).collection('routesAccess').valueChanges({ idField: 'id'})
+  getAuthorizedRoutes(vendorId: string) {
+    this.joined$ = this.afs.collection('vendors').doc(vendorId).collection('routesAccess').valueChanges({ idField: 'id' })
       .pipe(
-        switchMap((permissions:any) => {         
-          const routeIds = uniq(permissions.map((p:any) => p.routeId))         
+        switchMap((permissions: any) => {
+          const routeIds = uniq(permissions.map((p: any) => p.routeId))
           return routeIds.length === 0 ? of([]) :
-          combineLatest(
-            of(permissions),
             combineLatest(
-              routeIds.map( (routeId: any) =>
-                this.afs.collectionGroup('routes', ref => ref.where('routeId', '==', routeId)).valueChanges().pipe(
-                  map((routes: any) => routes[0]) // IRoute[]  TODO
+              of(permissions),
+              combineLatest(
+                routeIds.map((routeId: any) =>
+                  this.afs.collectionGroup('routes', ref => ref.where('routeId', '==', routeId)).valueChanges().pipe(
+                    map((routes: any) => routes[0]) // IRoute[]  TODO
+                  )
                 )
               )
             )
-          )
         }),
         map(([permissions, routes]) => {
           return typeof routes !== "undefined" ? routes
             .filter((route: any) => route) // Remove undefined values from routes
-            .map((route: any) => {            
+            .map((route: any) => {
               const permission = _.filter(permissions, (p) => {
                 return route && route.routeId === p.routeId;
               });
-        
+
               // Ensure that permission[0] is defined before accessing its properties
               return permission[0] ? {
                 ...route,
@@ -212,70 +212,73 @@ export class RoutesService {
               } : null; // Return null for cases where permission[0] is undefined
             }).filter((result: any) => result !== null) // Remove null values from the result array
             : of([]);
-        })       
+        })
       )
-      return this.joined$;
+    return this.joined$;
   }
-  
+
   getAllCustomersRoutes() {
-    this.joined$ = this.afs.collection('customers').valueChanges({ idField: 'id'})
+    this.joined$ = this.afs.collection('customers', ref => ref.where('active', '==', true))
+      .valueChanges({ idField: 'id' })
       .pipe(
-        switchMap((customers:any) => {         
+        switchMap((customers: any) => {
           if (customers.length === 0) {
             return of([]);
           } else {
             const routeObservables = customers.map((customer: Customer) =>
               this.afs.collection('customers').doc(customer.id).collection<any>('routes').valueChanges().pipe(
-                map((routes: any[]) => routes.map((route: any) => ({               
-                  ...route 
+                map((routes: any[]) => routes.map((route: any) => ({
+                  ...route
                 })))
               )
-            );           
+            );
             return combineLatest([of(customers), combineLatest(routeObservables)]);
           }
         }),
-        map(([customers, routes]) => {         
-          return routes ? _.flatten(routes as IRoute[][]) : [];
-        })
-      )
-      return this.joined$;
-  }
-  getAllCustomersRoutesbyCustomer(customerId:string) {  
-    const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes');
-      return customerbyRoute.snapshotChanges();
+        map(([customers, routes]) => routes ? _.flatten(routes as IRoute[][]) : [])
+      );
+
+    return this.joined$;
   }
 
-  getCustomersRoutesbyCustomer(customerId:string, routeId:string) {  
-    const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('stops', ref => ref.where('active','==', true).orderBy('order','asc'));
-      return customerbyRoute.snapshotChanges();
+  getAllCustomersRoutesbyCustomer(customerId: string) {
+    const customerRef = this.afs.collection('customers', ref => ref.where('active', '==', true))
+      .doc(customerId)
+      .collection('routes');
+
+    return customerRef.snapshotChanges();
   }
-  
-  getCustomersPolyLineCustomer(customerId:string, routeId:string) {  
+  getCustomersRoutesbyCustomer(customerId: string, routeId: string) {
+    const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('stops', ref => ref.where('active', '==', true).orderBy('order', 'asc'));
+    return customerbyRoute.snapshotChanges();
+  }
+
+  getCustomersPolyLineCustomer(customerId: string, routeId: string) {
     const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('polyline');
-      return customerbyRoute.snapshotChanges();
+    return customerbyRoute.snapshotChanges();
   }
 
   public getDirectionsWithStops(stopPoints: any): Observable<any> {
-    
+
     const httpOptions = {
       headers: new HttpHeaders({ 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }),
     };
     let api = `https://us-central1-andappssystem-c14f2.cloudfunctions.net/getDirectionsWithStops`;
     return this.http.post(api, { stopPoints: stopPoints }, httpOptions).pipe(
-      retry(0), 
+      retry(0),
     );
   }
 
-  setPolyline(vert: any, customerId:string, routeId: string, polyline: any) {    
- 
-    if (polyline.length < 2) {      
-      const key = this.afs.createId();     
+  setPolyline(vert: any, customerId: string, routeId: string, polyline: any) {
+
+    if (polyline.length < 2) {
+      const key = this.afs.createId();
       const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('polyline').doc(key);
       return route.set(vert);
-    } else {      
+    } else {
       const route = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('polyline').doc(polyline);
       return route.update(vert);
-    }  
+    }
   }
 
   setAuthorizedRoutes(vendorId: string, record: any) {
@@ -285,7 +288,7 @@ export class RoutesService {
 
   getVendorRoutes(vendorId: string) {
     return this.getRoutesArray(vendorId).pipe(
-      map((actions:any) => actions.map((a:any) => {
+      map((actions: any) => actions.map((a: any) => {
         return a.payload.doc.data().routeId;
       })),
       switchMap(permissions => {
@@ -307,7 +310,7 @@ export class RoutesService {
   //Vehicle Assignments
 
   getRouteVehicleAssignments(accountId: string, routeId: string, assignmentId: string, vendorId: string) {
-    const routeVehicleAssignments = this.afs.collection('customers').doc(accountId).collection('routes').doc(routeId).collection('vehicleAssignments', ref => ref.where('assignmentId','==',assignmentId).where('vendorId','==',vendorId));
+    const routeVehicleAssignments = this.afs.collection('customers').doc(accountId).collection('routes').doc(routeId).collection('vehicleAssignments', ref => ref.where('assignmentId', '==', assignmentId).where('vendorId', '==', vendorId));
     return routeVehicleAssignments.snapshotChanges();
   }
 
@@ -316,12 +319,12 @@ export class RoutesService {
     return routeVehicleAssignments.add(assignment);
   }
 
-  updateRouteVehicleAssignment(accountId: string, routeId: string, assignmentId: string,  assignment: any) {
+  updateRouteVehicleAssignment(accountId: string, routeId: string, assignmentId: string, assignment: any) {
     const routeVehicleAssignment = this.afs.collection('customers').doc(accountId).collection('routes').doc(routeId).collection('vehicleAssignments').doc(assignmentId);
     return routeVehicleAssignment.update(assignment);
   }
 
-  toggleRouteVehicleAssignment(accountId: string, routeId: string, assignmentId: string,  assignment: any) {
+  toggleRouteVehicleAssignment(accountId: string, routeId: string, assignmentId: string, assignment: any) {
     const routeVehicleAssignment = this.afs.collection('customers').doc(accountId).collection('routes').doc(routeId).collection('vehicleAssignments').doc(assignmentId);
     return routeVehicleAssignment.update({ active: !assignment.active });
   }
@@ -339,7 +342,7 @@ export class RoutesService {
   }
 
   getCustomerVendorAssignments(accountId: string) {
-    const routeAssignments = this.afs.collectionGroup('assignments', ref => ref.where('customerId','==',accountId).orderBy('time'));
+    const routeAssignments = this.afs.collectionGroup('assignments', ref => ref.where('customerId', '==', accountId).orderBy('time'));
     return routeAssignments.snapshotChanges();
   }
 
@@ -377,12 +380,12 @@ export class RoutesService {
       default:
         break;
     }
-    const routeAssignments = this.afs.collectionGroup('assignments', ref => ref.where(searchField,'==',true).where('active','==',true));
+    const routeAssignments = this.afs.collectionGroup('assignments', ref => ref.where(searchField, '==', true).where('active', '==', true));
     return routeAssignments.snapshotChanges();
   }
 
   getVendorVehicleAssignments(vendorId: string) {
-    const assignments = this.afs.collectionGroup('vehicleAssignments', ref => ref.where('vendorId','==',vendorId).where('active','==',true));
+    const assignments = this.afs.collectionGroup('vehicleAssignments', ref => ref.where('vendorId', '==', vendorId).where('active', '==', true));
     return assignments.snapshotChanges();
   }
 
@@ -391,12 +394,12 @@ export class RoutesService {
     return routeAssignments.add(assignment);
   }
 
-  updateRouteAssignment(accountId: string, routeId: string, assignmentId: string,  assignment: any) {
+  updateRouteAssignment(accountId: string, routeId: string, assignmentId: string, assignment: any) {
     const routeAssignment = this.afs.collection('customers').doc(accountId).collection('routes').doc(routeId).collection('assignments').doc(assignmentId);
     return routeAssignment.update(assignment);
   }
 
-  toggleRouteAssignment(accountId: string, routeId: string, assignmentId: string,  assignment: any) {
+  toggleRouteAssignment(accountId: string, routeId: string, assignmentId: string, assignment: any) {
     const routeAssignment = this.afs.collection('customers').doc(accountId).collection('routes').doc(routeId).collection('assignments').doc(assignmentId);
     return routeAssignment.update({ active: !assignment.active });
   }
@@ -419,7 +422,7 @@ export class RoutesService {
       round3: object.round3
     };
     //wrappedData.geopoint = new firebase.firestore.GeoPoint(+object.latitude, +object.longitude);   
-    wrappedData.geopoint = new GeoPoint(+object.latitude, +object.longitude);   
+    wrappedData.geopoint = new GeoPoint(+object.latitude, +object.longitude);
     const stopPoint = this.afs.collection('customers').doc(accountId).collection('routes').doc(routeId).collection('stops').doc(object.id);
     return stopPoint.update(wrappedData);
   }
@@ -435,7 +438,7 @@ export class RoutesService {
       round3MinutesSinceStart: object.round3MinutesSinceStart
     };
     //wrappedData.geopoint = new firebase.firestore.GeoPoint(+object.latitude, +object.longitude);
-    wrappedData.geopoint = new GeoPoint(+object.latitude, +object.longitude);  
+    wrappedData.geopoint = new GeoPoint(+object.latitude, +object.longitude);
     const stopPoint = this.afs.collection('customers').doc(accountId).collection('routes').doc(routeId).collection('stops').doc(object.id);
     return stopPoint.set(wrappedData);
   }

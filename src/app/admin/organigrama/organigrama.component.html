@@ -7,7 +7,7 @@
     </nz-page-header>
   </div>
   <div class="body">
-      <nz-tabset>
+    <nz-tabset [nzSelectedIndex]="0">
           <nz-tab nzTitle="Usuarios Interesados">
               <div style="margin-bottom: 10px;">                    
                 <form nz-form nzLayout="horizontal" [formGroup]="validateForm" (ngSubmit)="submitFormUnPaid()">

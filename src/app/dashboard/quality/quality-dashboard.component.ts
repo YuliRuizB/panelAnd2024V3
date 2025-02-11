@@ -64,6 +64,7 @@ export class QualityDashboardComponent implements OnInit {
   userlevelAccess: string | undefined;
   user: any;
   qualityService = inject(QualityService);
+  uploadingL: boolean = false;
 
   constructor(private msg: NzMessageService,
     private bucketStorage: AngularFireStorage,
@@ -96,8 +97,8 @@ export class QualityDashboardComponent implements OnInit {
 
   loadFiles() {
     this.qualitySubscription = this.qualityService.getFiles().subscribe((files) => {
-      this.rowData = files as IFileInfo[];
-      if (files.length >= 0) {
+      if (files.length >= 0) {        
+        this.rowData = files as IFileInfo[];
         files.forEach((element: any) => {
           this.rowFolders.push(element["folder"]);
         });
@@ -247,7 +248,7 @@ export class QualityDashboardComponent implements OnInit {
   }
 
   handleChangeUpload(info: NzUploadChangeParam): void {
-    if (info.file.status !== 'uploading') {
+    if (info.file && info.file.status !== 'uploading') {
       if (info.file.status === 'done') {
         this.msg.success(`${info.file.name} file uploaded successfully`);
       } else if (info.file.status === 'error') {

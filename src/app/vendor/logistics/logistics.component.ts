@@ -309,6 +309,28 @@ export class LogisticsComponent implements OnInit {
     this.startAt = startOfToday();
     this.driverConfirmationAt = null;
 
+    this.authService.user.subscribe(user => {
+      if (user) {
+        this.user = user;
+        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
+
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;            
+              this.getAccountsMaps();
+              this.getCustomersList();
+              return record;
+            })
+          ).subscribe();
+        }
+      }
+    });
 
     this.dateRangeForm = this.fb.group({
       startDate: [startOfToday()], // Default to the start of today
@@ -332,7 +354,7 @@ export class LogisticsComponent implements OnInit {
       routeId: [],
       routeName: []
     });
-    this.getAccountsMaps();
+  
 
     if (typeof window !== 'undefined' && window.navigator && window.navigator.geolocation) {
       // Get current position
@@ -347,31 +369,8 @@ export class LogisticsComponent implements OnInit {
       // Handle case when geolocation is not supported
       console.error('Geolocation is not supported by this browser.');
     }
-
-    this.authService.user.subscribe(user => {
-      if (user) {
-        this.user = user;
-        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
-
-          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-            takeUntil(this.stopSubscription$),
-            map((a: any) => {
-              const id = a.payload.id;
-              const data = a.payload.data() as any;
-              return { id, ...data }
-            }),
-            tap(record => {
-              this.infoSegment = record;
-              this.getCustomersList();
-              return record;
-            })
-          ).subscribe();
-        }
-      }
-    });
+   
     this.isBrowser = isPlatformBrowser(this.platformId);
-
-
     this.columnDefs = [
       {
         headerName: 'Fecha', floatingFilter: true, filter: true, field: 'created', cellRenderer: (params: any) => {
@@ -396,17 +395,16 @@ export class LogisticsComponent implements OnInit {
 
   getCustomersList() {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-      const customersCollection = this.afs.collection('customers', ref => ref
-        .where('customerId', '==', this.user.customerId).orderBy('name'));
+      const customersCollection = this.afs.collection('customers').doc(this.user.customerId);
       customersCollection.snapshotChanges().pipe(
         takeUntil(this.stopSubscription$),
-        map((actions: any) => actions.map((a: any) => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data }
-        })),
+        map((action: any) => {
+          const id = action.payload.id;
+          const data = action.payload.data() as any;
+          return { id, ...data };
+        }),
         tap((customers: any) => {
-          this.customersList = customers;
+          this.customersList = [customers];
           return customers;
         })
       ).subscribe();
@@ -689,7 +687,7 @@ export class LogisticsComponent implements OnInit {
   ngOnInit() {
     if (this.isBrowser) {
       // Aquí va el código relacionado con Ag-Grid o window
-      console.log('Esto se ejecuta solo en el navegador');
+     // console.log('Esto se ejecuta solo en el navegador');
     }
   }
 

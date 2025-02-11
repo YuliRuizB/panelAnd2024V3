@@ -219,7 +219,7 @@ export class EvidenceComponent implements OnInit {
             this.loadingevidenceInfo = false;
           },
           error: (err) => {
-            this.sendMessage("error", err);
+            this.sendMessage("error", err);           
             this.loadingevidenceInfo = false;
           }
         });
@@ -236,7 +236,7 @@ export class EvidenceComponent implements OnInit {
             this.loadingevidenceInfo = false;
           },
           error: (err) => {
-            this.sendMessage("error", err);
+            this.sendMessage("error", err);            
             this.loadingevidenceInfo = false;
           }
         });

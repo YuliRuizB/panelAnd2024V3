@@ -168,20 +168,21 @@ export class ProgramComponent implements OnInit, OnDestroy {
       if (user) {
         this.user = user;
         this.vendorID = user.vendorId || "";
-      if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
-        this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
-          takeUntil(this.stopSubscription$),
-          map((a: any) => {
-            const id = a.payload.id;
-            const data = a.payload.data() as any;
-            return { id, ...data }
-          }),
-          tap(record => {
-            this.infoSegment = record;
-            return record;
-          })
-        ).subscribe();
-      }}
+        if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
+          this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
+            takeUntil(this.stopSubscription$),
+            map((a: any) => {
+              const id = a.payload.id;
+              const data = a.payload.data() as any;
+              return { id, ...data }
+            }),
+            tap(record => {
+              this.infoSegment = record;
+              return record;
+            })
+          ).subscribe();
+        }
+      }
     });
     this.markers = [] as GeoJson[];
     this.startDate = startOfToday();
@@ -206,51 +207,51 @@ export class ProgramComponent implements OnInit, OnDestroy {
   }
 
   onValueChange(value: Date): void {
-    if (this.date != startOfDay(new Date(value))) {      
+    if (this.date != startOfDay(new Date(value))) {
       this.rowDataAsignModal = [];  // clear code before fill
-      this.numAssing = "(0)";      
+      this.numAssing = "(0)";
     }
     this.date = startOfDay(new Date(value));
     this.searchData(true);
   }
 
   onSelectDrivers(vendorID: string) {
-   // if (vendorID != undefined) {
-      this.vehiclesSubscription = this.vehicleService.getVendorVehicles(vendorID).pipe(
-        takeUntil(this.stopSubscription$),
-        map((actions: any) => actions.map((a: any) => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data }
-        }))
-      ).subscribe(vehicles => {
-        for (var x = 0; x < vehicles.length; x++) {
-          if (this.arrVehicle.indexOf(vehicles[x].name) === -1 && vehicles[x].name != undefined && vehicles[x].name != "") {
-            this.arrVehicle.push(vehicles[x].name);
-            this.arrVehicleEdit.push({ name: vehicles[x].name, id: vehicles[x].id })
-          }
+    // if (vendorID != undefined) {
+    this.vehiclesSubscription = this.vehicleService.getVendorVehicles(vendorID).pipe(
+      takeUntil(this.stopSubscription$),
+      map((actions: any) => actions.map((a: any) => {
+        const id = a.payload.doc.id;
+        const data = a.payload.doc.data() as any;
+        return { id, ...data }
+      }))
+    ).subscribe(vehicles => {
+      for (var x = 0; x < vehicles.length; x++) {
+        if (this.arrVehicle.indexOf(vehicles[x].name) === -1 && vehicles[x].name != undefined && vehicles[x].name != "") {
+          this.arrVehicle.push(vehicles[x].name);
+          this.arrVehicleEdit.push({ name: vehicles[x].name, id: vehicles[x].id })
         }
-        
-      });
-      this.driversSubscription = this.driversService.getDriversByCustomergetDrivers(vendorID).pipe(
-        takeUntil(this.stopSubscription$),
-        map((actions: any) => actions.map((a: any) => {
-          const id = a.payload.doc.id;
-          const data = a.payload.doc.data() as any;
-          return { id, ...data }
-        }))
-      ).subscribe((drivers: any) => {
-        
-        for (var x = 0; x < drivers.length; x++) {
-          if (this.arrDrivers.indexOf(drivers[x].displayName) === -1 && drivers[x].displayName != undefined && drivers[x].displayName != "") {
-            this.arrDrivers.push(drivers[x].displayName);
-            this.arrDriversEdit.push({ displayName: drivers[x].displayName, id: drivers[x].id });
-          }
+      }
+
+    });
+    this.driversSubscription = this.driversService.getDriversByCustomergetDrivers(vendorID).pipe(
+      takeUntil(this.stopSubscription$),
+      map((actions: any) => actions.map((a: any) => {
+        const id = a.payload.doc.id;
+        const data = a.payload.doc.data() as any;
+        return { id, ...data }
+      }))
+    ).subscribe((drivers: any) => {
+
+      for (var x = 0; x < drivers.length; x++) {
+        if (this.arrDrivers.indexOf(drivers[x].displayName) === -1 && drivers[x].displayName != undefined && drivers[x].displayName != "") {
+          this.arrDrivers.push(drivers[x].displayName);
+          this.arrDriversEdit.push({ displayName: drivers[x].displayName, id: drivers[x].id });
         }
-      });
-   /*  } else {
-      this.sendMessage('error', 'VendorId no esta establecido, favor de validar con administración 1');
-    } */
+      }
+    });
+    /*  } else {
+       this.sendMessage('error', 'VendorId no esta establecido, favor de validar con administración 1');
+     } */
   }
   getMonthData(date: Date): number | null {
     if (date.getMonth() === 8) {
@@ -279,10 +280,10 @@ export class ProgramComponent implements OnInit, OnDestroy {
 
   getSubscriptions(vendorId: string) {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
+
       this.vendorRoutesSubscription = this.usersService.getBoardingPassesByRoutebyCustomerId(vendorId, this.user.customerId).pipe(
         takeUntil(this.stopSubscriptions$)
       ).subscribe(data => {
-
         var filterCustomerC: any = [];
         this.filterCustomerRoute = [];
         for (var x = 0; x < data.length; x++) {
@@ -413,10 +414,13 @@ export class ProgramComponent implements OnInit, OnDestroy {
 
   }
   getInfoAssigments() {
-    if (this.user) { 
+    if (this.user) {
       this.getSubscriptions(this.user.vendorId);
-      this.onSelectDrivers(this.user.vendorId);
+      if (this.user.vendorId) {
+        this.onSelectDrivers(this.user.vendorId);
+      }
     }
+
   }
 
   getAssignments() {
@@ -502,8 +506,8 @@ export class ProgramComponent implements OnInit, OnDestroy {
     if (this.routeNameSelected != routeSelected.routeName) {
       this.rowDataAsignModal = [];
     }
-    this.routeNameSelected = routeSelected.routeName; 
-    this.assignmentSubscription = this.assignmentsService.getActiveAssignmentsRoute( routeSelected.routeId).pipe(
+    this.routeNameSelected = routeSelected.routeName;
+    this.assignmentSubscription = this.assignmentsService.getActiveAssignmentsRoute(routeSelected.routeId).pipe(
       takeUntil(this.stopSubscription$),
       map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;

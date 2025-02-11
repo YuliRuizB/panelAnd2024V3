@@ -208,7 +208,6 @@ export class RoutesComponents implements OnInit, OnDestroy {
   }
 
   setCustomerName(event: any) {
-
     const recordArray = _.filter(this.accountsList, r => {
       return r.id == event;
     });
@@ -321,7 +320,6 @@ export class RoutesComponents implements OnInit, OnDestroy {
     this.duplicateVisible = false;
     this.isDuplicateLoading = false;
   }
-
 
   addNewRoute(newProjectContent: TemplateRef<{}>) {
     var advanceForm: object;
@@ -493,6 +491,4 @@ export class RoutesComponents implements OnInit, OnDestroy {
       });
     });
   }
-
-
 }

@@ -25,6 +25,13 @@ export class VendorService {
     return vendorRoutes.snapshotChanges();
   }
 
+  getVendorByCustomer(customerId: string) {
+    const routesAssignments = this.afs.collection('vendors', ref => 
+      ref.where('customerId','==',customerId)
+      );
+      return routesAssignments.snapshotChanges();
+  }
+
   getVendorRoutesAccessByCustomer(customerId: string) {
     const routesAssignments = this.afs.collectionGroup('routesAccess', ref => 
       ref.where('customerId','==',customerId)

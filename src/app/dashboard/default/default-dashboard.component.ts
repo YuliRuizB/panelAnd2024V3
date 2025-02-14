@@ -1925,7 +1925,6 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     }
   }
   nzClicTransfer() {
-    console.log("this.currentUserSelected", this.currentUserSelected);
     
     this.loadinglatestTransfer = true;  
     

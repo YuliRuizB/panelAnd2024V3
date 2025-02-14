@@ -230,7 +230,6 @@ export class AdminPaymentsComponent implements OnInit {
       } else {
         this.usersService.getTransferInfo().subscribe((data) => {
           this.dataTransfer = data as any[];
-          console.log(this.dataTransfer);
           this.dataTransferList = this.dataTransfer;
           this.cCollection = this.afs.collection<any>('customers', ref => ref.where('active', '==', true));
           this.customerSubscription = this.cCollection.snapshotChanges().pipe(

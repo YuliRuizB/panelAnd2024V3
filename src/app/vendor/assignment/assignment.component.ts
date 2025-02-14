@@ -47,9 +47,6 @@ export class AssignmentComponent implements OnInit, OnDestroy {
       if (user) {
         this.user = user;        
         if (this.user !== null && this.user !== undefined && this.user.idSegment !== undefined) {
-          if ( this.user.rolId !== undefined){
-          this.getSubscriptions();
-          }
           this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
             takeUntil(this.stopSubscription$),
             map((a: any) => {
@@ -59,6 +56,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
             }),
             tap(record => {
               this.infoSegment = record;
+              this.getSubscriptions();
               return record;
             })
           ).subscribe();
@@ -119,6 +117,7 @@ export class AssignmentComponent implements OnInit, OnDestroy {
   }
 
   getSubscriptions() {
+    
     this.vendorRoutesSubscription = this.usersService.getBoardingPassesByRoute().pipe(
       takeUntil(this.stopSubscriptions$)
     ).subscribe(data => {
@@ -147,18 +146,33 @@ export class AssignmentComponent implements OnInit, OnDestroy {
           .filter(customerName => _.includes(_.map(this.customersActiveList, 'name'), customerName))
           .value();
 
+       for (let i = 0; i < data.length; ++i) {
+        if ( data[i].passes[0].routeName != ""){
+          data[i].routeName = data[i].passes[0].routeName;
+        }
+        if ( data[i].passes[0].routeId != ""){
+            data[i].routeId = data[i].passes[0].routeId;
+          }
+       }
+      this.vendorRoutesList = data;
+
       } else {
         this.customersList = _.chain(data)
           .map('customerName')
           .uniq()
           .filter(customerName => _.includes(_.map(this.customersActiveList, 'name'), customerName))
           .value();
-      }
+     
       for (let i = 0; i < data.length; ++i) {
-        data[i].routeName = data[i].passes[0].routeName;
-        data[i].routeId = data[i].passes[0].routeId;
+        if ( data[i].passes[0].routeName != ""){
+          data[i].routeName = data[i].passes[0].routeName;
+        }
+        if ( data[i].passes[0].routeId != ""){
+            data[i].routeId = data[i].passes[0].routeId;
+          }
       }
       this.vendorRoutesList = data;
+     }
     })
   }
 

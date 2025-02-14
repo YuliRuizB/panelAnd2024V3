@@ -68,6 +68,7 @@ export class EvidenceComponent implements OnInit {
     this.authService.user.subscribe((user: any) => {
       if (user) {
         this.user = user;
+        
         if (this.user !== null && this.user !== undefined && this.user.rolId !== undefined) {
           this.rolService.getRol(this.user.rolId).valueChanges().subscribe((item: any) => {
             this.infoLoad = item;
@@ -82,6 +83,7 @@ export class EvidenceComponent implements OnInit {
             }),
             tap(record => {
               this.infoSegment = record;
+              this.vendorList();
               return record;
             })
           ).subscribe();
@@ -111,17 +113,36 @@ export class EvidenceComponent implements OnInit {
       vendorName: [],
       vendorId: [],
     });
-    this.vendorsService.getVendors().pipe(
-      takeUntil(this.stopSubscription$),
-      map((actions: any) => actions.map((a: any) => {
-        const id = a.payload.doc.id;
-        const data = a.payload.doc.data() as IVendor;
-        const vendorWithId = { ...data, id }; // Combinar data y id en un nuevo objeto
-        return vendorWithId;
-      })))
-      .subscribe((vendors: IVendor[]) => {
-        this.vendorsList = vendors;
-      });
+   
+  }
+
+  vendorList(){
+    
+    if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
+      this.vendorsService.getVendorByCustomer(this.user.customerId).pipe(
+        takeUntil(this.stopSubscription$),
+        map((actions: any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as IVendor;
+          const vendorWithId = { ...data, id }; // Combinar data y id en un nuevo objeto
+          return vendorWithId;
+        })))
+        .subscribe((vendors: IVendor[]) => {
+          this.vendorsList = vendors;
+        });
+        } else {
+          this.vendorsService.getVendors().pipe(
+            takeUntil(this.stopSubscription$),
+            map((actions: any) => actions.map((a: any) => {
+              const id = a.payload.doc.id;
+              const data = a.payload.doc.data() as IVendor;
+              const vendorWithId = { ...data, id }; // Combinar data y id en un nuevo objeto
+              return vendorWithId;
+            })))
+            .subscribe((vendors: IVendor[]) => {
+              this.vendorsList = vendors;
+            });
+        }
   }
   onDateChangeDriver() {
     this.evidenceInfoDriver = [];

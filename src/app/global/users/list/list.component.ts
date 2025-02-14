@@ -83,6 +83,7 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
   checkOptionsOne: any[] = [];
   userCustomerId: string = "";
   selectedOption: string = "";
+  
 
   constructor(
     private afs: AngularFirestore,
@@ -401,7 +402,8 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
   }
 
   saveSegment(currentUserSelected: any) {
-    this.customersService.saveSegmentId(currentUserSelected.id, this.selectedSegmentId);
+    
+    this.customersService.saveSegmentId(currentUserSelected.uid, this.selectedSegmentId);
   }
 
   showModalEditDriver(currentUserSelected: any) {

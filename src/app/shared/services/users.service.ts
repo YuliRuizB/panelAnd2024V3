@@ -59,6 +59,8 @@ export class UsersService {
             const permission = _.filter(permissions, (p) => {
                 return boardingPass[0].routeId === p.routeId
             });        
+
+
             return {
               passes: [...boardingPass],
               permission: permission[0].active ? permission[0].active : false,
@@ -72,6 +74,8 @@ export class UsersService {
       )
       return this.joined$;
   }
+
+  
 
   getBoardingPassesByRoutebyCustomerId(vendorId: string, customerId: string) {    
     const today = new Date();

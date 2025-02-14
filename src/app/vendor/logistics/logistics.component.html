@@ -122,7 +122,7 @@
             <td><strong>Hora de Confirmación:</strong></td>
             <td>{{ transformToHoursAndMinutes(driverConfirmationAt) }}</td>
             <td><strong>Hora de Inicio:</strong></td>
-            <td>{{ transformToHoursAndMinutes(startAt) }}</td>
+            <td>{{ transformToHoursAndMinutes(startedAt) }}</td>
             <td><strong>Online:</strong></td>
             <td>
               <i nz-icon [nzType]="isActiveRoute() ? 'check-circle' : 'close-circle'"
@@ -133,7 +133,26 @@
           <tr>
             <td><strong>Vehículo:</strong></td>
             <td>{{ vehicleName }}</td>
-            <td colspan="4"></td>
+            <td><strong>Ultima Actualización : </strong></td>
+            <td>{{ transformToHoursAndMinutes(lastUpdatedAt) }}</td>
+            <td><strong></strong></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td><strong>Confirmado:</strong></td>
+            <td>
+              <i nz-icon [nzType]="isConfirmed ? 'check-circle' : 'close-circle'"
+                [ngClass]="isConfirmed ? 'active-icon' : 'inactive-icon'"></i>
+              <span>{{ isConfirmed ? 'True' : 'False' }}</span>
+            </td>
+            <td><strong>Rechazado:</strong></td>
+            <td> <i nz-icon [nzType]="isRejected ? 'check-circle' : 'close-circle'"
+              [ngClass]="isRejected ? 'active-icon' : 'inactive-icon'"></i>
+            <span>{{ isRejected ? 'True' : 'False' }}</span></td>
+            <td><strong>Finalizado:</strong></td>
+            <td> <i nz-icon [nzType]="hasEnded ? 'check-circle' : 'close-circle'"
+              [ngClass]="hasEnded ? 'active-icon' : 'inactive-icon'"></i>
+            <span>{{ hasEnded ? 'True' : 'False' }}</span></td>
           </tr>
         </table>
       </nz-card>
@@ -219,14 +238,9 @@
               </tbody>
             </nz-table> -->
               <!-- Ag-Grid Component -->
-              <div *ngIf="isBrowser" >
-                <ag-grid-angular 
-                style="height: 600px; width: 100%;"
-                class="ag-theme-quartz"  [rowData]="rowData"              
-                  [columnDefs]="columnDefs"                
-                  [animateRows]="true"
-                  [pagination]="true"
-                   [sideBar]="true">
+              <div *ngIf="isBrowser">
+                <ag-grid-angular style="height: 600px; width: 100%;" class="ag-theme-quartz" [rowData]="rowData"
+                  [columnDefs]="columnDefs" [animateRows]="true" [pagination]="true" [sideBar]="true">
                 </ag-grid-angular>
               </div>
             </div>

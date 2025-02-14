@@ -39,7 +39,10 @@
               </nz-collapse-panel>
             </nz-collapse>
           </div>
+         
           <div class="chat chat-app row">
+            <nz-sider nzCollapsible [(nzCollapsed)]="isCollapsed" [nzWidth]="250" [nzTrigger]="null"    
+            style="background-color: white; border: 1px solid #ccc !important; height: 100vh; overflow-y: auto;">        
             <div class="chat-list">
               <div class="chat-user-tool">
                 <i nz-icon  nzTheme="outline" class="search-icon p-r-10 font-size-20"></i>
@@ -52,11 +55,7 @@
                   <tbody>
                     <tr *ngFor="let data of basicTable.data" (click)="userSelected(data)">
                       <td>
-                        <div class="media align-items-center">
-                          <div>
-                            <nz-avatar class="shadow" style="background-color: white ;  color: #4F6F57;" nzShape="square" nzIcon="user" [nzSrc]="data.photoURL">
-                            </nz-avatar>
-                          </div>
+                        <div class="media align-items-center">                         
                           <div class="p-l-15">
                             <h6 class="m-b-0"><i *ngIf="data.disabled" nz-icon  nzTheme="twotone"
                                 nzTwotoneColor="#de4436"></i> {{data.displayName}}</h6>
@@ -75,6 +74,7 @@
                 </nz-table>
               </div>
             </div>
+          </nz-sider>
             <div class="chat-content" >
               <div class="conversation">
                 <div class="conversation-wrapper">

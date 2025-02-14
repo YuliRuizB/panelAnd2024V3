@@ -82,6 +82,7 @@ export class ListComponentVendor implements OnInit {
       active: [false],
       deleted: [false],
       status: ['In Progress'],
+      customerId: this.user.customerId,
       website: ['', [Validators.required]]
     });
   }
@@ -92,7 +93,7 @@ export class ListComponentVendor implements OnInit {
 
   getSubscriptions() {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) {
-      this.vendorService.getVendorRoutesAccessByCustomer(this.user.customerId).pipe(
+      this.vendorService.getVendorByCustomer(this.user.customerId).pipe(
         takeUntil(this.stopSubscription$),
         map((actions: any) => actions.map((a: any) => {
           const id = a.payload.doc.id;
@@ -100,14 +101,9 @@ export class ListComponentVendor implements OnInit {
           return { id, ...data }
         })))
         .subscribe((data: any) => {
-          if (data && data.length > 0) {
-            const firstVendorId = data[0].vendorId;
-            this.vendorService.getVendor(firstVendorId).
-              subscribe((data: any) => {
-                const vendorData = data.payload.data();
-                this.vendorList = [vendorData];
-                this.vendorListLoad = this.vendorList;
-              });
+          if (data && data.length > 0) {        
+            this.vendorList = data;
+            this.vendorListLoad = this.vendorList;
           }
         });
     }
@@ -164,7 +160,7 @@ export class ListComponentVendor implements OnInit {
   }
 
   submitForm() {
-    if (this.objectForm.valid) {
+    if (this.objectForm.valid) {      
       if (this.userlevelAccess != "3") {
         this.vendorService.createVendor(this.objectForm.value);
       } else {

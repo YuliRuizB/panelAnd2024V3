@@ -304,7 +304,6 @@ export class CustomersService {
   }
 
   getUserTransferInfo(userId: string) {
-    console.log(userId);
     
     const getpre = this.afs.collection('users')
       .doc(userId)

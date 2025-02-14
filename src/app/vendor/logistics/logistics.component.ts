@@ -127,7 +127,12 @@ export class LogisticsComponent implements OnInit {
   descriptionRoute: string = "";
   driverName: string = "";
   driverConfirmationAt: | Date | undefined | null = null;
-  startAt: | Date | undefined | null = null;
+  startedAt: | Date | undefined | null = null;
+  lastUpdatedAt: | Date | undefined | null = null;
+  isConfirmed: boolean = false;
+  isRejected: boolean = false;
+  hasEnded: boolean = false;
+
   activeRoute: string = "False";
   round: string = "";
   vehicleName: string = "";
@@ -306,7 +311,8 @@ export class LogisticsComponent implements OnInit {
     this.endDateA = endOfToday();
     this.startDateAct = startOfToday()
     this.endDateAct = endOfToday();
-    this.startAt = startOfToday();
+    this.startedAt = startOfToday();
+    this.lastUpdatedAt =null;
     this.driverConfirmationAt = null;
 
     this.authService.user.subscribe(user => {
@@ -482,8 +488,12 @@ export class LogisticsComponent implements OnInit {
         if (markers && markers.length > 0 && markers[0].geopoint) {
           this.driverName = markers[0].driver;
           this.driverConfirmationAt = markers[0].driverConfirmationAt;
-          this.startAt = markers[0].startAt;
+          this.startedAt = markers[0].startAted;
           this.activeRoute = markers[0].active;
+          this.isConfirmed = markers[0].isConfirmed;          
+          this.isRejected = markers[0].isRejected;
+          this.hasEnded = markers[0].hasEnded;
+          this.lastUpdatedAt = markers[0].lastUpdatedAt;
           this.round = markers[0].round;
           this.vehicleName = markers[0].vehicleName;
           this.addGeoPointToMarkerPositions(markers[0].geopoint);
@@ -491,11 +501,16 @@ export class LogisticsComponent implements OnInit {
           this.notification.create('warning', 'Información', 'No hay operaciones activas en este momento.');
           this.driverName = "";
           this.driverConfirmationAt = null;
-          this.startAt = null;
+          this.startedAt = null;
+          this.lastUpdatedAt= null;
           this.activeRoute = "False";
+          this.isConfirmed = false;
+          this.isRejected = false;
+          this.hasEnded = false;
           this.round = "";
           this.vehicleName = "";
           this.descriptionRoute = "";
+          this.lastUpdatedAt =null;
           this.markerPositions = [];
         }
       })
@@ -510,12 +525,16 @@ export class LogisticsComponent implements OnInit {
             return { id, arrayLatLng, ...data }
           });
         })
-      ).subscribe((markers: any) => {
-        if (markers && markers.length > 0 && markers[0].geopoint) {
+      ).subscribe((markers: any) => {        
+        if (markers && markers.length > 0 && markers[0].geopoint) {          
           this.driverName = markers[0].driver;
           this.driverConfirmationAt = markers[0].driverConfirmationAt;
-          this.startAt = markers[0].startAt;
-          this.activeRoute = markers[0].active;
+          this.startedAt = markers[0].startedAt;
+          this.lastUpdatedAt = markers[0].lastUpdatedAt;
+          this.activeRoute = markers[0].active;          
+          this.isConfirmed = markers[0].isConfirmed; 
+          this.hasEnded = markers[0].hasEnded;         
+          this.isRejected = markers[0].isRejected;
           this.round = markers[0].round;
           this.vehicleName = markers[0].vehicleName;
 
@@ -525,11 +544,16 @@ export class LogisticsComponent implements OnInit {
           this.markerPositions = [];
           this.driverName = "";
           this.driverConfirmationAt = null;
-          this.startAt = null;
+          this.startedAt = null;
+          this.lastUpdatedAt = null;
           this.activeRoute = "False";
+          this.isConfirmed = false;
+          this.isRejected = false;
+          this.hasEnded = false;
           this.round = "";
           this.vehicleName = "";
           this.descriptionRoute = "";
+          this.lastUpdatedAt = null;
           this.markerPositions = [];
         }
       })

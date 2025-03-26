@@ -178,3 +178,16 @@
       margin-block: 1.5rem;
     }
   }
+
+  .portal-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #A8977C; /* Color tomado del logo */
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: 20px;
+    letter-spacing: 1px;
+    border-bottom: 3px solid #A8977C;
+    display: inline-block;
+    padding-bottom: 5px;
+}

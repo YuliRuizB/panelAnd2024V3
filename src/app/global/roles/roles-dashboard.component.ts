@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
 import { FormsModule, ReactiveFormsModule, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { TransferItem } from 'ng-zorro-antd/transfer';
@@ -8,6 +8,7 @@ import * as _ from 'lodash';
 import { Subscription } from 'rxjs';
 import { RolService } from '../../shared/services/roles.service';
 import { en_US } from 'ng-zorro-antd/i18n'; import { formRol } from '../../shared/interfaces/roles.type';
+import { log } from 'console';
 ;
 
 
@@ -25,6 +26,7 @@ export class RolComponent implements OnInit {
   sub?: Subscription;
   isAddVisible: boolean = false;
   isEditVisible: boolean = false;
+  isDeleteVisible: boolean = false;
   validateAddRolForm!: UntypedFormGroup;
   validateEditRolForm!: UntypedFormGroup;
   currentRolSelected: any;
@@ -34,10 +36,15 @@ export class RolComponent implements OnInit {
   formCollection: AngularFirestoreCollection<any> | undefined;
   formRolCollection: AngularFirestoreCollection<any> | undefined;
   loadedRolesList: Array<any> = [];
+  loadedRoles: any[] = [];
   displayData: any;
+  selectedRole: string = '';
   NameRol: string = "";
   rolSelectedID: any;
   disabled = false;
+  deletForm: UntypedFormGroup;
+  selectDelRole: string = "";
+
   options = [
     { value: '1', label: 'Ver, Editar, Borrar' },
     { value: '2', label: 'Ver, Editar' },
@@ -45,9 +52,21 @@ export class RolComponent implements OnInit {
   ];
 
   constructor(public msg: NzMessageService,
+    private cdr: ChangeDetectorRef,
     private fb: UntypedFormBuilder,
     private afs: AngularFirestore
-  ) { }
+  ) {
+
+    this.deletForm = this.fb.group({
+      name: [''],
+      description: [''],
+      rolId: [''],
+      optionAccessLavel: [''],
+      active: ['']
+    });
+
+
+  }
 
   ngOnInit() {
     this.validateAddRolForm = this.fb.group({
@@ -68,12 +87,15 @@ export class RolComponent implements OnInit {
   }
 
   geRolesList() {
-    this.rolesCollection = this.afs.collection<any>('roles', ref => ref.orderBy('name'));
+    this.rolesCollection = this.afs.collection<any>('roles', ref =>
+      ref.where('active', '==', true).orderBy('name')
+    );
+
     this.roles = this.rolesCollection.snapshotChanges().pipe(
       map((actions: any) => actions.map((a: any) => {
         const id = a.payload.doc.id;
         const data = a.payload.doc.data() as any;
-        return { id, ...data }
+        return { id, ...data };
       }))
     ).subscribe(roles => {
       this.loadroles(roles);
@@ -85,14 +107,18 @@ export class RolComponent implements OnInit {
       this.displayData = roles;
       this.roldata = _.orderBy(JSON.parse(JSON.stringify(roles)), ['name'], ['asc']);
       this.loadedRolesList = this.roldata;
+      this.loadedRoles = [...this.roldata];
+      this.cdr.detectChanges();
     }
   }
+
   ngOnDestroy() {
     if (this.roles) {
       this.roles.unsubscribe();
     }
     this.NameRol = "";
   }
+
   rolSelected(data: any) {
     this.disabled = false;
     this.list = [];
@@ -229,6 +255,7 @@ export class RolComponent implements OnInit {
     this.validateAddRolForm.controls['active'].setValue(false);
     this.isAddVisible = true;
     this.isEditVisible = false;
+    this.isDeleteVisible = false;
   }
 
   showModalEditRol(currentRolSelected: any) {
@@ -244,13 +271,28 @@ export class RolComponent implements OnInit {
       const uidRol = currentRolSelected.id == undefined ? "" : currentRolSelected.id;
       this.isAddVisible = false;
       this.isEditVisible = true;
+      this.isDeleteVisible = false;
     }
+  }
+  showModalDeleteRol() {
+    //  this.geRolesList();
+    if (this.loadedRoles.length > 0) {
+      this.isDeleteVisible = true;
+    }
+  }
+
+  rolSelectedDelete(data: any) {
+    this.selectDelRole = data;
   }
 
   handleCancel() {
     this.isAddVisible = false;
     this.isEditVisible = false;
+    this.isDeleteVisible = false;
+    this.selectDelRole = "";
   }
+
+
   submitAddForm() {
     if (this.validateAddRolForm.valid) {
       this.rolService.createRol(this.validateAddRolForm.value).then((response) => {
@@ -280,5 +322,21 @@ export class RolComponent implements OnInit {
     } else {
       this.msg.success("El Formulario no es valido favor de validar");
     }
+  }
+
+
+  submitDelForm() {
+    if (this.selectDelRole != "") {
+      this.afs.collection('roles').doc(this.selectDelRole).update({ active: false })
+      .then(() => {
+        this.loadedRolesList = [];
+        this.geRolesList();
+        this.isDeleteVisible = false;
+        this.msg.success("Se elimino el rol con éxito.");
+      });     
+    } else {
+      this.msg.error("Necesitas seleccionar un rol para eliminar");
+    }
+
   }
 }

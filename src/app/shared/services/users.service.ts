@@ -564,6 +564,16 @@ export class UsersService {
     );
     return getpre.valueChanges();
   }
+
+  getPreRegisterInfoEByVendor(vendorId:string) {
+    const getpre = this.afs.collectionGroup('drivers', ref => 
+    ref.where('status','==','pending')
+    .where('vendorId','==',vendorId)
+      .orderBy('firstName','desc')
+    );
+    return getpre.valueChanges();
+  }
+
   getPreRegisterInfoEByCustomer(customerId:string) {
     const getpre = this.afs.collectionGroup('drivers', ref => 
     ref.where('status','==','pending')
@@ -572,9 +582,19 @@ export class UsersService {
     );
     return getpre.valueChanges();
   }
+
+  getVendorId(customerId:string) {           
+      const getpre = this.afs.collection('vendors', ref => 
+        ref.where('customerId', '==', customerId)
+          .where('active', '==', true)
+      );
+      return getpre.snapshotChanges();
+  }
+
   getTransferInfoByCustomer(customerId:string) {
     const getpre = this.afs.collectionGroup('transfers', ref => 
     ref.where('status','!=','complete')
+    
     .where('customerId','==', customerId)
       .orderBy('dateTime','desc')
     );

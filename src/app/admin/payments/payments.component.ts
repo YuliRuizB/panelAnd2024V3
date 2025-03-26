@@ -15,6 +15,7 @@ import _ from 'lodash';
 import { IStopPoint } from '../../shared/models/ColumItem';
 import { UserData } from '../../shared/interfaces/payments.type';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { log } from 'node:console';
 
 @Component({
   selector: 'app-payments',
@@ -248,10 +249,23 @@ export class AdminPaymentsComponent implements OnInit {
 
   fillDataE() {
     if (this.dataEjecutoresList.length <= 1) {
-      if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
-        this.usersService.getPreRegisterInfoEByCustomer(this.user.customerId).subscribe((data) => {
-          this.dataEjecutores = data as any[];
-          this.dataEjecutoresList = this.dataEjecutores;
+            if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual        
+        this.dataEjecutores = [];
+        this.usersService.getVendorId(this.user.customerId).pipe(
+          takeUntil(this.stopSubscription$),
+          map((actions: any) => actions.map((a: any) => {
+            const id = a.payload.doc.id;
+            const data = a.payload.doc.data() as any;
+            const route = { ...data, id };
+            return route;
+          }))
+        ).subscribe((vendors: any) => {
+          vendors.forEach((vendor: any) => {
+            this.usersService.getPreRegisterInfoEByVendor(vendor.id).subscribe((drivers: any) => {                            
+              this.dataEjecutores = [...this.dataEjecutores, ...drivers];                      
+              this.dataEjecutoresList = [...this.dataEjecutores];
+            });
+          });
         });
       } else {
         this.usersService.getPreRegisterInfoE().subscribe((data) => {

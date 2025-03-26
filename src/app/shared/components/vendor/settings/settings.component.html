@@ -1,6 +1,6 @@
 <button *ngIf="userCanUpdate" class="media align-items-right m-t-10 m-r-10" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;"
   (click)="showModal()"><i nz-icon></i>Asignar Operación</button>
-<nz-table #basicTable [nzData]="vendorRoutesList" [nzLoading]="loading" >
+<nz-table #basicTable [nzData]="vendorRoutesList"  >
   <thead>
     <tr>
       <th style="color: #4F6F57;">Empresa</th>
@@ -61,7 +61,7 @@
     <nz-form-item>
       <nz-form-label [nzSpan]="6" nzFor="route">Operación 1</nz-form-label>
       <nz-form-control [nzSpan]="14">
-        <nz-select *ngIf="allRoutesList.length > 0" [(ngModel)]="selectedRoute" [nzLoading]="loading" nzAllowClear
+        <nz-select *ngIf="allRoutesList.length > 0" [(ngModel)]="selectedRoute" nzAllowClear
           nzPlaceHolder="Selecciona una Operación">
           <nz-option-group *ngFor="let c of allRoutesList" [nzLabel]="c.customerName">
             <nz-option *ngFor="let r of c.routes"

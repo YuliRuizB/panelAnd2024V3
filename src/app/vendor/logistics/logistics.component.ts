@@ -94,6 +94,7 @@ export class LogisticsComponent implements OnInit {
   display: any;
   zoom: any;
   accountsList: any = [];
+  driversList : any = [];
   stopSubscription$: Subject<boolean> = new Subject();
   user: any;
   customerName: string = "Empresa";
@@ -358,7 +359,8 @@ export class LogisticsComponent implements OnInit {
       customerId: [],
       customerName: [],
       routeId: [],
-      routeName: []
+      routeName: [],
+      driverId: [null] 
     });
   
 
@@ -465,7 +467,45 @@ export class LogisticsComponent implements OnInit {
   }
 
   onDateRangeChangeMap(): void {
+    const selectedDriverId = this.dateRangeFormMap.controls['driversId'].value; // Obtener el ID seleccionado
+  
+    // Filtrar el objeto correspondiente en driversList
+    const selectedDriver = this.driversList.find((driver: any) => driver.driverId === selectedDriverId);
+  
+    if (selectedDriver) {
+      console.log(selectedDriver);
+      
+      this.driverName = selectedDriver.driver;
+      this.driverConfirmationAt = selectedDriver.driverConfirmationAt;
+      this.startedAt = selectedDriver.startAted;
+      this.activeRoute = selectedDriver.active;
+      this.isConfirmed = selectedDriver.isConfirmed;          
+      this.isRejected = selectedDriver.isRejected;
+      this.hasEnded = selectedDriver.hasEnded;
+      this.lastUpdatedAt = selectedDriver.lastUpdatedAt;
+      this.round = selectedDriver.round;
+      this.vehicleName = selectedDriver.vehicleName;
+      this.addGeoPointToMarkerPositions(selectedDriver.geopoint);
+    } else {
+      this.notification.create('warning', 'Información', 'No hay operaciones activas en este momento.');
+      this.driverName = "";
+      this.driverConfirmationAt = null;
+      this.startedAt = null;
+      this.lastUpdatedAt= null;
+      this.activeRoute = "False";
+      this.isConfirmed = false;
+      this.isRejected = false;
+      this.hasEnded = false;
+      this.round = "";
+      this.vehicleName = "";
+      this.descriptionRoute = "";
+      this.lastUpdatedAt = null;
+      this.markerPositions = [];
+    }
+  }
+  
 
+  onOpSelected(){
     if (this.dateRangeFormMap.get('routeId')!.value != undefined) {
       const recordArray = _.filter(this.routes, r => {
         return r.id == this.dateRangeFormMap.get('routeId')!.value;
@@ -485,7 +525,12 @@ export class LogisticsComponent implements OnInit {
           });
         })
       ).subscribe((markers: any) => {
-        if (markers && markers.length > 0 && markers[0].geopoint) {
+        if (markers && markers.length > 0 && markers[0].geopoint) { 
+          this.driversList = markers;
+        } 
+       /*  if (markers && markers.length > 0 && markers[0].geopoint) {
+          console.log(markers);
+          
           this.driverName = markers[0].driver;
           this.driverConfirmationAt = markers[0].driverConfirmationAt;
           this.startedAt = markers[0].startAted;
@@ -512,7 +557,7 @@ export class LogisticsComponent implements OnInit {
           this.descriptionRoute = "";
           this.lastUpdatedAt =null;
           this.markerPositions = [];
-        }
+        } */
       })
     } else {
       this.markers = this.logisticsService.getliveBusses(this.dateRangeFormMap.get('customerId')!.value, this.dateRangeFormMap.get('routeId')!.value);
@@ -525,8 +570,11 @@ export class LogisticsComponent implements OnInit {
             return { id, arrayLatLng, ...data }
           });
         })
-      ).subscribe((markers: any) => {        
-        if (markers && markers.length > 0 && markers[0].geopoint) {          
+      ).subscribe((markers: any) => {     
+        if (markers && markers.length > 0 && markers[0].geopoint) { 
+          this.driversList = markers;
+        } 
+       /*  if (markers && markers.length > 0 && markers[0].geopoint) {          
           this.driverName = markers[0].driver;
           this.driverConfirmationAt = markers[0].driverConfirmationAt;
           this.startedAt = markers[0].startedAt;
@@ -555,10 +603,12 @@ export class LogisticsComponent implements OnInit {
           this.descriptionRoute = "";
           this.lastUpdatedAt = null;
           this.markerPositions = [];
-        }
+        } */
       })
     }
   }
+
+
   transformToHoursAndMinutes(timestamp: { seconds: number; nanoseconds: number } | Date | undefined | null): string {
     if (!timestamp) {
       return 'NA'; // Return 'NA' if the timestamp is null or undefined

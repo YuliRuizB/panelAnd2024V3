@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { AngularFireFunctions } from '@angular/fire/compat/functions';
+import { log } from 'console';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { map } from 'rxjs/operators';
 
@@ -31,7 +32,7 @@ export class DashboardService {
     sendFCMNotification(infoToSend).subscribe({
       next: (response: any) => {
       },
-      error: (err: any) => {
+      error: (err: any) => {        
       }
     });
   }

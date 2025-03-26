@@ -236,7 +236,7 @@ export class RoutesComponents implements OnInit, OnDestroy {
                 return { id, ...data };
               }))
             ).subscribe({
-              next: (stopPoints: any) => {
+              next: (stopPoints: any) => {                
                 const coordinatesArray = stopPoints.map((stopPoint: any) => {
                   return {
                     latitude: parseFloat(stopPoint.latitude),
@@ -245,11 +245,11 @@ export class RoutesComponents implements OnInit, OnDestroy {
                 });
                 this.routesService.getDirectionsWithStops(coordinatesArray).subscribe({
                   next: async (response: any) => {  
-                    this.routesService.setPolyline(response, data.customerId, data.routeId,polyline[0].id).then(() => {
+                     this.routesService.setPolyline(response, data.customerId, data.routeId,polyline[0].id).then(() => {
                     }).catch((error: any) => {
                       this.sendMessage("error", error);
-                    }); 
-                  },
+                    });  
+                   },
                   error: (e: any) => {
                     console.error(e);
                   },

@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, OnDestroy, inject, ViewChild, ElementRef } from '@angular/core';
 import { Subscription, Subject } from 'rxjs';
 import { IStopPoint } from '../../../interfaces/route.type';
-import { map, takeUntil, tap } from 'rxjs/operators';
+import { map, take, takeUntil, tap } from 'rxjs/operators';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedStopPointsNewComponent } from '../new/new.component';
@@ -127,6 +127,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
 
   toggleActive(data: any) {
     this.routesService.toggleActiveStopPoint(this.accountId, this.routeId, data);
+    this.updatePolyLine(this.accountId, this.routeId);
   }
 
   openPanelPDF(data: any) {
@@ -206,6 +207,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   handleOkEdit() {
     this.routesService.updateStopPoint(this.accountId, this.routeId, this.validateForm.value).then(() => {
       this.isEditVisible = false;
+      this.updatePolyLine(this.accountId, this.routeId);
       this.message.success('¡Listo!');
     }).catch(err => {
       this.isEditVisible = false;
@@ -239,6 +241,59 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
           resolve;
         })
       })
+    });
+  }
+
+  updatePolyLine(customerId: string, routeId: string) {
+    this.routesService.getCustomersPolyLineCustomer(customerId, routeId).pipe(
+      take(1),
+      map((actions: any) =>
+        actions.length > 0
+          ? actions.map((a: any) => {
+            const id = a.payload.doc.id;
+            return { id };
+          })
+          : [{ id: "-" }]
+      )
+    ).subscribe({
+      next: (polyline: any) => {
+        this.routesService.getCustomersRoutesbyCustomer(customerId, routeId).pipe(
+          map((actions: any) => actions.map((a: any) => {
+            const id = a.payload.doc.id;
+            const data = a.payload.doc.data() as any;
+            return { id, ...data };
+          }))
+        ).subscribe({
+          next: (stopPoints: any) => {
+            if (!stopPoints || stopPoints.length < 2) {             
+              return;
+            }
+            const coordinatesArray = stopPoints.map((stopPoint: any) => {
+              return {
+                latitude: parseFloat(stopPoint.latitude),
+                longitude: parseFloat(stopPoint.longitude)
+              };
+            });
+            this.routesService.getDirectionsWithStops(coordinatesArray).subscribe({
+              next: async (response: any) => {
+                this.routesService.setPolyline(response, customerId, routeId, polyline[0].id).then(() => {
+                }).catch((error: any) => {
+                  this.sendMessage("error", error);
+                });
+              },
+              error: (e: any) => {
+                console.error(e);
+              },
+            });
+          },
+          error: (err: any) => {
+            this.sendMessage("error", err);
+          }
+        });
+      },
+      error: (err: any) => {
+        this.sendMessage("error", err);
+      }
     });
   }
 

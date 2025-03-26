@@ -99,10 +99,15 @@
               </nz-option>
             </nz-select>
             <nz-select style="width: 320px;" formControlName="routeId" nzAllowClear
-              nzPlaceHolder="Selecciona la Operación">
+              nzPlaceHolder="Selecciona la Operación" (ngModelChange)="onOpSelected()">
               <nz-option *ngFor="let o of routes" nzCustomContent [nzLabel]="o.name" [nzValue]="o.routeId"><i
                   nz-icon></i> {{ o.name }}</nz-option>
             </nz-select>
+            <nz-select style="width: 320px;" formControlName="driverId" nzAllowClear
+            nzPlaceHolder="Selecciona el Ejecutor">
+            <nz-option *ngFor="let o of driversList" nzCustomContent [nzLabel]="o.driver" [nzValue]="o.driverId"><i
+                nz-icon></i> {{ o.driver }}</nz-option>
+          </nz-select>
             <!-- Submit Button -->
             <button nz- button style=" background-color: #4F6F57; color: #f6f3ea;" type="submit">Aceptar</button>
           </form>

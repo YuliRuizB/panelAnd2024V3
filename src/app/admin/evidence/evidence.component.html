@@ -121,7 +121,7 @@
             <nz-form-control>
               <nz-form-label style="width: 160px;">Programa</nz-form-label>   
               <nz-select  style="width: 450px;" formControlName="programId" nzAllowClear (ngModelChange)="onProgramSelected()"
-              nzPlaceHolder="Seleccione un PR">
+              nzPlaceHolder="Seleccione un Programa">
                 <nz-option *ngFor="let d of programList" [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
               </nz-select>
             </nz-form-control>
@@ -176,9 +176,9 @@
               </nz-select>
             </nz-form-control>
             <nz-form-control>
-              <nz-form-label style="width: 160px;">Ruta</nz-form-label>   
+              <nz-form-label style="width: 160px;">Operación</nz-form-label>   
               <nz-select  style="width: 450px;" formControlName="routeId" nzAllowClear (ngModelChange)="onRouteSelected()"
-              nzPlaceHolder="Seleccione un PR">
+              nzPlaceHolder="Seleccione una operación">
                 <nz-option *ngFor="let d of RouteList" [nzValue]="d.id" [nzLabel]="d.name"></nz-option>
               </nz-select>
             </nz-form-control>

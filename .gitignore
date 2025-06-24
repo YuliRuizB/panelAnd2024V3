@@ -67,3 +67,5 @@ node_modules/
 .env.*
 /src/environments
 environments/
+eval "$(ssh-agent -s)"
+ssh-keygen -t rsa -b 4096 -C "tu-email@ejemplo.com"

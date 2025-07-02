@@ -242,7 +242,7 @@ export class RoutesComponents implements OnInit, OnDestroy {
                     latitude: parseFloat(stopPoint.latitude),
                     longitude: parseFloat(stopPoint.longitude)
                   };
-                });
+                });              
                 this.routesService.getDirectionsWithStops(coordinatesArray).subscribe({
                   next: async (response: any) => {  
                      this.routesService.setPolyline(response, data.customerId, data.routeId,polyline[0].id).then(() => {

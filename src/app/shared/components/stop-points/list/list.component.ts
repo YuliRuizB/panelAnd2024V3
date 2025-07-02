@@ -1,7 +1,7 @@
 import { Component, OnInit, Input, OnDestroy, inject, ViewChild, ElementRef } from '@angular/core';
 import { Subscription, Subject } from 'rxjs';
 import { IStopPoint } from '../../../interfaces/route.type';
-import { map, take, takeUntil, tap } from 'rxjs/operators';
+import { filter, map, switchMap, take, takeUntil, tap } from 'rxjs/operators';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { SharedStopPointsNewComponent } from '../new/new.component';
@@ -25,6 +25,7 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
   @ViewChild('download', { static: false }) download!: ElementRef;
   @Input() accountId: string = '';
   @Input() routeId: string = '';
+  @Input() userCanUpdate: boolean = false;
   rolService = inject(RolService);
   routesService = inject(RoutesService);
   userService = inject(UsersService);
@@ -249,53 +250,47 @@ export class SharedStopPointsListComponent implements OnInit, OnDestroy {
       take(1),
       map((actions: any) =>
         actions.length > 0
-          ? actions.map((a: any) => {
-            const id = a.payload.doc.id;
-            return { id };
-          })
+          ? actions.map((a: any) => ({ id: a.payload.doc.id }))
           : [{ id: "-" }]
+      ),
+      switchMap((polyline: any) =>
+        this.routesService.getCustomersRoutesbyCustomer(customerId, routeId).pipe(
+          take(1),
+          map((actions: any) =>
+            actions.map((a: any) => {
+              const id = a.payload.doc.id;
+              const data = a.payload.doc.data();
+              return { id, ...data };
+            })
+          ),
+          map((stopPoints: any[]) => ({ polylineId: polyline[0].id, stopPoints }))
+        )
+      ),
+      filter(({ stopPoints }) => stopPoints.length >= 2),
+      map(({ polylineId, stopPoints }) => {
+        const coordinatesArray = stopPoints.map(sp => ({
+          latitude: parseFloat(sp.latitude),
+          longitude: parseFloat(sp.longitude)
+        }));
+        return { polylineId, coordinatesArray };
+      }),
+      switchMap(({ polylineId, coordinatesArray }) =>
+        this.routesService.getDirectionsWithStops(coordinatesArray).pipe(
+          switchMap((response: any) =>
+            this.routesService.setPolyline(response, customerId, routeId, polylineId)
+          )
+        )
       )
     ).subscribe({
-      next: (polyline: any) => {
-        this.routesService.getCustomersRoutesbyCustomer(customerId, routeId).pipe(
-          map((actions: any) => actions.map((a: any) => {
-            const id = a.payload.doc.id;
-            const data = a.payload.doc.data() as any;
-            return { id, ...data };
-          }))
-        ).subscribe({
-          next: (stopPoints: any) => {
-            if (!stopPoints || stopPoints.length < 2) {             
-              return;
-            }
-            const coordinatesArray = stopPoints.map((stopPoint: any) => {
-              return {
-                latitude: parseFloat(stopPoint.latitude),
-                longitude: parseFloat(stopPoint.longitude)
-              };
-            });
-            this.routesService.getDirectionsWithStops(coordinatesArray).subscribe({
-              next: async (response: any) => {
-                this.routesService.setPolyline(response, customerId, routeId, polyline[0].id).then(() => {
-                }).catch((error: any) => {
-                  this.sendMessage("error", error);
-                });
-              },
-              error: (e: any) => {
-                console.error(e);
-              },
-            });
-          },
-          error: (err: any) => {
-            this.sendMessage("error", err);
-          }
-        });
+      next: () => {
+        console.log("Polyline updated successfully");
       },
-      error: (err: any) => {
+      error: (err) => {
         this.sendMessage("error", err);
       }
     });
   }
+  
 
   onEditOk() {
   }

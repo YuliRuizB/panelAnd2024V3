@@ -28,6 +28,7 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
   authService = inject(AuthenticationService);
   devicesList: any;
   devicesListDrive: any;
+  isContentOpen = false;
   loadedDevicesList: Array<any> = [];
   loadedDevicesListDrive: Array<any> = [];
   currentUserSelected: any;
@@ -315,7 +316,8 @@ export class GlobalUsersListComponent implements OnInit, OnDestroy {
     this.rolesperUserAplicacion = "";
     this.currentUserSelected = data;
     this.RolesArray = data.roles;
-    this.rolesperUserAplicacion = this.RolesArray.join(', ');
+    
+    this.rolesperUserAplicacion = this.RolesArray?.length ? this.RolesArray.join(', ') : 'user';
     if (data.rolId != undefined) {
       if (data.rolId.length > 0) {
         this.rolService.getRol(data.rolId).valueChanges().subscribe(item => {

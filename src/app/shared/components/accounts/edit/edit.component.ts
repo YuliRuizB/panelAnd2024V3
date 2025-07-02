@@ -10,6 +10,7 @@ import { UsersService } from '../../../services/users.service';
 import { AuthenticationService } from '../../../services/authentication.service';
 import { AngularFireStorage, AngularFireUploadTask } from '@angular/fire/compat/storage';
 import { VendorService } from '../../../../shared/services/vendor.service';
+import { log } from 'node:console';
 
 @Component({
   selector: 'app-shared-account-edit',
@@ -243,6 +244,7 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
   onSubmit() {
     if (this.userlevelAccess != "3") {
       this.accountsService.updateAccount(this.accountId, this.objectForm.value).then(() => {
+        this.sendMessage('sucess', "El registro a sido actualizado con éxito.");
       }, err => {
         this.sendMessage('error', err);
       }).catch((err) => this.sendMessage('error', err))
@@ -252,12 +254,17 @@ export class SharedAccountEditComponent implements OnInit, OnDestroy {
   }
 
   onJobTypeSelected(event: any) {
-    const searchJob = this.jobType.filter((job: any) => job.uid === event);
-    if (searchJob.length > 0) {
-      let consecutive = searchJob[0].consecutive;
-      consecutive = parseInt(consecutive, 10) + 1;
-      consecutive = consecutive.toString().padStart(4, '0');
-      this.objectForm.controls['custConsecutive'].setValue(searchJob[0].type + consecutive);
+    console.log(event);
+    
+    if (event != undefined) {
+      const searchJob = this.jobType.filter((job: any) => job.uid === event);
+      if (searchJob.length > 0) {
+        let consecutive = searchJob[0].consecutive;
+        consecutive = parseInt(consecutive, 10) + 1;
+        consecutive = consecutive.toString().padStart(4, '0');
+        this.objectForm.controls['custConsecutive'].setValue(searchJob[0].type + consecutive);
+      }
     }
+
   }
 }

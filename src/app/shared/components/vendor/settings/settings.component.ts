@@ -129,8 +129,7 @@ export class SharedVendorSettingsComponent implements OnInit, OnDestroy {
       this.vendorRoutesSubscription = this.routesService.getAuthorizedRoutes(this.vendorId).subscribe({
         next: (routes: any) => {
           this.vendorRoutesList = !!routes && routes.length > 0 ? routes : [];
-          this.userCanUpdate = true;
-        },
+         },
         error: (err) => {
           this.vendorRoutesList = [];
           this.loading = false;

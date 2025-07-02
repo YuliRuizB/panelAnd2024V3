@@ -126,10 +126,16 @@
       </nz-form-control>
     </nz-form-item>
     <nz-form-item>
-      <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="custConsecutive">Consecutivo</nz-form-label>
-      <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="Consecutivo es necesario para crear la empresa.">
-        <input nz-input formControlName="custConsecutive" id="custConsecutive"  ([nzDisabled])="isDisabled"/>
-      </nz-form-control>      
+      <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="custConsecutive">
+        Consecutivo
+      </nz-form-label>
+      <nz-form-control
+        [nzSm]="14"
+        [nzXs]="24"
+        nzErrorTip="Consecutivo es necesario para crear la empresa."
+      >
+        <input nz-input formControlName="custConsecutive" id="custConsecutive" [disabled]="isDisabled" />
+      </nz-form-control>
     </nz-form-item>
     <nz-form-item>
       <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="phoneNumber">Teléfono</nz-form-label>

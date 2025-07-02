@@ -82,6 +82,7 @@ export class AccountsService {
   setAccount(account: any,cusCons :string) {  
     const docId = this.afs.createId();  
     const last_updated = serverTimestamp();
+    account.docId = docId;
     const newAccountRef = this.afs.collection('customers').doc(docId);
     const newPublicAccountRef = this.afs.collection('pCustomers').doc(docId);
    // const stats = this.afs.collection('summarized').doc('ZcVXcD1p4O7mYjwBIiLv');

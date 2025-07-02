@@ -809,19 +809,11 @@
                   </nz-tab>
                   <nz-tab nzTitle="Código QR">
                     <div *ngIf="requiredFields">
-                      <nz-qrcode nzValue="{{currentUserSelected?.uid}}-{{lastPurchase?.idBoardingPass}}-{{lastPurchase?.stopId}}"></nz-qrcode>
-                      <a #download></a>
-                      {{currentUserSelected?.uid}}-{{lastPurchase?.idBoardingPass}}-{{lastPurchase?.stopId}}
-                      <button nz-button nzType="primary" (click)="downloadImg()">Descargar</button>
+                      <div *ngIf="currentUserSelected && lastPurchase"> 
+                        <nz-qrcode nzValue="{{currentUserSelected.uid}}-{{lastPurchase.idBoardingPass}}"></nz-qrcode>
+                        {{currentUserSelected.uid}}-{{lastPurchase.idBoardingPass}}
+                      </div>
                     </div>
-                    <div *ngIf="!requiredFields">
-                      <nz-qrcode nzValue="{{currentUserSelected?.uid}}-{{lastPurchase?.idBoardingPass}}"></nz-qrcode>
-                      <a #download></a>
-                      {{currentUserSelected?.uid}}-{{lastPurchase?.idBoardingPass}}
-                      <button nz-button nzType="primary" (click)="downloadImg()">Descargar</button>
-                    </div>
-                  
-  
                   </nz-tab>
                   <nz-tab nzTitle="Credencial">
   

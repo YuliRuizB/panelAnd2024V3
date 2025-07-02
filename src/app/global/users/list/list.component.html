@@ -1,312 +1,203 @@
-  <div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
-    <div class="site-page-header-ghost-wrapper">
-      <nz-page-header [nzGhost]="false"   style="background-color:#f9fbfd;">
-        <nz-page-header-title  style="margin-left: 350px;">Perfiles</nz-page-header-title>
-        <nz-page-header-subtitle >Perfiles de usuarios  del Sistema
+<div style="margin: buttom 15px; margin-right: 15px; margin-left: 15px;">
+  <nz-layout>
+    <nz-layout>
+      <nz-page-header [nzGhost]="false" style="background-color:#f9fbfd;">
+        <nz-page-header-title style="margin-left: 350px;">Perfiles</nz-page-header-title>
+        <nz-page-header-subtitle>Perfiles de usuarios del Sistema
         </nz-page-header-subtitle>
       </nz-page-header>
-    </div>    
-    <div class="container-fluid p-h-0">      
-      <nz-tabset  [nzSelectedIndex]="0" class="page-header-tab">      
-        <nz-tab nzTitle="Usuarios">
-          <div class="chat-header" style="background-color: #f9f9f9;">
-            <nz-collapse>
-              <nz-collapse-panel [nzHeader]="'Filtros avanzados'" [nzActive]="true">            
-                <div style="display: flex; align-items: center; gap: 15px;">            
-                  
-                  <nz-select [(ngModel)]="selectedOption" (ngModelChange)="log($event)" nzPlaceHolder="Selecciona un cliente" style="width: 450px;">                 
-                    <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
-                      {{ o.name }}
-                    </nz-option>
-                  </nz-select>
-                  <nz-input-group [nzSuffix]="suffixIconSearch" style="flex-grow: 1;">
-                    <input type="text" #searchInput nz-input placeholder="Buscar" (keyup)="getItems(searchInput.value)" />
-                  </nz-input-group>
-                  <ng-template #suffixIconSearch>
-                    <span nz-icon nzType="search"></span>
-                  </ng-template>
-  
-                  <nz-input-group [nzSuffix]="suffixIconSearch" style="flex-grow: 1;">
-                    <input type="text" #searchInputEmail nz-input placeholder="Buscar por Correo" (keyup.enter)="getItemsByEmail(searchInputEmail.value)" />
-                  </nz-input-group>
-                  <ng-template #suffixIconSearch>
-                    <span nz-icon nzType="search"></span>
-                  </ng-template>
-  
-                  <button class="m-r-10" nz-button nzType="primary" (click)="searchloadUsers()">Cargar Usuarios</button>
-                </div>
-                
-              </nz-collapse-panel>
-            </nz-collapse>
-          </div>
-         
-          <div class="chat chat-app row">
-            <nz-sider nzCollapsible [(nzCollapsed)]="isCollapsed" [nzWidth]="250" [nzTrigger]="null"    
-            style="background-color: white; border: 1px solid #ccc !important; height: 100vh; overflow-y: auto;">        
-            <div class="chat-list">
-              <div class="chat-user-tool">
-                <i nz-icon  nzTheme="outline" class="search-icon p-r-10 font-size-20"></i>
-                <!-- <input placeholder="Search..."> -->
-                <input placeholder="Buscar" #searchBar 
-                (keyup)="getItems(searchBar.value)">
+      <nz-page-header-content>
+        <div class="chat-header" style="background-color: #f9f9f9;">
+          <nz-collapse>
+            <nz-collapse-panel [nzHeader]="'Filtros avanzados'" [nzActive]="true">
+              <div style="display: flex; align-items: center; gap: 15px;">
+
+                <nz-select [(ngModel)]="selectedOption" (ngModelChange)="log($event)"
+                  nzPlaceHolder="Selecciona un cliente" style="width: 450px;">
+                  <nz-option *ngFor="let o of customersList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                    {{ o.name }}
+                  </nz-option>
+                </nz-select>
+                <nz-input-group [nzSuffix]="suffixIconSearch" style="flex-grow: 1;">
+                  <input type="text" #searchInput nz-input placeholder="Buscar" (keyup)="getItems(searchInput.value)" />
+                </nz-input-group>
+                <ng-template #suffixIconSearch>
+                  <span nz-icon nzType="search"></span>
+                </ng-template>
+
+                <nz-input-group [nzSuffix]="suffixIconSearch" style="flex-grow: 1;">
+                  <input type="text" #searchInputEmail nz-input placeholder="Buscar por Correo"
+                    (keyup.enter)="getItemsByEmail(searchInputEmail.value)" />
+                </nz-input-group>
+                <ng-template #suffixIconSearch>
+                  <span nz-icon nzType="search"></span>
+                </ng-template>
+
+                <button class="m-r-10" nz-button nzType="primary" (click)="searchloadUsers()">Cargar Usuarios</button>
               </div>
-              <div class="chat-user-list">
-                <nz-table #basicTable [nzData]="devicesList" [nzShowPagination]="false" [nzPageSize]="10">
-                  <tbody>
-                    <tr *ngFor="let data of basicTable.data" (click)="userSelected(data)">
-                      <td>
-                        <div class="media align-items-center">                         
-                          <div class="p-l-15">
-                            <h6 class="m-b-0"><i *ngIf="data.disabled" nz-icon  nzTheme="twotone"
-                                nzTwotoneColor="#de4436"></i> {{data.displayName}}</h6>
-                            <ng-container>
-                              <p class="msg-overflow m-b-0 text-muted font-size-13">
-                                {{data.studentId}} <nz-badge [nzStatus]="data.emailVerified ? 'success' : 'error'"></nz-badge>
-                                {{ data.email }} <br />
-                                {{ data.customerName }}
-                              </p>
-                            </ng-container>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </nz-table>
-              </div>
-            </div>
-          </nz-sider>
-            <div class="chat-content" >
-              <div class="conversation">
-                <div class="conversation-wrapper">
-                  <div class="conversation-header justify-content-between" *ngIf="isUserSelected">
-                    <ng-container>
-                      <div class="media align-items-center">
-                        <a [routerLink]="[]" class="m-r-20 d-md-none d-block text-dark font-size-18 m-t-5">
-                          <i nz-icon type="left-circle" theme="outline"></i>
-                        </a>
-                        <div>
-                          <nz-avatar class="shadow" style="background-color: white ;  color: #4F6F57;" nzShape="square" nzIcon="user" [nzSrc]="currentUserSelected.photoURL">
-                          </nz-avatar>
-                        </div>
-                        <div class="p-l-15">
-                          <h6 class="m-b-0">
-                            <i *ngIf="currentUserSelected.disabled" nz-icon nzTheme="twotone"
-                              nzTwotoneColor="#de4436"></i> {{ currentUserSelected.displayName }}
-                          </h6>
-                          <p class="m-b-0 text-muted font-size-13">
-                            <nz-badge [nzStatus]="currentUserSelected.emailVerified ? 'success' : 'error'"></nz-badge>
-                            <span>
-                              {{ currentUserSelected.email }}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    </ng-container>
+
+            </nz-collapse-panel>
+          </nz-collapse>
+        </div>
+      </nz-page-header-content>
+    </nz-layout>
+    <nz-layout>
+      <nz-sider nzCollapsible [(nzCollapsed)]="isCollapsed" [nzWidth]="330" [nzTrigger]="null"
+        style="background-color: white; border: 1px solid #ccc !important; height: 100vh; overflow-y: auto;">
+
+        <div class="chat-user-list">
+          <nz-table *ngIf="devicesList?.length > 0" #basicTable [nzData]="devicesList" [nzShowPagination]="true"
+            [nzPageSize]="30" [nzScroll]="{ y: 'calc(100vh - 120px)' }" style="height: 100%;">
+            <tbody>
+              <tr *ngFor="let data of basicTable.data" (click)="userSelected(data)">
+                <td>
+                  <div class="media align-items-center">
+                    <div class="p-l-15">
+                      <h6 class="m-b-0"><i *ngIf="data.disabled" nz-icon nzTheme="twotone" nzTwotoneColor="#de4436"></i>
+                        {{data.displayName}}</h6>
+                      <ng-container>
+                        <p class="msg-overflow m-b-0 text-muted font-size-13">
+                          {{data.studentId}} <nz-badge [nzStatus]="data.emailVerified ? 'success' : 'error'"></nz-badge>
+                          {{ data.email }} <br />
+                          {{ data.customerName }}
+                        </p>
+                      </ng-container>
+                    </div>
                   </div>
-                  <div class="body">
-                    <nz-tabset *ngIf="isUserSelected"
-                      style="width: 100% !important; overflow-y: scroll !important; height: 100% !important;">
-                      <nz-tab nzTitle="Informacion General" (nzClick)="nzClicOptionInformacion()">
-                        <div>
-                          <button class="m-r-10" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="showModalEditUser(currentUserSelected)"><i
-                              nz-icon ></i> Asignar Rol </button>                        
-                          <div>
-                            <nz-descriptions nzBordered nzSize="small">
-                              <nz-descriptions-item nzTitle="Nombre">{{ currentUserSelected.firstName }}</nz-descriptions-item>
-                              <nz-descriptions-item nzTitle="Apellidos">{{ currentUserSelected.lastName }}</nz-descriptions-item>
-                              <nz-descriptions-item nzTitle="Email">{{ currentUserSelected.email }}</nz-descriptions-item>
-                              <nz-descriptions-item nzTitle="Correo Valido">{{ currentUserSelected.emailVerified
-                                }}</nz-descriptions-item>
-                              <nz-descriptions-item nzTitle="Display Name">{{ currentUserSelected.displayName
-                                }}</nz-descriptions-item>
-                              <nz-descriptions-item nzTitle="Usuario">{{ currentUserSelected.username }}</nz-descriptions-item>
-                              <nz-descriptions-item nzTitle="Activo">
-                                {{ currentUserSelected.disabled ? 'Suspendido' : 'Activo' }}
-                              </nz-descriptions-item>
-                              <nz-descriptions-item nzTitle="Rol Administrativo">{{ rolesperUser }}</nz-descriptions-item>
-                              <nz-descriptions-item nzTitle="Rol Aplicaciones">{{ rolesperUserAplicacion }}</nz-descriptions-item>
-                              <nz-descriptions-item nzTitle="Estatus">{{ currentUserSelected.status }}</nz-descriptions-item>
-                            </nz-descriptions>
-                          </div>
-                        </div>
-                      </nz-tab>
-                      <nz-tab nzTitle="Segmentación" (nzClick)="nzClicOptionSegment(currentUserSelected)">
-                        <div>
-                         Actual Segmento Seleccionado : {{ selectedSegmentName }}
-                        </div>
-                        <div>
-                          <nz-button-group>
-                            <button nz-button (click)="log(1)">Segmentos</button>
-                            <button nz-button nz-dropdown [nzDropdownMenu]="menu1" nzPlacement="bottomRight">
-                              <span nz-icon nzType="ellipsis"></span>
-                            </button>                                                       
-                              <nz-dropdown-menu #menu1="nzDropdownMenu">
-                                <ul nz-menu>
-                                  <li nz-menu-item *ngFor="let segment of segmentList" [class.selected]="selectedSegmentId === segment.id"
-                                    (click)="onSegmentSelected(segment)">
-                                    {{ segment.nivelNum }} - {{ segment.nivel }}
-                                  </li>
-                                </ul>
-                              </nz-dropdown-menu>                           
-                          </nz-button-group>                       
-                        </div> 
-                        <div>
-                          <button class="m-r-10" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="saveSegment(currentUserSelected)"><i
-                             nz-icon ></i> Guardar</button>                          
-                        </div>
-                      </nz-tab>
-                    </nz-tabset>
-        
-                    <nz-modal [(nzVisible)]="isEditUserVisible" [nzTitle]="modalUserTitle" [nzContent]="modalUserContent"
-                      [nzFooter]="modalUserFooter" (nzOnCancel)="handleCancel()" [nzWidth]="600">
-                      <ng-template #modalUserTitle>
-                        Asignar Rol 
-                      </ng-template>
-        
-                      <ng-template #modalUserContent>
-                        <form nz-form nzLayout="horizontal" [formGroup]="validateEditForm" (ngSubmit)="submitForm()">
-        
-                          <nz-form-item>
-                            <nz-form-label [nzSm]="6" [nzXs]="24">Rol</nz-form-label>
-                            <nz-form-control [nzSm]="14" [nzXs]="24">
-                              <nz-select formControlName="rolId" nzAllowClear nzPlaceHolder="Selecciona el Rol">
-                                <nz-option *ngFor="let o of roles" nzCustomContent [nzLabel]="o.name" [nzValue]="o.uid"><i
-                                    nz-icon ></i>  {{ o.description }}</nz-option>
-                              </nz-select>
-                            </nz-form-control>
-                          </nz-form-item>
-                        </form>
-                      </ng-template>
-        
-                      <ng-template #modalUserFooter>
-                        <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleCancel()">Cancelar</button>
-                        <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="submitEditForm()">Guardar</button>
-                      </ng-template>
-                    </nz-modal>
-        
-           <!--          <nz-modal [(nzVisible)]="isCustomersVisible" [nzTitle]="modalUserTitle" [nzContent]="modalUserContent"
-                      [nzFooter]="modalUserFooter" (nzOnCancel)="handleCancel()" [nzWidth]="600">
-                      <ng-template #modalUserTitle>
-                        Asingar Empresas
-                      </ng-template>        
-                      <ng-template #modalUserContent>
-                        <form nz-form nzLayout="horizontal" [formGroup]="validateEditForm" (ngSubmit)="submitCustomerForm()">
-        
-                          <nz-form-item>
-                            <nz-form-label [nzSm]="6" [nzXs]="24">Rol</nz-form-label>
-                            <nz-form-control [nzSm]="14" [nzXs]="24">
-                              <nz-select formControlName="rolId" nzAllowClear nzPlaceHolder="Selecciona el Rol">
-                                <nz-option *ngFor="let o of roles" nzCustomContent [nzLabel]="o.name" [nzValue]="o.uid"><i
-                                    nz-icon ></i> {{ o.description }}</nz-option>
-                              </nz-select>
-                            </nz-form-control>
-                          </nz-form-item>
-                        </form>
-                      </ng-template>        
-                      <ng-template #modalUserFooter>
-                        <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="handleCancel()">Cancelar</button>
-                        <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="submitCustomerForm()">Guardar</button>
-                      </ng-template>
-                    </nz-modal> -->
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </div>
+      </nz-sider>
+      <nz-layout>
+        <nz-header style="background-color: white; border: 1px solid #ccc !important;">
+          <span class="trigger" nz-icon [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'"
+            (click)="isCollapsed = !isCollapsed"></span>
+        </nz-header>
+        <div style="background-color: white !important; border: 1px solid #ccc !important; padding: 20px;" [ngClass]="{'open': isContentOpen}">
+          <div class="conversation">
+            <div class="conversation-wrapper">
+              <div class="conversation-header justify-content-between" *ngIf="isUserSelected">
+                <ng-container>
+                  <div class="media align-items-center">
+                    <a [routerLink]="[]" class="m-r-20 d-md-none d-block text-dark font-size-18 m-t-5">
+                      <i nz-icon type="left-circle" theme="outline"></i>
+                    </a>
+                    <div>
+                      <nz-avatar class="shadow" style="background-color: white ;  color: #4F6F57;" nzShape="square"
+                        nzIcon="user" [nzSrc]="currentUserSelected.photoURL">
+                      </nz-avatar>
+                    </div>
+                    <div class="p-l-15">
+                      <h6 class="m-b-0">
+                        <i *ngIf="currentUserSelected.disabled" nz-icon nzTheme="twotone" nzTwotoneColor="#de4436"></i>
+                        {{ currentUserSelected.displayName }}
+                      </h6>
+                      <p class="m-b-0 text-muted font-size-13">
+                        <nz-badge [nzStatus]="currentUserSelected.emailVerified ? 'success' : 'error'"></nz-badge>
+                        <span>
+                          {{ currentUserSelected.email }}
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                </div>
+                </ng-container>
               </div>
-            </div>
-          </div>
-        </nz-tab>
-    <!--     <nz-tab nzTitle="PR">       
-          <div class="chat chat-app row">
-            <div class="chat-list">
-              <div class="chat-user-tool">
-                <i nz-icon  nzTheme="outline" class="search-icon p-r-10 font-size-20"></i>             
-                <input placeholder="Buscar" #searchBarDrive (keyup)="getItemsDrive(searchBarDrive.value)">
-              </div>
-              <div class="chat-user-list">
-                <nz-table #basicTableDriver [nzData]="devicesListDrive" [nzShowPagination]="false" [nzPageSize]="10">
-                    <tbody>
-                      <tr *ngFor="let data1 of basicTableDriver.data" (click)="driverSelected(data1)">
-                        <td>
-                          <div class="media align-items-center">
-                            <div>
-                              <nz-avatar class="shadow" style="background-color: white ;  color: #4F6F57;" nzShape="square" nzIcon="user" [nzSrc]="data1.photoURL">
-                              </nz-avatar>
-                            </div>
-                            <div class="p-l-15">
-                              <h6 class="m-b-0">{{data1.displayName}}</h6>
-                                <ng-container>
-                                  <p class="msg-overflow m-b-0 text-muted font-size-13">
-                                  <nz-badge [nzStatus]="data1.emailVerified ? 'success' : 'error'"></nz-badge>
-                                    {{ data1.email }} <br />                               
-                                  </p>
-                                </ng-container>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                </nz-table>
-              </div>
-            </div>
-            <div class="chat-content" >
-              <div class="conversation">
-                <div class="conversation-wrapper">
-                  <div class="conversation-header justify-content-between" *ngIf="isDriverSelected">
-                    <ng-container>
-                      <div class="media align-items-center">
-                        <a [routerLink]="[]" class="m-r-20 d-md-none d-block text-dark font-size-18 m-t-5">
-                          <i nz-icon type="left-circle" theme="outline"></i>
-                        </a>
-                        <div>
-                          <nz-avatar class="shadow" style="background-color: white ;  color: #4F6F57;" nzShape="square" nzIcon="user" [nzSrc]="currentDriverSelected.photoURL">
-                          </nz-avatar>
-                        </div>
-                        <div class="p-l-15">
-                          <h6 class="m-b-0">
-                            <i  nz-icon nzTheme="twotone"
-                              nzTwotoneColor="#de4436"></i> {{ currentDriverSelected.displayName }}
-                          </h6>
-                          <p class="m-b-0 text-muted font-size-13">
-                            <nz-badge [nzStatus]="currentDriverSelected.emailVerified ? 'success' : 'error'"></nz-badge>
-                            <span>
-                              {{ currentDriverSelected.email }}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    </ng-container>
-                  </div>
-                  <div class="body">
-                    <nz-tabset *ngIf="isDriverSelected"
-                    style="width: 100% !important; overflow-y: scroll !important; height: 100% !important;">
-                    <nz-tab nzTitle="Informacion General" (nzClick)="nzClicOptionInformacion()">
-                      <div>
-                        <button class="m-r-10" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="showModalEditDriver(currentDriverSelected)"><i
-                            nz-icon ></i> Asignar Rol</button>                       
-                      </div>
+              <div class="body">
+                <nz-tabset *ngIf="isUserSelected"
+                  style="width: 100% !important; overflow-y: scroll !important; height: 100% !important;">
+                  <nz-tab nzTitle="Informacion General" (nzClick)="nzClicOptionInformacion()">
+                    <div>
+                      <button class="m-r-10" nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+                        (click)="showModalEditUser(currentUserSelected)"><i nz-icon></i> Asignar Rol </button>
                       <div>
                         <nz-descriptions nzBordered nzSize="small">
-                          <nz-descriptions-item nzTitle="Nombre">{{ currentDriverSelected.firstName }}</nz-descriptions-item>
-                          <nz-descriptions-item nzTitle="Apellidos">{{ currentDriverSelected.lastName }}</nz-descriptions-item>
-                          <nz-descriptions-item nzTitle="Email">{{ currentDriverSelected.email }}</nz-descriptions-item>
-                          <nz-descriptions-item nzTitle="División"> {{vendorName}}</nz-descriptions-item>
-                          <nz-descriptions-item nzTitle="Correo Valido">{{ currentDriverSelected.emailVerified }}</nz-descriptions-item>
-                          <nz-descriptions-item nzTitle="Display Name">{{ currentDriverSelected.displayName }}</nz-descriptions-item>
-                          <nz-descriptions-item nzTitle="Usuario">{{ currentDriverSelected.username }}</nz-descriptions-item>                      
-                          <nz-descriptions-item nzTitle="Rol Administrativo">{{ rolesperUser }}</nz-descriptions-item>
-                          <nz-descriptions-item nzTitle="Rol Aplicaciones">{{ rolesperUserAplicacion }}</nz-descriptions-item>
-                          <nz-descriptions-item nzTitle="Estatus">{{ currentUserSelected.status }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Nombre">{{ currentUserSelected.firstName
+                            }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Apellidos">{{ currentUserSelected.lastName
+                            }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Email">{{ currentUserSelected.email
+                            }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Correo Valido">{{ currentUserSelected.emailVerified
+                            }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Display Name">{{ currentUserSelected.displayName
+                            }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Usuario">{{ currentUserSelected.username
+                            }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Activo">
+                            {{ currentUserSelected.disabled ? 'Suspendido' : 'Activo' }}
+                          </nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Rol Administrativo">{{ rolesperUser
+                            }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Rol Aplicaciones">{{ rolesperUserAplicacion
+                            }}</nz-descriptions-item>
+                          <nz-descriptions-item nzTitle="Estatus">{{ currentUserSelected.status
+                            }}</nz-descriptions-item>
                         </nz-descriptions>
                       </div>
-      
-                    </nz-tab>
-                  </nz-tabset>
-                  </div>
-                </div>
+                    </div>
+                  </nz-tab>
+                  <nz-tab nzTitle="Segmentación" (nzClick)="nzClicOptionSegment(currentUserSelected)">
+                    <div>
+                      Actual Segmento Seleccionado : {{ selectedSegmentName }}
+                    </div>
+                    <div>
+                      <nz-button-group>
+                        <button nz-button (click)="log(1)">Segmentos</button>
+                        <button nz-button nz-dropdown [nzDropdownMenu]="menu1" nzPlacement="bottomRight">
+                          <span nz-icon nzType="ellipsis"></span>
+                        </button>
+                        <nz-dropdown-menu #menu1="nzDropdownMenu">
+                          <ul nz-menu>
+                            <li nz-menu-item *ngFor="let segment of segmentList"
+                              [class.selected]="selectedSegmentId === segment.id" (click)="onSegmentSelected(segment)">
+                              {{ segment.nivelNum }} - {{ segment.nivel }}
+                            </li>
+                          </ul>
+                        </nz-dropdown-menu>
+                      </nz-button-group>
+                    </div>
+                    <div>
+                      <button class="m-r-10" nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+                        (click)="saveSegment(currentUserSelected)"><i nz-icon></i> Guardar</button>
+                    </div>
+                  </nz-tab>
+                </nz-tabset>
               </div>
             </div>
-          </div>        
-        </nz-tab> -->
-      </nz-tabset>
-    </div>
+          </div>
+        </div>
+      </nz-layout>
+    </nz-layout>
+  </nz-layout>
 </div>
-    
+
+<nz-modal [(nzVisible)]="isEditUserVisible" [nzTitle]="modalUserTitle" [nzContent]="modalUserContent"
+[nzFooter]="modalUserFooter" (nzOnCancel)="handleCancel()" [nzWidth]="600">
+<ng-template #modalUserTitle>
+  Asignar Rol
+</ng-template>
+
+<ng-template #modalUserContent>
+  <form nz-form nzLayout="horizontal" [formGroup]="validateEditForm" (ngSubmit)="submitForm()">
+
+    <nz-form-item>
+      <nz-form-label [nzSm]="6" [nzXs]="24">Rol</nz-form-label>
+      <nz-form-control [nzSm]="14" [nzXs]="24">
+        <nz-select formControlName="rolId" nzAllowClear nzPlaceHolder="Selecciona el Rol">
+          <nz-option *ngFor="let o of roles" nzCustomContent [nzLabel]="o.name" [nzValue]="o.uid"><i
+              nz-icon></i> {{ o.description }}</nz-option>
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+  </form>
+</ng-template>
+
+<ng-template #modalUserFooter>
+  <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+    (click)="handleCancel()">Cancelar</button>
+  <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+    (click)="submitEditForm()">Guardar</button>
+</ng-template>
+</nz-modal>

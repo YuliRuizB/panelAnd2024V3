@@ -54,7 +54,7 @@
     <div class="col-md-6">
       <div class="text-md-right m-v-10">
         
-        <button nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="showModalCreate()">
+        <button *ngIf="userCanUpdate" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;" (click)="showModalCreate()">
           <i nz-icon nzType="plus"></i>
           <span>Agregar estación</span>
         </button>
@@ -104,11 +104,11 @@
       <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'" *ngIf="data.rounds">{{ data.round3MinutesSinceStart }}</td>
       <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'" *ngIf="!data.rounds">--:--</td>
       <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'">
-        <a nz-dropdown [nzDropdownMenu]="menu" nzPlacement="bottomRight">
+        <a nz-dropdown [nzDropdownMenu]="menu" nzPlacement="bottomRight" *ngIf="userCanUpdate">
           Más..
           <span nz-icon nzType="down"></span>         
         </a>
-        <nz-dropdown-menu #menu="nzDropdownMenu">
+        <nz-dropdown-menu #menu="nzDropdownMenu" >
           
           <ul nz-menu nzSelectable>
           <li nz-menu-item (click)="openPanelPDF(data)">

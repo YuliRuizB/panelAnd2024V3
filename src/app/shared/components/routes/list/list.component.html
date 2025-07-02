@@ -44,6 +44,6 @@
 
 <nz-tabset [nzTabPosition]="nzTabPosition" [(nzSelectedIndex)]="selectedIndex">
   <nz-tab *ngFor="let tab of routesList" [nzTitle]="getTabTitle(tab)">
-    <app-shared-stoppoints-list [accountId]="accountId" [routeId]="tab.id"></app-shared-stoppoints-list>
+    <app-shared-stoppoints-list [userCanUpdate]="true" [accountId]="accountId" [routeId]="tab.id"></app-shared-stoppoints-list>
   </nz-tab>
 </nz-tabset>

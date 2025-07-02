@@ -61,7 +61,7 @@ export class AuthenticationService {
               '¡Oops!, su cuenta no ha sido verificada',
               'Para continuar es necesario verificar su cuenta de correo electrónico.'
             );
-            this.router.navigate(['authentication/please-verify-email']);
+           // this.router.navigate(['authentication/please-verify-email']);
           } else {           
             this.getAccessLevel(result.user.uid);
           }

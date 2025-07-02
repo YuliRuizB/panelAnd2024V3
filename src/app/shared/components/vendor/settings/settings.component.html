@@ -1,4 +1,4 @@
-<button *ngIf="userCanUpdate" class="media align-items-right m-t-10 m-r-10" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;"
+<button  class="media align-items-right m-t-10 m-r-10" nz-button  style=" background-color: #4F6F57; color: #f6f3ea;"
   (click)="showModal()"><i nz-icon></i>Asignar Operación</button>
 <nz-table #basicTable [nzData]="vendorRoutesList"  >
   <thead>
@@ -47,7 +47,7 @@
 <nz-tabset [nzTabPosition]="'top'" [nzType]="'line'">
   <div *ngFor="let data of vendorRoutesList">
     <nz-tab *ngIf="data.permission" [nzTitle]="data.customerName + ' ' + data.name">
-      <app-shared-stoppoints-list [accountId]="data.customerId" [routeId]="data.routeId"></app-shared-stoppoints-list>
+      <app-shared-stoppoints-list [accountId]="data.customerId" [userCanUpdate]="userCanUpdate" [routeId]="data.routeId"></app-shared-stoppoints-list>
     </nz-tab>
   </div>
 </nz-tabset>
@@ -59,7 +59,7 @@
 <ng-template #modalContent>
   <div>
     <nz-form-item>
-      <nz-form-label [nzSpan]="6" nzFor="route">Operación 1</nz-form-label>
+      <nz-form-label [nzSpan]="6" nzFor="route">Operación </nz-form-label>
       <nz-form-control [nzSpan]="14">
         <nz-select *ngIf="allRoutesList.length > 0" [(ngModel)]="selectedRoute" nzAllowClear
           nzPlaceHolder="Selecciona una Operación">

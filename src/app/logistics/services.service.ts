@@ -39,6 +39,16 @@ export class LogisticsService {
     ).snapshotChanges();
   }
 
+    getActivityLogByCustomerByRoute(start: Date, end: Date, customerId: string, routePath:string) {
+    return this.afs.collection(this.collection, (ref) => ref
+      .where('customerPath', '==', customerId)
+      .where('routePath', '==', routePath)      
+      .where('created', '>', start)
+      .where('created', '<', end)
+      .orderBy('created', 'desc')
+    ).snapshotChanges();
+  }
+
   getliveBusses(customerId: string, routeId: string) {
     const date: any = startOfToday();
     return this.afs.collection('customers').doc(customerId).collection('program',
@@ -79,11 +89,10 @@ export class LogisticsService {
       .orderBy('created', 'desc')
     ).snapshotChanges();
   }
-  getUsersByCustomer(start: Date, end: Date, customerId: string) {
+  getUsersByCustomer(start: String, end: String, customerId: string) {
     return this.afs.collection(this.collectionU, (ref) => ref
       .where('customerId', '==', customerId)
-      .where('dateCreateUserFormat', '>', start)
-      .where('dateCreateUserFormat', '<', end)
+      .where('dateCreateUserFormat', '==', start)
       .orderBy('dateCreateUserFormat', 'desc')
     ).snapshotChanges();
   }

@@ -94,7 +94,7 @@ export class LogisticsComponent implements OnInit {
   display: any;
   zoom: any;
   accountsList: any = [];
-  driversList : any = [];
+  driversList: any = [];
   stopSubscription$: Subject<boolean> = new Subject();
   user: any;
   customerName: string = "Empresa";
@@ -128,6 +128,7 @@ export class LogisticsComponent implements OnInit {
   descriptionRoute: string = "";
   driverName: string = "";
   driverConfirmationAt: | Date | undefined | null = null;
+  dateRangeSelected: string = "";
   startedAt: | Date | undefined | null = null;
   lastUpdatedAt: | Date | undefined | null = null;
   isConfirmed: boolean = false;
@@ -292,11 +293,20 @@ export class LogisticsComponent implements OnInit {
 
   ];
   columnDefs: ColDef[];
-
+  pageIndex = 1;
+  pageSize = 5;
   public defaultColDef: ColDef = {
     flex: 1,
     minWidth: 100,
   };
+  cardsByDate: {
+    date: string;
+    count: number;
+    users: any[];
+    routeCounts: { [key: string]: number };
+  }[] = [];
+  userRoutes: any = [];
+
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: object,
@@ -313,7 +323,7 @@ export class LogisticsComponent implements OnInit {
     this.startDateAct = startOfToday()
     this.endDateAct = endOfToday();
     this.startedAt = startOfToday();
-    this.lastUpdatedAt =null;
+    this.lastUpdatedAt = null;
     this.driverConfirmationAt = null;
 
     this.authService.user.subscribe(user => {
@@ -329,7 +339,7 @@ export class LogisticsComponent implements OnInit {
               return { id, ...data }
             }),
             tap(record => {
-              this.infoSegment = record;            
+              this.infoSegment = record;
               this.getAccountsMaps();
               this.getCustomersList();
               return record;
@@ -360,9 +370,9 @@ export class LogisticsComponent implements OnInit {
       customerName: [],
       routeId: [],
       routeName: [],
-      driverId: [null] 
+      driverId: [null]
     });
-  
+
 
     if (typeof window !== 'undefined' && window.navigator && window.navigator.geolocation) {
       // Get current position
@@ -377,7 +387,7 @@ export class LogisticsComponent implements OnInit {
       // Handle case when geolocation is not supported
       console.error('Geolocation is not supported by this browser.');
     }
-   
+
     this.isBrowser = isPlatformBrowser(this.platformId);
     this.columnDefs = [
       {
@@ -468,18 +478,18 @@ export class LogisticsComponent implements OnInit {
 
   onDateRangeChangeMap(): void {
     const selectedDriverId = this.dateRangeFormMap.controls['driversId'].value; // Obtener el ID seleccionado
-  
+
     // Filtrar el objeto correspondiente en driversList
     const selectedDriver = this.driversList.find((driver: any) => driver.driverId === selectedDriverId);
-  
+
     if (selectedDriver) {
       console.log(selectedDriver);
-      
+
       this.driverName = selectedDriver.driver;
       this.driverConfirmationAt = selectedDriver.driverConfirmationAt;
       this.startedAt = selectedDriver.startAted;
       this.activeRoute = selectedDriver.active;
-      this.isConfirmed = selectedDriver.isConfirmed;          
+      this.isConfirmed = selectedDriver.isConfirmed;
       this.isRejected = selectedDriver.isRejected;
       this.hasEnded = selectedDriver.hasEnded;
       this.lastUpdatedAt = selectedDriver.lastUpdatedAt;
@@ -491,7 +501,7 @@ export class LogisticsComponent implements OnInit {
       this.driverName = "";
       this.driverConfirmationAt = null;
       this.startedAt = null;
-      this.lastUpdatedAt= null;
+      this.lastUpdatedAt = null;
       this.activeRoute = "False";
       this.isConfirmed = false;
       this.isRejected = false;
@@ -503,9 +513,9 @@ export class LogisticsComponent implements OnInit {
       this.markerPositions = [];
     }
   }
-  
 
-  onOpSelected(){
+
+  onOpSelected() {
     if (this.dateRangeFormMap.get('routeId')!.value != undefined) {
       const recordArray = _.filter(this.routes, r => {
         return r.id == this.dateRangeFormMap.get('routeId')!.value;
@@ -525,39 +535,39 @@ export class LogisticsComponent implements OnInit {
           });
         })
       ).subscribe((markers: any) => {
-        if (markers && markers.length > 0 && markers[0].geopoint) { 
+        if (markers && markers.length > 0 && markers[0].geopoint) {
           this.driversList = markers;
-        } 
-       /*  if (markers && markers.length > 0 && markers[0].geopoint) {
-          console.log(markers);
-          
-          this.driverName = markers[0].driver;
-          this.driverConfirmationAt = markers[0].driverConfirmationAt;
-          this.startedAt = markers[0].startAted;
-          this.activeRoute = markers[0].active;
-          this.isConfirmed = markers[0].isConfirmed;          
-          this.isRejected = markers[0].isRejected;
-          this.hasEnded = markers[0].hasEnded;
-          this.lastUpdatedAt = markers[0].lastUpdatedAt;
-          this.round = markers[0].round;
-          this.vehicleName = markers[0].vehicleName;
-          this.addGeoPointToMarkerPositions(markers[0].geopoint);
-        } else {
-          this.notification.create('warning', 'Información', 'No hay operaciones activas en este momento.');
-          this.driverName = "";
-          this.driverConfirmationAt = null;
-          this.startedAt = null;
-          this.lastUpdatedAt= null;
-          this.activeRoute = "False";
-          this.isConfirmed = false;
-          this.isRejected = false;
-          this.hasEnded = false;
-          this.round = "";
-          this.vehicleName = "";
-          this.descriptionRoute = "";
-          this.lastUpdatedAt =null;
-          this.markerPositions = [];
-        } */
+        }
+        /*  if (markers && markers.length > 0 && markers[0].geopoint) {
+           console.log(markers);
+           
+           this.driverName = markers[0].driver;
+           this.driverConfirmationAt = markers[0].driverConfirmationAt;
+           this.startedAt = markers[0].startAted;
+           this.activeRoute = markers[0].active;
+           this.isConfirmed = markers[0].isConfirmed;          
+           this.isRejected = markers[0].isRejected;
+           this.hasEnded = markers[0].hasEnded;
+           this.lastUpdatedAt = markers[0].lastUpdatedAt;
+           this.round = markers[0].round;
+           this.vehicleName = markers[0].vehicleName;
+           this.addGeoPointToMarkerPositions(markers[0].geopoint);
+         } else {
+           this.notification.create('warning', 'Información', 'No hay operaciones activas en este momento.');
+           this.driverName = "";
+           this.driverConfirmationAt = null;
+           this.startedAt = null;
+           this.lastUpdatedAt= null;
+           this.activeRoute = "False";
+           this.isConfirmed = false;
+           this.isRejected = false;
+           this.hasEnded = false;
+           this.round = "";
+           this.vehicleName = "";
+           this.descriptionRoute = "";
+           this.lastUpdatedAt =null;
+           this.markerPositions = [];
+         } */
       })
     } else {
       this.markers = this.logisticsService.getliveBusses(this.dateRangeFormMap.get('customerId')!.value, this.dateRangeFormMap.get('routeId')!.value);
@@ -570,40 +580,40 @@ export class LogisticsComponent implements OnInit {
             return { id, arrayLatLng, ...data }
           });
         })
-      ).subscribe((markers: any) => {     
-        if (markers && markers.length > 0 && markers[0].geopoint) { 
+      ).subscribe((markers: any) => {
+        if (markers && markers.length > 0 && markers[0].geopoint) {
           this.driversList = markers;
-        } 
-       /*  if (markers && markers.length > 0 && markers[0].geopoint) {          
-          this.driverName = markers[0].driver;
-          this.driverConfirmationAt = markers[0].driverConfirmationAt;
-          this.startedAt = markers[0].startedAt;
-          this.lastUpdatedAt = markers[0].lastUpdatedAt;
-          this.activeRoute = markers[0].active;          
-          this.isConfirmed = markers[0].isConfirmed; 
-          this.hasEnded = markers[0].hasEnded;         
-          this.isRejected = markers[0].isRejected;
-          this.round = markers[0].round;
-          this.vehicleName = markers[0].vehicleName;
-
-          this.addGeoPointToMarkerPositions(markers[0].geopoint);
-        } else {
-          this.notification.create('warning', 'Información', 'No hay operaciones activas en este momento.');
-          this.markerPositions = [];
-          this.driverName = "";
-          this.driverConfirmationAt = null;
-          this.startedAt = null;
-          this.lastUpdatedAt = null;
-          this.activeRoute = "False";
-          this.isConfirmed = false;
-          this.isRejected = false;
-          this.hasEnded = false;
-          this.round = "";
-          this.vehicleName = "";
-          this.descriptionRoute = "";
-          this.lastUpdatedAt = null;
-          this.markerPositions = [];
-        } */
+        }
+        /*  if (markers && markers.length > 0 && markers[0].geopoint) {          
+           this.driverName = markers[0].driver;
+           this.driverConfirmationAt = markers[0].driverConfirmationAt;
+           this.startedAt = markers[0].startedAt;
+           this.lastUpdatedAt = markers[0].lastUpdatedAt;
+           this.activeRoute = markers[0].active;          
+           this.isConfirmed = markers[0].isConfirmed; 
+           this.hasEnded = markers[0].hasEnded;         
+           this.isRejected = markers[0].isRejected;
+           this.round = markers[0].round;
+           this.vehicleName = markers[0].vehicleName;
+ 
+           this.addGeoPointToMarkerPositions(markers[0].geopoint);
+         } else {
+           this.notification.create('warning', 'Información', 'No hay operaciones activas en este momento.');
+           this.markerPositions = [];
+           this.driverName = "";
+           this.driverConfirmationAt = null;
+           this.startedAt = null;
+           this.lastUpdatedAt = null;
+           this.activeRoute = "False";
+           this.isConfirmed = false;
+           this.isRejected = false;
+           this.hasEnded = false;
+           this.round = "";
+           this.vehicleName = "";
+           this.descriptionRoute = "";
+           this.lastUpdatedAt = null;
+           this.markerPositions = [];
+         } */
       })
     }
   }
@@ -648,9 +658,18 @@ export class LogisticsComponent implements OnInit {
   }
 
   onDateRangeChangeAct(): void {
+    this.sumTotalUsersRange = 0;
     this.startDateAct = this.dateRangeFormAct.get('startDate')!.value;
     this.endDateAct = this.dateRangeFormAct.get('endDate')!.value;
     this.customerIdSelected = this.dateRangeFormAct.get('customerId')!.value;
+    const startDate = new Date(this.startDateAct);
+    const endDate = new Date(this.endDateAct);
+
+    const formattedStart = startDate.toLocaleDateString('es-MX');
+    const formattedEnd = endDate.toLocaleDateString('es-MX');
+
+    this.dateRangeSelected = `Del ${formattedStart} al ${formattedEnd}`;
+
     if (this.startDateAct && this.endDateAct && this.customerIdSelected) {
       this.logisticsService.getChartDatabyCustomer(this.startDate, this.endDate, this.customerIdSelected).pipe(
         map((actions: any) => {
@@ -664,13 +683,7 @@ export class LogisticsComponent implements OnInit {
         this.getSums(result);
       });
 
-      this.logisticsService.getUsersByCustomer(this.startDate, this.endDate, this.customerIdSelected).pipe(
-        map((actions: any) => {
-          return actions.length;
-        })
-      ).subscribe((count: number) => {
-        this.sumTotalUsersRange = count;
-      });
+      this.onSubmitDateRange();
 
       this.logisticsService.getUsersByCustomerTot(this.customerIdSelected).pipe(
         map((actions: any) => {
@@ -684,6 +697,87 @@ export class LogisticsComponent implements OnInit {
       this.notification.create('error', 'Error', 'Se Requiere un rango de fechas');
     }
   }
+
+  getRoutes() {
+    this.routesService.getRoutes(this.customerIdSelected).pipe(
+      takeUntil(this.stopSubscription$),
+      map((actions: any) => actions.map((a: any) => {
+        const id = a.payload.doc.id;
+        const data = a.payload.doc.data() as any;
+        return { id, ...data }
+      })))
+      .subscribe((routes: IStopPoint[]) => {
+        this.userRoutes = routes;
+      });
+  }
+  onSubmitDateRange() {
+    const start = this.dateRangeFormAct.get('startDate')!.value;
+    const end = this.dateRangeFormAct.get('endDate')!.value;
+
+    const current = new Date(start);
+    const final = new Date(end);
+
+    this.cardsByDate = [];
+
+    // Cargar rutas primero
+    this.getRoutes(); // Asegúrate de que esto haya terminado antes si depende del resultado
+
+    while (current <= final) {
+      const day = current.getDate();
+      const month = current.getMonth() + 1;
+      const year = current.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
+      this.logisticsService.getUsersByCustomer(formattedDate, formattedDate, this.customerIdSelected).pipe(
+        map((actions: any[]) => {
+          const routeCounts: { [routeDescription: string]: number } = {};
+
+          const users = actions.map(a => {
+            const data = a.payload.doc.data();
+            const routeId = data.defaultRoute || '';
+            const route = this.userRoutes.find((r: any) => r.id === routeId);
+            const routeDescription = route ? route.description : 'Sin ruta';
+
+            // Acumulador por ruta
+            if (routeDescription) {
+              routeCounts[routeDescription] = (routeCounts[routeDescription] || 0) + 1;
+            }
+
+            return {
+              firstName: data.firstName || '',
+              lastName: data.lastName || '',
+              email: data.email || '',
+              defaultRoute: routeDescription,
+              turno: data.turno || ''
+            };
+          });
+
+          return {
+            count: actions.length,
+            users,
+            routeCounts
+          };
+        })
+      ).subscribe(({ count, users, routeCounts }) => {
+        this.cardsByDate.push({
+          date: formattedDate,
+          count,
+          users,
+          routeCounts
+        });
+
+        // Ordenar por fecha ascendente
+        this.cardsByDate.sort((a, b) => {
+          const [da, ma, ya] = a.date.split('/').map(Number);
+          const [db, mb, yb] = b.date.split('/').map(Number);
+          return new Date(ya, ma - 1, da).getTime() - new Date(yb, mb - 1, db).getTime();
+        });
+      });
+
+      current.setDate(current.getDate() + 1);
+    }
+  }
+
 
   getSums(result: any) {
 
@@ -761,7 +855,7 @@ export class LogisticsComponent implements OnInit {
   ngOnInit() {
     if (this.isBrowser) {
       // Aquí va el código relacionado con Ag-Grid o window
-     // console.log('Esto se ejecuta solo en el navegador');
+      // console.log('Esto se ejecuta solo en el navegador');
     }
   }
 

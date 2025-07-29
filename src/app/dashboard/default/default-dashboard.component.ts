@@ -142,6 +142,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     defaultRound: any; defaultRouteName: any;
     defaultStopName: any; defaultStopId: any;
     turno: string; roundTrip: string;
+    curp:string; age:string; group:string; adress:string;
   };
   currentSelectedCustomerId: string | undefined;
   loadingLastPurchase = false;
@@ -694,6 +695,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     lastName: any; email: any; phoneNumber: any; status: string; id: string; token: any; defaultRoute: any; emailVerified: any;
     turno: string; roundTrip: string;
     displayName: any; userName: any; customerName: any; defaultRound: any; defaultRouteName: any; defaultStopName: any; defaultStopId: any;
+    curp:any; age:any; group:any; adress:any
   }) {
     this.currentUserSelected = data;
     this.currentSelectedCustomerId = this.currentUserSelected.customerId;
@@ -1432,7 +1434,11 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
             defaultRound: '',
             defaultRouteName: '',
             defaultStopName: '',
-            defaultStopId: ''
+            defaultStopId: '',
+            curp: '',
+            age:'',
+            group:'',
+            adress:''
           };
           this.isUserSelected = false;
         },

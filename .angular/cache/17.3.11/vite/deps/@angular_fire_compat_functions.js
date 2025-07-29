@@ -12,13 +12,13 @@ import {
   firebase
 } from "./chunk-FUK53ENW.js";
 import "./chunk-ZS64ZNTA.js";
-import "./chunk-2SLTQYCJ.js";
 import {
   VERSION,
   ɵAngularFireSchedulers,
   ɵAppCheckInstances
 } from "./chunk-5TG5XZGR.js";
 import "./chunk-QZ4FX7SB.js";
+import "./chunk-2SLTQYCJ.js";
 import {
   Inject,
   Injectable,

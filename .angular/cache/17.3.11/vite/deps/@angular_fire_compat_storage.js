@@ -15,9 +15,6 @@ import {
 } from "./chunk-FUK53ENW.js";
 import "./chunk-ZS64ZNTA.js";
 import {
-  AsyncPipe
-} from "./chunk-2SLTQYCJ.js";
-import {
   VERSION,
   keepUnstableUntilFirst,
   observeOutsideAngular,
@@ -33,6 +30,9 @@ import {
   getModularInstance,
   registerVersion
 } from "./chunk-QZ4FX7SB.js";
+import {
+  AsyncPipe
+} from "./chunk-2SLTQYCJ.js";
 import {
   ChangeDetectorRef,
   Inject,

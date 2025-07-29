@@ -9,6 +9,10 @@ import { CurrencyPipe } from './pipes/currency.pipe';
 import { globalImputs } from './directives/global-imputs';
 import { TableService } from './services/table.service';
 import { TermsComponent } from './templates/terms/terms.component';
+import { ReportsComponent } from './components/reports/reports.component';
+import { AgGridModule } from 'ag-grid-angular';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzTableModule } from 'ng-zorro-antd/table';
 
 @NgModule({ 
     schemas: [NO_ERRORS_SCHEMA],
@@ -18,7 +22,9 @@ import { TermsComponent } from './templates/terms/terms.component';
         HttpClientModule,
         globalImputs,     
         SearchPipe,   
-        ReactiveFormsModule,              
+        ReactiveFormsModule,
+        NzSelectModule,
+        NzTableModule
       ],
     imports: [
         RouterModule,
@@ -31,6 +37,7 @@ import { TermsComponent } from './templates/terms/terms.component';
     declarations: [
         SearchPipe,
         CurrencyPipe,
+        ReportsComponent,
     ],
     providers: [  
         TableService

@@ -517,6 +517,12 @@ export class UsersService {
     return InfoUser.snapshotChanges();
 
   }
+
+   getUserInfoScan(userID:string){
+    return this.afs.collection('users').doc(userID).valueChanges();
+  }
+
+  
   getUserByCustomerInfo(customeId:string){
     const usersCollection = this.afs.collection("users", ref => ref.where('customerId', '==', customeId));
     return usersCollection.snapshotChanges();

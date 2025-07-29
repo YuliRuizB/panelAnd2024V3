@@ -7,7 +7,7 @@
     </nz-page-header>
   </div>
   <nz-tabset [nzSelectedIndex]="0">
-    <nz-tab nzTitle="Actividad General">
+    <nz-tab nzTitle="Registros Nuevos">
       <nz-card>
         <div class="d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Selecciona</h5>
@@ -34,15 +34,73 @@
       <nz-card [nzTitle]="'Registro de Usuarios'">
         <nz-row [nzGutter]="16">
           <nz-col [nzSpan]="12">
-            <nz-statistic [nzValue]="(sumTotalUsersRange | number)!" [nzTitle]="'Usuarios Nuevos'"></nz-statistic>
-          </nz-col>
-          <nz-col [nzSpan]="12">
             <nz-statistic [nzValue]="(sumTotalUsers | number)!" [nzTitle]="'Total de Usuarios'"></nz-statistic>
           </nz-col>
         </nz-row>
       </nz-card>
+      <nz-card *ngFor="let card of cardsByDate" style="margin-bottom: 24px;" [nzTitle]="'Desglose ' + card.date">
+        <nz-row class="mb-2">
+          <nz-col [nzSpan]="18">
+            <strong>Fecha:</strong> {{ card.date }}
+          </nz-col>
+          <nz-col [nzSpan]="6" style="text-align: right;">
+            <strong>{{ card.count }} usuarios</strong>
+          </nz-col>
+        </nz-row>
+        <div *ngIf="card.routeCounts" class="route-counts-container"
+          style="padding: 12px; border: 1px solid #d9d9d9; border-radius: 4px; background: #fafafa;">
+          <nz-row class="mb-2" align="middle" style="font-weight: 600; font-size: 16px; color: #333;">
+            <nz-col [nzSpan]="18">
+              Usuarios por ruta:
+            </nz-col>
+            <nz-col [nzSpan]="6" style="text-align: right;">
+              Cantidad
+            </nz-col>
+          </nz-row>
 
-      <nz-card [nzTitle]="'Dia'">
+          <nz-divider style="margin: 8px 0;"></nz-divider>
+
+          <div *ngFor="let route of card.routeCounts | keyvalue">
+            <nz-row align="middle" style="padding: 6px 0; border-bottom: 1px solid #f0f0f0;">
+              <nz-col [nzSpan]="18" style="font-weight: 500; color: #595959;">
+                {{ route.key }}
+              </nz-col>
+              <nz-col [nzSpan]="6" style="text-align: right; font-weight: 700; color: #1890ff;">
+                {{ route.value }} usuario{{ route.value !== 1 ? 's' : '' }}
+              </nz-col>
+            </nz-row>
+          </div>
+        </div>
+        <nz-table [nzData]="card.users" [nzFrontPagination]="true" [nzPageSize]="5" [nzScroll]="{ x: '600px' }"
+          [nzBordered]="true" [nzSize]="'middle'">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Email</th>
+              <th>Ruta</th>
+              <th>Turno</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let user of card.users | slice: (pageIndex - 1) * pageSize : pageIndex * pageSize">
+              <td>{{ user.firstName }}</td>
+              <td>{{ user.lastName }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.defaultRoute }}</td>
+              <td>{{ user.turno }}</td>
+            </tr>
+          </tbody>
+        </nz-table>
+
+        <nz-pagination [nzPageSize]="pageSize" [nzTotal]="card.users.length" [(nzPageIndex)]="pageIndex"
+          [nzSize]="'small'" [nzShowQuickJumper]="true" [nzShowSizeChanger]="false"></nz-pagination>
+
+      </nz-card>
+
+
+      <!--     <nz-card [nzTitle]="'Dia'">
         <nz-row [nzGutter]="16">
           <nz-col [nzSpan]="12">
             <ng-container *ngFor="let item of resultLiveRoundDLevel2">
@@ -81,7 +139,7 @@
             <nz-statistic [nzValue]="(sumT | number)!" [nzTitle]="'Total turno Noche'"></nz-statistic>
           </nz-col>
         </nz-row>
-      </nz-card>
+      </nz-card> -->
     </nz-tab>
     <nz-tab nzTitle="Mapas" (nzClick)="getAccountsMaps()">
       <nz-card nzTitle="Empresa">
@@ -104,10 +162,10 @@
                   nz-icon></i> {{ o.name }}</nz-option>
             </nz-select>
             <nz-select style="width: 320px;" formControlName="driverId" nzAllowClear
-            nzPlaceHolder="Selecciona el Ejecutor">
-            <nz-option *ngFor="let o of driversList" nzCustomContent [nzLabel]="o.driver" [nzValue]="o.driverId"><i
-                nz-icon></i> {{ o.driver }}</nz-option>
-          </nz-select>
+              nzPlaceHolder="Selecciona el Ejecutor">
+              <nz-option *ngFor="let o of driversList" nzCustomContent [nzLabel]="o.driver" [nzValue]="o.driverId"><i
+                  nz-icon></i> {{ o.driver }}</nz-option>
+            </nz-select>
             <!-- Submit Button -->
             <button nz- button style=" background-color: #4F6F57; color: #f6f3ea;" type="submit">Aceptar</button>
           </form>
@@ -152,12 +210,14 @@
             </td>
             <td><strong>Rechazado:</strong></td>
             <td> <i nz-icon [nzType]="isRejected ? 'check-circle' : 'close-circle'"
-              [ngClass]="isRejected ? 'active-icon' : 'inactive-icon'"></i>
-            <span>{{ isRejected ? 'True' : 'False' }}</span></td>
+                [ngClass]="isRejected ? 'active-icon' : 'inactive-icon'"></i>
+              <span>{{ isRejected ? 'True' : 'False' }}</span>
+            </td>
             <td><strong>Finalizado:</strong></td>
             <td> <i nz-icon [nzType]="hasEnded ? 'check-circle' : 'close-circle'"
-              [ngClass]="hasEnded ? 'active-icon' : 'inactive-icon'"></i>
-            <span>{{ hasEnded ? 'True' : 'False' }}</span></td>
+                [ngClass]="hasEnded ? 'active-icon' : 'inactive-icon'"></i>
+              <span>{{ hasEnded ? 'True' : 'False' }}</span>
+            </td>
           </tr>
         </table>
       </nz-card>

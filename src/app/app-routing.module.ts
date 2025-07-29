@@ -9,6 +9,8 @@ import { CommonLayoutComponent } from './layouts/common-layout/common-layout.com
 import { PrivacyPageComponent } from './shared/templates/privacy-page/privacy-page.component';
 import { PrivacyPageComponentSNB } from './shared/templates/privacy-pageSNB/privacy-pageSNB.component';
 import { BajaUsuarioSNBComponent } from './shared/templates/baja-usuarioSNB/baja-usuarioSNB.component';
+import { BajaUsuarioVMComponent } from './shared/templates/baja-usuarioVM/baja-usuarioVM.component';
+import { PrivacyPageComponentVM } from './shared/templates/privacyPageVM/privacy-pageVM.component';
 const redirectUnauthorizedToLogin = () => redirectUnauthorizedTo(["authentication/login"]);
 
 
@@ -61,8 +63,10 @@ const routes: Routes = [
   },
   { path: "bajaUsuario", component: BajaUsuarioComponent },
   { path: "bajaUsuarioSNB", component: BajaUsuarioSNBComponent },
+  { path: "bajaUsuarioVM" , component: BajaUsuarioVMComponent},
   { path: "privacy-page", component: PrivacyPageComponent },
   { path: "privacy-pageSNB", component: PrivacyPageComponentSNB },
+   { path: "privacy-pageVM", component: PrivacyPageComponentVM },
   //{ path: '**', component: PageNotFoundComponent },
 
   { path: "external-privacy", component: ExternalPrivacyComponent },

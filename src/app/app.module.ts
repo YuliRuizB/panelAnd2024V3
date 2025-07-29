@@ -149,6 +149,9 @@ import { CenterComponent } from './admin/center/center.component';
 import { RefaundComponent } from './admin/refaund/refaund.component';
 import { PrivacyPageComponentSNB } from './shared/templates/privacy-pageSNB/privacy-pageSNB.component';
 import { BajaUsuarioSNBComponent } from './shared/templates/baja-usuarioSNB/baja-usuarioSNB.component';
+import { BajaUsuarioVMComponent } from './shared/templates/baja-usuarioVM/baja-usuarioVM.component';
+import { PrivacyPageComponentVM } from './shared/templates/privacyPageVM/privacy-pageVM.component';
+import { ReportsComponent } from './shared/components/reports/reports.component';
 
 
 const antDesignIcons = AllIcons as {
@@ -164,6 +167,7 @@ const icons: IconDefinition[] = Object.keys(antDesignIcons).map(key => {
   declarations: [
     PrivacyPageComponent,
     PrivacyPageComponentSNB,
+     PrivacyPageComponentVM,
     PrivacyComponent,
     TermsComponent,
     RouteEditComponent,
@@ -172,6 +176,7 @@ const icons: IconDefinition[] = Object.keys(antDesignIcons).map(key => {
     LoginComponent,   
     BajaUsuarioComponent,
     BajaUsuarioSNBComponent,
+    BajaUsuarioVMComponent,
     ExternalPrivacyComponent,
     preRegisterComponent,
     CommonLayoutComponent,
@@ -238,8 +243,9 @@ const icons: IconDefinition[] = Object.keys(antDesignIcons).map(key => {
     ProgramComponent,
     RoutesNewComponents,
     CenterComponent,
-    RefaundComponent,    
-
+    RefaundComponent,
+    ReportsComponent
+    
   ],
   imports: [
     NzSpaceModule,

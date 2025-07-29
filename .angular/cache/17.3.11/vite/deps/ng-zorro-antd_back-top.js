@@ -2,6 +2,9 @@ import {
   NzDestroyService,
   NzScrollService
 } from "./chunk-IYUMHXL3.js";
+import {
+  fadeMotion
+} from "./chunk-UHWYIMUQ.js";
 import "./chunk-LGVF5KUC.js";
 import {
   NzIconDirective,
@@ -11,9 +14,6 @@ import {
   Platform,
   normalizePassiveListenerOptions
 } from "./chunk-KQHFB7XS.js";
-import {
-  fadeMotion
-} from "./chunk-UHWYIMUQ.js";
 import {
   Directionality
 } from "./chunk-E6WSB66Z.js";

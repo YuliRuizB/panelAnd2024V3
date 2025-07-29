@@ -1,4 +1,7 @@
 import {
+  es_default
+} from "./chunk-P673GEJL.js";
+import {
   en_US_default,
   formatDistance_default,
   formatRelative_default,
@@ -7,19 +10,16 @@ import {
   requiredArgs,
   startOfUTCWeek,
   toDate
-} from "./chunk-FYOOSI55.js";
+} from "./chunk-6NPWCSCJ.js";
 import "./chunk-TRFTH7IE.js";
 import "./chunk-5MLMGDL2.js";
-import "./chunk-JZCPY7PP.js";
-import {
-  es_default
-} from "./chunk-P673GEJL.js";
 import {
   buildFormatLongFn,
   buildLocalizeFn,
   buildMatchFn,
   buildMatchPatternFn
 } from "./chunk-OKQZR6SN.js";
+import "./chunk-JZCPY7PP.js";
 import "./chunk-Y6Q6HMFU.js";
 
 // node_modules/date-fns/esm/locale/af/_lib/formatDistance/index.js

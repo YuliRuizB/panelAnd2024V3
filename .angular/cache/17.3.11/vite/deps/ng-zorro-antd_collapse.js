@@ -1,18 +1,18 @@
 import {
+  NzNoAnimationDirective
+} from "./chunk-SVIZAOHU.js";
+import {
   NzDestroyService
 } from "./chunk-IYUMHXL3.js";
+import {
+  collapseMotion
+} from "./chunk-UHWYIMUQ.js";
 import "./chunk-LGVF5KUC.js";
 import {
   NzIconDirective,
   NzIconModule
 } from "./chunk-4XKQL6UW.js";
 import "./chunk-KQHFB7XS.js";
-import {
-  NzNoAnimationDirective
-} from "./chunk-SVIZAOHU.js";
-import {
-  collapseMotion
-} from "./chunk-UHWYIMUQ.js";
 import {
   NzOutletModule,
   NzStringTemplateOutletDirective

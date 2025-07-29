@@ -35,7 +35,7 @@ import {
   relativeToValue,
   spritePointToSvg,
   used
-} from "./chunk-JV5Z7NMR.js";
+} from "./chunk-NWMMPPA5.js";
 import {
   Dictionary,
   DictionaryDisposer,

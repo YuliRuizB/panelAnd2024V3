@@ -1,0 +1,121 @@
+<div class="site-page-header-ghost-wrapper">
+    <nz-page-header [nzGhost]="false" style="background-color:#f9fbfd;">
+
+        <nz-page-header-extra>
+            <div style="font-weight: bold;">
+                Usuarios Actuales: {{ userData.length }}
+            </div>
+        </nz-page-header-extra>
+    </nz-page-header>
+</div>
+<nz-tabset>
+    <nz-tab nzTitle="Usuarios">
+        <div style="margin-bottom: 16px;">
+            <label for="routeFilter" style="margin-right: 8px; font-weight: bold;">Filtrar por Ruta:</label>
+            <nz-select id="routeFilter" [(ngModel)]="selectedRouteId" (ngModelChange)="filterUsersByRoute()"
+                nzPlaceHolder="Selecciona una Operación">
+                <nz-option *ngFor="let route of routesList" [nzValue]="route.routeId" [nzLabel]="route.routeName">
+                </nz-option>
+            </nz-select>
+            <div style="font-weight: bold;">
+                Usuarios Totales: {{ filteredUserData.length }}
+                <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+                    (click)="export()">Exportar</button>
+            </div>
+        </div>
+        <nz-table [nzData]="filteredUserData" [nzPageSize]="pageSize" [nzFrontPagination]="true"
+            [nzShowPagination]="true" (nzCurrentPageDataChange)="listOfCurrentPageData = $event.slice()"
+            [nzScroll]="{ x: '1000px' }" [nzSize]="'middle'">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Correo</th>
+                    <th>Teléfono</th>
+                    <th>Curp</th>
+                    <th>Edad</th>
+                    <th>Direccion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <ng-container *ngFor="let data of listOfCurrentPageData">
+                    <tr>
+                        <td>{{ data.firstName}} {{ data.lastName}}</td>
+                        <td>{{ data.email}}</td>
+                        <td>{{ data.phoneNumber}}</td>
+                        <td>{{ data.curp}}</td>
+                        <td>{{ data.age}}</td>
+                        <td>{{ data.adress}}</td>
+                    </tr>
+                </ng-container>
+            </tbody>
+        </nz-table>
+    </nz-tab>
+    <nz-tab nzTitle="Escaneos">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Actividad en Vivo</h5>
+
+        </div>
+        <form [formGroup]="dateRangeForm">
+            <!-- Start Date Picker -->
+            <nz-date-picker formControlName="startDate"></nz-date-picker>
+
+            <!-- End Date Picker -->
+            <nz-date-picker formControlName="endDate"></nz-date-picker>
+
+            <!-- Submit Button -->
+        </form>
+
+        <div> <label for="routeFilter1" style="margin-right: 8px; font-weight: bold;">Filtrar por Ruta:</label>
+            <nz-select id="routeFilter1" [(ngModel)]="selectedRouteIdScan" (ngModelChange)="loadData()"
+                nzPlaceHolder="Selecciona una Operación">
+                <nz-option *ngFor="let route of routesList" [nzValue]="route.routeId" [nzLabel]="route.routeName">
+                </nz-option>
+            </nz-select>
+             <div style="font-weight: bold;">
+                Usuarios Totales: {{ filteredUserDataScan.length }}
+                <button nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
+                    (click)="exportScan()">Exportar</button>
+            </div>
+        </div>
+
+        <nz-table [nzData]="filteredUserDataScan" [nzPageSize]="pageSize" [nzFrontPagination]="true"
+            [nzShowPagination]="true" (nzCurrentPageDataChange)="listOfCurrentPageDataScan = $event.slice()"
+            [nzScroll]="{ x: '1000px' }" [nzSize]="'middle'">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Nombre</th>
+                  <th>Grupo</th>
+                  <!--     <th>Teléfono</th>
+                    <th>Curp</th>
+                    <th>Edad</th>
+                    <th>Direccion</th>  -->                  
+                   
+                    <th>Operación</th>
+                    <th>Turno</th>
+                    <th>Vehículo</th>
+                    <th>Chofer</th>
+                </tr>
+            </thead>
+            <tbody>
+                <ng-container *ngFor="let data of listOfCurrentPageDataScan">
+                    <tr>
+                        <td>{{ data.date}}</td>
+                        <td>{{ data.studentName}}</td>
+                        <td>{{ data.user.group }}</td>
+                    <!--   <td>{{ data.user.email}}</td>
+                          <td>{{ data.phoneNumber}}</td>
+                        <td>{{ data.curp}}</td>
+                        <td>{{ data.age}}</td>
+                        <td>{{ data.adress}}</td>   -->                                         
+                        <td>{{ data.op}}</td>
+                        <td>{{ data.round}}</td>
+                        <td>{{ data.driver}}</td>
+                         <td>{{ data.vehicleName}}</td>
+                    </tr>
+                </ng-container>
+            </tbody>
+        </nz-table>
+
+    </nz-tab>
+</nz-tabset>

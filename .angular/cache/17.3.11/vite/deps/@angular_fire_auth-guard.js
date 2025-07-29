@@ -1,5 +1,10 @@
 import "./chunk-JQJXKPM6.js";
 import {
+  Router
+} from "./chunk-XACF35F6.js";
+import "./chunk-TKNO2Y5I.js";
+import "./chunk-XPD2KT2Q.js";
+import {
   applyActionCode,
   beforeAuthStateChanged,
   checkActionCode,
@@ -56,14 +61,8 @@ import {
   verifyPasswordResetCode
 } from "./chunk-NMLWJLDS.js";
 import {
-  Router
-} from "./chunk-XACF35F6.js";
-import "./chunk-TKNO2Y5I.js";
-import "./chunk-XPD2KT2Q.js";
-import {
   FirebaseApp
 } from "./chunk-ZS64ZNTA.js";
-import "./chunk-2SLTQYCJ.js";
 import {
   VERSION,
   ɵgetAllInstancesOf,
@@ -73,6 +72,7 @@ import {
 import {
   registerVersion
 } from "./chunk-QZ4FX7SB.js";
+import "./chunk-2SLTQYCJ.js";
 import {
   Injectable,
   InjectionToken,

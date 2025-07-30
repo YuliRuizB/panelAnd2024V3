@@ -40,11 +40,16 @@
       </nz-card>
       <nz-card *ngFor="let card of cardsByDate" style="margin-bottom: 24px;" [nzTitle]="'Desglose ' + card.date">
         <nz-row class="mb-2">
-          <nz-col [nzSpan]="18">
+          <nz-col [nzSpan]="12">
             <strong>Fecha:</strong> {{ card.date }}
           </nz-col>
           <nz-col [nzSpan]="6" style="text-align: right;">
             <strong>{{ card.count }} usuarios</strong>
+          </nz-col>
+          <nz-col [nzSpan]="6" style="text-align: right;">
+            <button nz-button nzType="default" (click)="exportToExcel(card)">
+              Exportar
+            </button>
           </nz-col>
         </nz-row>
         <div *ngIf="card.routeCounts" class="route-counts-container"

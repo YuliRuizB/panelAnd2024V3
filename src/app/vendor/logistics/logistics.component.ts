@@ -25,6 +25,8 @@ import { ColDef, GridApi, GridOptions, GridReadyEvent } from 'ag-grid-community'
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css'
 import { HttpClient } from '@angular/common/http';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 
 class GeoPoint {
   constructor(public _lat: number, public _long: number) { }
@@ -483,7 +485,6 @@ export class LogisticsComponent implements OnInit {
     const selectedDriver = this.driversList.find((driver: any) => driver.driverId === selectedDriverId);
 
     if (selectedDriver) {
-      console.log(selectedDriver);
 
       this.driverName = selectedDriver.driver;
       this.driverConfirmationAt = selectedDriver.driverConfirmationAt;
@@ -658,6 +659,7 @@ export class LogisticsComponent implements OnInit {
   }
 
   onDateRangeChangeAct(): void {
+    this.cardsByDate = [];
     this.sumTotalUsersRange = 0;
     this.startDateAct = this.dateRangeFormAct.get('startDate')!.value;
     this.endDateAct = this.dateRangeFormAct.get('endDate')!.value;
@@ -699,6 +701,7 @@ export class LogisticsComponent implements OnInit {
   }
 
   getRoutes() {
+    this.userRoutes = [];
     this.routesService.getRoutes(this.customerIdSelected).pipe(
       takeUntil(this.stopSubscription$),
       map((actions: any) => actions.map((a: any) => {
@@ -717,17 +720,14 @@ export class LogisticsComponent implements OnInit {
     const current = new Date(start);
     const final = new Date(end);
 
-    this.cardsByDate = [];
-
     // Cargar rutas primero
     this.getRoutes(); // Asegúrate de que esto haya terminado antes si depende del resultado
-
+    this.cardsByDate = [];
     while (current <= final) {
       const day = current.getDate();
       const month = current.getMonth() + 1;
       const year = current.getFullYear();
       const formattedDate = `${day}/${month}/${year}`;
-
       this.logisticsService.getUsersByCustomer(formattedDate, formattedDate, this.customerIdSelected).pipe(
         map((actions: any[]) => {
           const routeCounts: { [routeDescription: string]: number } = {};
@@ -748,7 +748,10 @@ export class LogisticsComponent implements OnInit {
               lastName: data.lastName || '',
               email: data.email || '',
               defaultRoute: routeDescription,
-              turno: data.turno || ''
+              turno: data.turno || '',
+              curp:data.curp || '',
+              group:data.group ||'',
+              adress: data.adress ||''
             };
           });
 
@@ -759,12 +762,17 @@ export class LogisticsComponent implements OnInit {
           };
         })
       ).subscribe(({ count, users, routeCounts }) => {
-        this.cardsByDate.push({
-          date: formattedDate,
-          count,
-          users,
-          routeCounts
-        });
+
+        const alreadyExists = this.cardsByDate.some(card => card.date === formattedDate);
+
+        if (!alreadyExists) {
+          this.cardsByDate.push({
+            date: formattedDate,
+            count,
+            users,
+            routeCounts
+          });
+        }
 
         // Ordenar por fecha ascendente
         this.cardsByDate.sort((a, b) => {
@@ -957,7 +965,6 @@ export class LogisticsComponent implements OnInit {
         })
       ).subscribe((result: IActivityLog[]) => {
         this.rowData = result;
-        console.log(this.rowData);
 
         this.activityList = this.rowData.slice(0, 5);
         this.chartData = _.map(this.rowData, (x: any) => {
@@ -981,7 +988,6 @@ export class LogisticsComponent implements OnInit {
         })
       ).subscribe((result: IActivityLog[]) => {
         this.rowData = result;
-        console.log(this.rowData);
         this.activityList = this.rowData.slice(0, 5);
         this.chartData = _.map(this.rowData, (x: any) => { // Correct usage of _.map()
           return { country: x.vehicle, visits: x.studentId }
@@ -1048,6 +1054,51 @@ export class LogisticsComponent implements OnInit {
     }
   }
 
+  exportToExcel(card: any): void {
+    const data: any[][] = [];
+
+    // Sección 1: Encabezado general
+    data.push(['Fecha', card.date]);
+    data.push(['Total de usuarios', card.count]);
+    data.push([]);
+
+    // Sección 2: Usuarios por ruta
+    data.push(['Usuarios por ruta']);
+    data.push(['Ruta', 'Cantidad']);
+    for (const [ruta, cantidad] of Object.entries(card.routeCounts)) {
+      data.push([ruta, cantidad]);
+    }
+
+    data.push([]);
+    data.push([]);
+
+    // Sección 3: Tabla de usuarios
+    data.push(['Usuarios']);
+    data.push(['Nombre', 'Apellido', 'Email', 'Ruta', 'Turno', 'Curp', 'Grupo', 'Direccion']);
+    for (const user of card.users) {
+      data.push([
+        user.firstName || '',
+        user.lastName || '',
+        user.email || '',
+        user.defaultRoute || '',
+        user.turno || '',
+        user.curp || '',
+        user.group || '',
+        user.adress || ''
+      ]);
+    }
+
+    // Crear y guardar el archivo Excel
+    const worksheet: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(data);
+    const workbook: XLSX.WorkBook = {
+      Sheets: { 'Desglose': worksheet },
+      SheetNames: ['Desglose']
+    };
+    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+    const fileName = `Desglose_${card.date.replace(/\//g, '-')}.xlsx`;
+    FileSaver.saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), fileName);
+  }
 
 
 }

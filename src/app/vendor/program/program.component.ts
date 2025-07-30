@@ -314,9 +314,10 @@ export class ProgramComponent implements OnInit, OnDestroy {
         takeUntil(this.stopSubscriptions$)
       ).subscribe(data => {
         var filterCustomerC: any = [];
-        this.filterCustomerRoute = [];
+        this.filterCustomerRoute = [];       
+        
         for (var x = 0; x < data.length; x++) {
-
+          
           this.filterCustomerRoute.push({
             customerId: data[x].customerId,
             customerName: data[x].customerName,
@@ -487,14 +488,32 @@ export class ProgramComponent implements OnInit, OnDestroy {
     this.customerPath = customerSelected.customerName;
     this.routePath = this.customerPath;
     var filterRoute: any[] = [];
-
     this.filterCustomerRoute.forEach((element: any) => {
       if (element.customerId === customerSelected.customerId) {
         var duplicateRecord = filterRoute.find((y: any) =>
           y.routeId === element.routeId && y.customerId === element.customerId
         );
         if (!duplicateRecord) {
-          filterRoute.push({ routeId: element.routeId, routeName: element.routeName, customerId: element.customerId });
+           var elementDesc = element.routeName;
+          if (element.routeName == '') {                    
+            this.routesService.getRouteByCustomerUnique(element.customerId, element.routeId)
+              .pipe(
+                take(1),
+                map((action: any) => {
+                  const id = action.payload.id;
+                  const data = action.payload.data();
+                  return { ...data, id };
+                })
+              )
+              .subscribe((data: any) => {
+                elementDesc = data.description;
+                filterRoute.push({ routeId: element.routeId, routeName: elementDesc, customerId: element.customerId });
+              });
+            ;
+          } else {
+            filterRoute.push({ routeId: element.routeId, routeName: elementDesc, customerId: element.customerId });
+          }
+          
         }
       }
     });

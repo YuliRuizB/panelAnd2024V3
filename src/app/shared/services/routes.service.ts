@@ -253,6 +253,11 @@ export class RoutesService {
     return customerbyRoute.snapshotChanges();
   }
 
+  getRouteByCustomerUnique(customerId: string, routeId: string){
+    const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId);
+    return customerbyRoute.snapshotChanges();
+  }
+
   getCustomersPolyLineCustomer(customerId: string, routeId: string) {
     const customerbyRoute = this.afs.collection('customers').doc(customerId).collection('routes').doc(routeId).collection('polyline');
     return customerbyRoute.snapshotChanges();

@@ -57,10 +57,12 @@
         </div>
         <form [formGroup]="dateRangeForm">
             <!-- Start Date Picker -->
-            <nz-date-picker formControlName="startDate"></nz-date-picker>
+            <nz-date-picker formControlName="startDate"
+             (ngModelChange)="onDateChange()"></nz-date-picker>
 
             <!-- End Date Picker -->
-            <nz-date-picker formControlName="endDate"></nz-date-picker>
+            <nz-date-picker formControlName="endDate"
+            (ngModelChange)="onDateChange()"></nz-date-picker>
 
             <!-- Submit Button -->
         </form>

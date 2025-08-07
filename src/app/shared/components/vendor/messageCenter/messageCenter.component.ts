@@ -77,14 +77,14 @@ export class MessageCenterComponent implements OnInit {
   isUserSelectedIndGeneral: boolean = false;
   isUserSelectedSeg: boolean = false;
   isMessageInd: boolean = false;
-  isEjecSelectedSeg : boolean = false;
+  isEjecSelectedSeg: boolean = false;
   selectedCustomer: any[] = [];
   selectedCustomerGral: any[] = [];
   selectedUser: any[] = [];
   selectedEjecutor: any[] = [];
   selectedSearchType: string = "";
   selectedSearchTypeG: string = "";
-  newMessageSeg:string = "";
+  newMessageSeg: string = "";
   checkOptionsUnit = [
     { label: 'Unidad', value: 'Unidad', checked: false },
     { label: 'Todas las Unidades', value: 'allUnit', checked: false }
@@ -101,6 +101,12 @@ export class MessageCenterComponent implements OnInit {
     { label: 'Sencillo', value: 'sencillo', checked: false }
   ];
   selectedValue: string = '';
+  selectedUserIds: string[] = [];
+  batchSize = 50;
+  delayBetweenBatches = 3000;
+  pageSize: number = 10;
+  pageIndex = 1;
+  pagedData: any[] = [];
 
   constructor(
     private afs: AngularFirestore,
@@ -167,6 +173,7 @@ export class MessageCenterComponent implements OnInit {
   }
 
   ngOnInit() {
+
   }
 
   log(value: object[]): void {
@@ -273,59 +280,62 @@ export class MessageCenterComponent implements OnInit {
       this.listOfRound.push({ idRound: round });
     }
   }
-  applyFilterSeg () {
-      if (this.selectedValue === 'usuarios') {        
-          this.messageCenterService.getUserByRoundCustomer("", this.listOfSelectedRoutes, this.listOfSelectedCustomer)
-          .snapshotChanges() // Convertir a Observable
-          .pipe(
-            take(1),
-            map((actions: any) => {
-              return actions
-                .map((a: any) => {
-                  const data = a.payload.doc.data() as any;
-                  const id = a.payload.doc.id;
-                  const path = a.payload.doc.ref.parent.path;
-                  const pathArray = path.split('/');
-                  const VuserID = pathArray[1];
-                  return { id, ...data, VuserID };
-                })
-                .filter((user: any ) => user.token !== ""); // Filtrar usuarios con token diferente de ""
-            }),
-            tap((userF) => {                
-              if (userF) {
-                this.isUserSelectedSeg = true;
-                this.isEjecSelectedSeg = false;
-                let routeAded = {
-                  route: this.getSelectedRouteName(this.listOfSelectedRoutes),
-                  users: userF.length }
-                  this.listRecordsSeg.push(routeAded);
-                this.isShowUsers= true;
-                userF.forEach((sRound : any) => {
-                  const DuplicateAddRecord = this.userObj.find(duplicate => duplicate.routeId == sRound.routeId &&
-                    duplicate.customerId == sRound.customerId );
-                  if (!DuplicateAddRecord) {
-                    let userObj = {
-                      active: true,
-                      id: sRound.uid,
-                      label: sRound['firstName'] + ' ' + sRound['lastName'] + ' // ' + sRound['email'],
-                      phoneNumber: sRound['phone'],
-                      firstName: sRound['firstName'],
-                      lastName: sRound['lastName'],
-                      email: sRound['email'],
-                      displayName: sRound['displayName'],
-                      token: sRound['token']
-                    }
-                    this.userObj.push(userObj);              
-                
-              }});
-            }})
-          )
-          .subscribe();
-        
-        } else  {
-    
-        }    
-  
+  applyFilterSeg() {
+    if (this.selectedValue === 'usuarios') {
+      this.messageCenterService.getUserByRoundCustomer("", this.listOfSelectedRoutes, this.listOfSelectedCustomer)
+        .snapshotChanges() // Convertir a Observable
+        .pipe(
+          take(1),
+          map((actions: any) => {
+            return actions
+              .map((a: any) => {
+                const data = a.payload.doc.data() as any;
+                const id = a.payload.doc.id;
+                const path = a.payload.doc.ref.parent.path;
+                const pathArray = path.split('/');
+                const VuserID = pathArray[1];
+                return { id, ...data, VuserID };
+              })
+              .filter((user: any) => user.token !== ""); // Filtrar usuarios con token diferente de ""
+          }),
+          tap((userF) => {
+            if (userF) {
+              this.isUserSelectedSeg = true;
+              this.isEjecSelectedSeg = false;
+              let routeAded = {
+                route: this.getSelectedRouteName(this.listOfSelectedRoutes),
+                users: userF.length
+              }
+              this.listRecordsSeg.push(routeAded);
+              this.isShowUsers = true;
+              userF.forEach((sRound: any) => {
+                const DuplicateAddRecord = this.userObj.find(duplicate => duplicate.routeId == sRound.routeId &&
+                  duplicate.customerId == sRound.customerId);
+                if (!DuplicateAddRecord) {
+                  let userObj = {
+                    active: true,
+                    id: sRound.uid,
+                    label: sRound['firstName'] + ' ' + sRound['lastName'] + ' // ' + sRound['email'],
+                    phoneNumber: sRound['phone'],
+                    firstName: sRound['firstName'],
+                    lastName: sRound['lastName'],
+                    email: sRound['email'],
+                    displayName: sRound['displayName'],
+                    token: sRound['token']
+                  }
+                  this.userObj.push(userObj);
+
+                }
+              });
+            }
+          })
+        )
+        .subscribe();
+
+    } else {
+
+    }
+
   }
 
   applyFilter() {
@@ -356,7 +366,7 @@ export class MessageCenterComponent implements OnInit {
           tap((userF) => {
             if (userF) {
               this.userFillFinal(userF);
-             
+
             }
           })
         ).subscribe();
@@ -369,11 +379,11 @@ export class MessageCenterComponent implements OnInit {
     this.listofRecordsAfected.splice(index, 1);
     this.listofRecordsAfected = [...this.listofRecordsAfected]; // Para que Angular detecte el cambio
   }
-  getSelectedRouteName(recordId:string): string | undefined {
+  getSelectedRouteName(recordId: string): string | undefined {
     const selectedRoute = this.routes.find(route => route.routeId === recordId);
     return selectedRoute ? selectedRoute.name : undefined;
   }
-  
+
   changesOverRoutesSelected() {
     let singleItemChecked = this.checkOptionsRoute.find(res => res.value == 'Route');
     if (singleItemChecked!.checked) {
@@ -434,7 +444,7 @@ export class MessageCenterComponent implements OnInit {
     responseFill.forEach((element: any) => {
       // call the token and id per row
       const findUser = this.ListofUsersIDs.find(find => find.idUser == element.VuserID && find.round == element.round);
-      if (!findUser) {        
+      if (!findUser) {
         this.ListofUsersIDs.push({
           idUser: element.VuserID,
           routeId: element.routeId,
@@ -463,11 +473,46 @@ export class MessageCenterComponent implements OnInit {
     }
   }
 
+  onPageIndexChange(index: number): void {
+    this.pageIndex = index;
+    this.updatePagedData();
+  }
+
+  updatePagedData(): void {
+    const startIndex = (this.pageIndex - 1) * this.pageSize;
+    const endIndex = this.pageIndex * this.pageSize;
+    this.pagedData = this.userObjG.slice(startIndex, endIndex);
+  }
+
   sendGeneralMessage() {
     if (this.isUserSelectedIndGeneral) {
-      if (this.newMessageG != "") {
-        this.userObjG.forEach(eachUserMessage => {
+      this.sendMessagesInBatches();
+    } else if (this.isEjecutoresSelectedIndGeneral) {
+      this.sendMessagesNormal();
+    } else {
+      this.createMessage('warning', 'Debes seleccionar un grupo para enviar el mensaje.');
+    }
+  }
+  async sendMessagesInBatches() {
+    if (!this.newMessageG || this.newMessageG.trim() === "") {
+      this.createMessage('warning', 'El campo mensaje no puede estar vacío.');
+      return;
+    }
 
+    const batchSize = 10;
+    const delayMs = 1000;
+    const users = [...this.userObjG];
+
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    for (let i = 0; i < users.length; i += batchSize) {
+      const batch = users.slice(i, i + batchSize);
+
+      for (const eachUserMessage of batch) {
+        eachUserMessage.status = 'sending';
+        this.updatePagedData(); // Actualiza la tabla
+
+        try {
           const dataMessage = {
             createdAt: new Date(),
             from: 'FyXKSXsUbYNtAbWL7zZ66o2f1M92',
@@ -479,7 +524,8 @@ export class MessageCenterComponent implements OnInit {
             email: eachUserMessage.email,
             title: 'Apps And Informa General',
             body: this.newMessageG
-          }
+          };
+
           const notifMessage = {
             timestamp: new Date(),
             title: 'Apps And Informa General',
@@ -487,50 +533,66 @@ export class MessageCenterComponent implements OnInit {
             body: this.newMessageG,
             token: eachUserMessage.token,
             uid: eachUserMessage.id
-          }
-          this.dashboardService.setChatMessage(dataMessage);
-          this.dashboardService.setMessage(notifMessage, eachUserMessage.id);
-          //  this.dashboardService.sendToDeviceMessage(dataMessage);
-        })
-        this.createMessage('sucess', "El mensaje se a enviado a todos los destinatarios");
-      } else {
-        this.createMessage('warning', 'El campo mensaje no puede estar vacío.');
-      }
-    }
-    else {
-      if (this.newMessageG != "") {
-        this.ejecutorObjG.forEach(eachUserMessage => {
-          const dataMessage = {
-            createdAt: new Date(),
-            from: 'FyXKSXsUbYNtAbWL7zZ66o2f1M92',
-            fromName: 'Apps And Informa General',
-            msg: this.newMessageG,
-            requestId: 'suhB7YFAh6PYXCRuJhfD',
-            token: eachUserMessage.token,
-            uid: eachUserMessage.id,
-            email: eachUserMessage.email,
-            title: 'Apps And Informa General',
-            body: this.newMessageG
-          }
-          const notifMessage = {
-            timestamp: new Date(),
-            title: 'Apps And Informa General',
-            email: eachUserMessage.email,
-            body: this.newMessageG,
-            token: eachUserMessage.token,
-            uid: eachUserMessage.id
-          }
-          this.dashboardService.setChatMessage(dataMessage);
-          this.dashboardService.setMessage(notifMessage, eachUserMessage.id);
-         // this.dashboardService.sendToDeviceMessage(dataMessage);
-        })
-        this.createMessage('sucess', "Se a enviado el mensaje a todos los destinatarios");
-        this.newMessageG = "";
-      } else {
-        this.createMessage('warning', 'El campo mensaje no puede estar vacío.');
+          };
+
+
+          await this.dashboardService.setChatMessage(dataMessage);
+          await this.dashboardService.setMessage(notifMessage, eachUserMessage.id);
+
+
+          eachUserMessage.status = 'sent';
+        } catch (error) {
+          eachUserMessage.status = 'error';
+        }
+
+        this.updatePagedData(); // Actualiza después de enviar cada uno
       }
 
+      if (i + batchSize < users.length) {
+        await delay(delayMs);
+      }
     }
+
+    this.createMessage('success', "El mensaje se ha enviado a todos los destinatarios en lotes");
+    this.newMessageG = "";
+  }
+
+
+  // --- Envío normal ---
+  sendMessagesNormal() {
+    if (!this.newMessageG || this.newMessageG.trim() === "") {
+      this.createMessage('warning', 'El campo mensaje no puede estar vacío.');
+      return;
+    }
+
+    this.ejecutorObjG.forEach(eachUserMessage => {
+      const dataMessage = {
+        createdAt: new Date(),
+        from: 'FyXKSXsUbYNtAbWL7zZ66o2f1M92',
+        fromName: 'Apps And Informa General',
+        msg: this.newMessageG,
+        requestId: 'suhB7YFAh6PYXCRuJhfD',
+        token: eachUserMessage.token,
+        uid: eachUserMessage.id,
+        email: eachUserMessage.email,
+        title: 'Apps And Informa General',
+        body: this.newMessageG
+      };
+
+      const notifMessage = {
+        timestamp: new Date(),
+        title: 'Apps And Informa General',
+        email: eachUserMessage.email,
+        body: this.newMessageG,
+        token: eachUserMessage.token,
+        uid: eachUserMessage.id
+      };
+
+      this.dashboardService.setChatMessage(dataMessage);
+      this.dashboardService.setMessage(notifMessage, eachUserMessage.id);
+    });
+
+    this.createMessage('success', "Se ha enviado el mensaje a todos los destinatarios");
     this.newMessageG = "";
   }
 
@@ -600,9 +662,9 @@ export class MessageCenterComponent implements OnInit {
     this.newMessageInd = "";
   }
 
-  sendSeg(){    
+  sendSeg() {
     if (this.isUserSelectedSeg) {
-      if (this.newMessageSeg != "") {        
+      if (this.newMessageSeg != "") {
         this.userObj.forEach(eachUserMessage => {
           const dataMessage = {
             createdAt: new Date(),
@@ -624,10 +686,10 @@ export class MessageCenterComponent implements OnInit {
             token: eachUserMessage.token,
             uid: eachUserMessage.id
           }
-          
+
           this.dashboardService.setChatMessage(dataMessage);
           this.dashboardService.setMessage(notifMessage, eachUserMessage.id);
-         // this.dashboardService.sendToDeviceMessage(dataMessage);
+          // this.dashboardService.sendToDeviceMessage(dataMessage);
         })
         this.createMessage('sucess', "El mensaje se a enviado a todos los destinatarios");
       } else {
@@ -656,10 +718,10 @@ export class MessageCenterComponent implements OnInit {
             body: this.newMessageSeg,
             token: eachUserMessage.token,
             uid: eachUserMessage.id
-          }         
+          }
           this.dashboardService.setChatMessage(dataMessage);
           this.dashboardService.setMessage(notifMessage, eachUserMessage.id);
-         // this.dashboardService.sendToDeviceMessage(dataMessage);
+          // this.dashboardService.sendToDeviceMessage(dataMessage);
         })
         this.createMessage('sucess', "Se a enviado el mensaje a todos los destinatarios");
         this.newMessageG = "";
@@ -670,7 +732,7 @@ export class MessageCenterComponent implements OnInit {
     }
     this.newMessageG = "";
   }
-  
+
 
   changesOverClient(event: any) {
 
@@ -690,6 +752,16 @@ export class MessageCenterComponent implements OnInit {
 
   changesOverClientGral(event: any) {
     this.IdCustomerLiveGral = event;
+    this.selectedSearchTypeG = "";
+
+    // Limpiar listas anteriores
+    this.userObjG = [];
+    this.ejecutorObjG = [];
+    this.pagedData = [];
+
+    // Opcional: resetear indicadores visuales
+    this.isUserSelectedIndGeneral = false;
+    this.isEjecutoresSelectedIndGeneral = false;
   }
 
   changesOverClientInd(event: any) {
@@ -707,14 +779,15 @@ export class MessageCenterComponent implements OnInit {
 
   }
 
-  selectedCriteriaG(event: any) {    
-    
+  selectedCriteriaG(event: any) {
+
     if (event == "usuarios") {
       this.isUserSelectedIndGeneral = true;
       this.isEjecutoresSelectedIndGeneral = false;
+      this.userObjG = [];
       this.accountsSubscription = this.userService.getUserByAccount(this.IdCustomerLiveGral).subscribe((data1: any[]) => {
-       
-        
+        console.log("entro");
+
         data1.forEach(action => {
           const data = action.payload.doc.data();
           if (data["token"] != "") {
@@ -727,15 +800,17 @@ export class MessageCenterComponent implements OnInit {
               lastName: data['lastName'],
               email: data['email'],
               displayName: data['displayName'],
-              token: data['token']
+              token: data['token'],
+              status: 'pending'
             }
             this.userObjG.push(userObj);
           }
         });
+        this.updatePagedData();
       });
     } else { // Selecciono Ejecutores
       this.isEjecutoresSelectedIndGeneral = true;
-      this.isUserSelectedIndGeneral = false;      
+      this.isUserSelectedIndGeneral = false;
       this.accountsSubscription = this.driverService.getDriversByCustomer(this.IdCustomerLiveGral).subscribe((data1: any[]) => {
         data1.forEach(action => {
           const data = action.payload.doc.data();
@@ -758,50 +833,55 @@ export class MessageCenterComponent implements OnInit {
     }
   }
 
-  selectedCriteriaSeg(event:any) {
-    
+  selectedCriteriaSeg(event: any) {
+
   }
   selectedCriteria(event: any) {
-    
+
     if (event == "usuarios") {
       this.isUserSelectedInd = true;
       this.isUserSelectedSeg = true;
       this.isEjecSelectedSeg = false;
       this.isShowUsers = true;
-      this.isEjecutoresSelectedInd = false;       
-      this.accountsSubscription = this.userService.getUserByAccount(this.listOfSelectedCustomer).subscribe((data1: any[]) => {
-        data1.forEach(action => {
-          const data = action.payload.doc.data();
-          if (data["token"] !== "") {
-            const exists = this.userObj.some(user => user.id === data['uid']);      
-            if (!exists) {
-              let userObj = {
-                active: true,
-                id: data['uid'],
-                label: `${data['firstName']} ${data['lastName']} // ${data['email']}`,
-                phoneNumber: data['phoneNumber'],
-                firstName: data['firstName'],
-                lastName: data['lastName'],
-                email: data['email'],
-                displayName: data['displayName'],
-                token: data['token']
-              };
-              this.userObj.push(userObj);
+      this.isEjecutoresSelectedInd = false;
+      console.log(this.listOfSelectedCustomer);
+
+      this.accountsSubscription = this.userService
+        .getUserByAccount(this.listOfSelectedCustomer)
+        .subscribe((data1: any[]) => {
+          data1.forEach(action => {
+            const data = action.payload.doc.data();
+            if (data["token"] !== "") {
+              const exists = this.userObj.some(user => user.id === data['uid']);
+              if (!exists) {
+                let userObj = {
+                  active: true,
+                  id: data['uid'],
+                  label: `${data['firstName']} ${data['lastName']} // ${data['email']}`,
+                  phoneNumber: data['phoneNumber'],
+                  firstName: data['firstName'],
+                  lastName: data['lastName'],
+                  email: data['email'],
+                  displayName: data['displayName'],
+                  token: data['token'],
+                  status: 'pending' // pendiente, enviando, enviado, error
+                };
+                this.userObj.push(userObj);
+              }
             }
-          }
+          });
         });
-      });
     } else { // Selecciono Ejecutores
       this.isEjecutoresSelectedInd = true;
       this.isUserSelectedSeg = false;
       this.isEjecSelectedSeg = true;
       this.isUserSelectedInd = false;
       this.isShowUsers = false;
-      this.accountsSubscription = this.driverService.getDriversByCustomer(this.IdCustomerLiveInd).subscribe((data1: any[]) => {        
+      this.accountsSubscription = this.driverService.getDriversByCustomer(this.IdCustomerLiveInd).subscribe((data1: any[]) => {
         data1.forEach(action => {
           const data = action.payload.doc.data();
           if (data["token"] !== "") {
-            const exists = this.ejecutorObj.some(user => user.id === data['uid']);            
+            const exists = this.ejecutorObj.some(user => user.id === data['uid']);
             if (!exists) {
               let ejecutorObj = {
                 active: true,

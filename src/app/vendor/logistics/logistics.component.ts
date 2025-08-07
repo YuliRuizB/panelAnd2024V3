@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone, inject, PLATFORM_ID, Inject } from '@angular/core'
-import { takeUntil, map, tap } from 'rxjs/operators';
+import { takeUntil, map, tap, switchMap, catchError, take } from 'rxjs/operators';
 import { startOfToday, endOfToday, format, fromUnixTime } from 'date-fns';
 import esLocale from 'date-fns/locale/es';
 import * as _ from 'lodash';
@@ -10,7 +10,7 @@ import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { LogisticsService } from '../../logistics/services.service';
 import { LiveService } from '../../shared/services/live.service';
 import { AccountsService } from '../../shared/services/accounts.service';
-import { Subject, Subscription } from 'rxjs';
+import { forkJoin, Observable, of, Subject, Subscription } from 'rxjs';
 import { AuthenticationService } from '../../shared/services/authentication.service';
 import { RoutesService } from '../../shared/services/routes.service';
 import { IStopPoint } from '../../shared/interfaces/route.type';
@@ -27,6 +27,7 @@ import 'ag-grid-community/styles/ag-theme-quartz.css'
 import { HttpClient } from '@angular/common/http';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
+import { UsersService } from '../../shared/services/users.service';
 
 class GeoPoint {
   constructor(public _lat: number, public _long: number) { }
@@ -54,6 +55,7 @@ export class LogisticsComponent implements OnInit {
   dateRangeForm: UntypedFormGroup;
   dateRangeFormA: UntypedFormGroup;
   dateRangeFormAct: UntypedFormGroup;
+  dateRangeFormLive: UntypedFormGroup;
   dateRangeFormMap: UntypedFormGroup;
   accountsSubscription!: Subscription;
   startDate: Date;
@@ -136,7 +138,9 @@ export class LogisticsComponent implements OnInit {
   isConfirmed: boolean = false;
   isRejected: boolean = false;
   hasEnded: boolean = false;
-
+  selectedRouteIdScan: string = '';
+  selectedCustomerIdScan: string = '';
+  routesList: any;
   activeRoute: string = "False";
   round: string = "";
   vehicleName: string = "";
@@ -146,6 +150,9 @@ export class LogisticsComponent implements OnInit {
   accountsService = inject(AccountsService);
   authService = inject(AuthenticationService);
   routesService = inject(RoutesService);
+  usrService = inject(UsersService);
+  selectedRouteNameScan: string = '';
+  filteredUserDataScan: any[] = [];
   // estructura de la tabla.
   listOfColumns: ColumnItem[] = [
     {
@@ -308,6 +315,7 @@ export class LogisticsComponent implements OnInit {
     routeCounts: { [key: string]: number };
   }[] = [];
   userRoutes: any = [];
+  listOfCurrentPageDataScan: any[] = [];
 
 
   constructor(
@@ -366,6 +374,12 @@ export class LogisticsComponent implements OnInit {
       startDate: [startOfToday()], // Default to the start of today
       endDate: [endOfToday()],     // Default to the end of today
       customerId: [],
+    });
+    this.dateRangeFormLive = this.fb.group({
+      startDate: [startOfToday()], // Default to the start of today
+      endDate: [endOfToday()],     // Default to the end of today
+      customerId: [],
+      routeId: []
     });
     this.dateRangeFormMap = this.fb.group({
       customerId: [],
@@ -658,6 +672,55 @@ export class LogisticsComponent implements OnInit {
     return !!this.activeRoute;  // Si ya es booleano, se asegura de que sea true o false
   }
 
+  onDateRangeChangeLive(): void {
+    this.startDate = this.dateRangeFormLive.get('startDate')!.value;
+    this.endDate = this.dateRangeFormLive.get('endDate')!.value;
+    this.selectedRouteIdScan = this.dateRangeFormLive.get('routeId')!.value;
+    const selectedRoute = this.routesList.find((route: any) => route.routeId === this.selectedRouteIdScan);
+    this.selectedRouteNameScan = selectedRoute ? selectedRoute.routeName : '';
+
+    if (this.selectedRouteIdScan != "") {
+      if (this.startDate && this.endDate) {
+
+        this.logisticsService.getActivityLogByCustomerByRoute(this.startDate, this.endDate, this.selectedCustomerIdScan,
+          this.selectedRouteIdScan).pipe(
+            tap((logs: any[]) => {
+            }),
+            switchMap((logs: any[]): Observable<any[]> => {
+              const enrichedLogs$ = logs.map((logSnap: any) => {
+                const logData = logSnap.payload.doc.data();
+                const id = logSnap.payload.doc.id;
+                const userId = logData.userId;
+
+                return this.usrService.getUserInfoScan(userId).pipe(
+                  take(1),  // <-- muy importante
+                  catchError((err: any) => {
+                    console.error('Error al obtener usuario', userId, err);
+                    return of(null);
+                  }),
+                  map((userData: any) => ({
+                    ...logData,
+                    id,
+                    op: this.selectedRouteNameScan,
+                    user: userData || {}
+                  }))
+                );
+              });
+
+              return enrichedLogs$.length > 0 ? forkJoin(enrichedLogs$) : of([]);
+            })
+          ).subscribe((enrichedLogs: any[]) => {
+            this.filteredUserDataScan = enrichedLogs;
+          });
+
+      }
+      else {
+        this.notification.create('error', 'Error', 'Se Requiere un rango de fechas');
+        return;
+      }
+    }
+  }
+
   onDateRangeChangeAct(): void {
     this.cardsByDate = [];
     this.sumTotalUsersRange = 0;
@@ -749,9 +812,9 @@ export class LogisticsComponent implements OnInit {
               email: data.email || '',
               defaultRoute: routeDescription,
               turno: data.turno || '',
-              curp:data.curp || '',
-              group:data.group ||'',
-              adress: data.adress ||''
+              curp: data.curp || '',
+              group: data.group || '',
+              adress: data.adress || ''
             };
           });
 
@@ -1100,5 +1163,53 @@ export class LogisticsComponent implements OnInit {
     FileSaver.saveAs(new Blob([excelBuffer], { type: 'application/octet-stream' }), fileName);
   }
 
+  loadRoutes() {
+    this.selectedCustomerIdScan = this.dateRangeFormLive.get('customerId')!.value;
+    this.routesList = [];
+
+    this.routesService.getRoutes(this.selectedCustomerIdScan).pipe(
+      takeUntil(this.stopSubscription$),
+      map((actions: any) => actions.map((a: any) => {
+        const id = a.payload.doc.id;
+        const data = a.payload.doc.data();
+        return { routeId: id, routeName: data.description ?? 'Sin nombre' };
+      }))
+    ).subscribe(routes => {
+      this.routesList = routes;
+    });
+  }
+
+   exportScan(): void {
+  
+      const dataToExport = this.filteredUserDataScan.map(user => ({
+        Nombre: user.studentName,
+        Fecha: user.date,
+        Ruta: user.op,
+        Turno: user.round,
+        Conductor: user.driver,
+        Vehiculo: user.vehicleName,
+        Email: user.user?.email || '',
+        CURP: user.user?.curp || '',
+        Teléfono: user.user?.phoneNumber || '',
+        CódigoPostal: user.user?.zipCode || '',
+        Dirección: user.user?.adress || '',
+        Edad: user.user?.age || '',        
+        Grupo: user.user?.group || ''       
+  
+      }));
+  
+      const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(dataToExport);
+      const worksheetName = 'Actividad en Vivo';
+  
+      const workbook: XLSX.WorkBook = {
+        Sheets: { [worksheetName]: worksheet },
+        SheetNames: [worksheetName]
+      };
+  
+      const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob: Blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+      FileSaver.saveAs(blob, `actividad_envivo_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    }
+  
 
 }

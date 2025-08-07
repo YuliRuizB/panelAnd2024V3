@@ -1,6 +1,6 @@
 <div>
   <nz-tabset [nzSelectedIndex]="0">
-    <nz-tab nzTitle="Individual">
+    <!--    <nz-tab nzTitle="Individual">
       <div>
         <p>Nota: Los registros encontrados solo se muestran si cuentan con un token.
           <br>
@@ -48,54 +48,95 @@
         <button class="m-r-10" nz-button style=" background-color: #4F6F57; color: #f6f3ea;" (click)="sendIndMessage()">
           <i nz-icon nzType="plus"></i>Enviar Mensaje</button>
       </div>
-    </nz-tab>
+    </nz-tab> -->
     <nz-tab nzTitle="General">
+      <!-- Empresa -->
       <div>
-        <nz-form-label [nzSpan]="4" nzFor="label">Empresa </nz-form-label>
+        <nz-form-label [nzSpan]="4" nzFor="label">Empresa</nz-form-label>
         <nz-select [nzMaxTagCount]="3" style="width: 250px;" nzPlaceHolder="Selecciona una empresa"
           [(ngModel)]="selectedCustomerGral" (ngModelChange)="changesOverClientGral($event)">
-          <nz-option *ngFor="let customer of listOfCustomerGeneral" [nzLabel]="customer.name" [nzValue]="customer.id">
-          </nz-option>
+          <nz-option *ngFor="let customer of listOfCustomerGeneral" [nzLabel]="customer.name"
+            [nzValue]="customer.id"></nz-option>
         </nz-select>
       </div>
-      <div>
-        <nz-form-label [nzSpan]="4" nzFor="label"> Tipo Busqueda </nz-form-label>
+
+      <!-- Tipo de Búsqueda -->
+      <div style="margin-top: 12px;">
+        <nz-form-label [nzSpan]="4" nzFor="label">Tipo Búsqueda</nz-form-label>
         <nz-select [nzMaxTagCount]="3" style="width: 250px;" [(ngModel)]="selectedSearchTypeG"
-          nzPlaceHolder="Selecciona un tipo de Busqueda" (ngModelChange)="selectedCriteriaG($event)">
+          nzPlaceHolder="Selecciona un tipo de Búsqueda" (ngModelChange)="selectedCriteriaG($event)">
           <nz-option nzValue="ejecutores" nzLabel="Ejecutores"></nz-option>
           <nz-option nzValue="usuarios" nzLabel="Usuarios"></nz-option>
         </nz-select>
       </div>
-      <div>
-        <p>Nota: Los registros encontrados solo se muestran si cuentan con un token.
-          <br>
+
+      <!-- Nota -->
+      <div style="margin-top: 12px;">
+        <p>
+          Nota: Los registros encontrados solo se muestran si cuentan con un token.
+          <br />
           Se enviará el mensaje a todos los miembros del listado encontrados.
         </p>
       </div>
-      <div *ngIf="isUserSelectedIndGeneral">
-        <nz-form-label [nzSpan]="2" nzFor="label">Usuarios </nz-form-label>
-        <nz-select [nzMaxTagCount]="3" style="width: 70%;">
-          <nz-option *ngFor="let user of userObjG" [nzLabel]="user.label" [nzValue]="user.id">
-          </nz-option>
-        </nz-select>
+
+      <!-- Usuarios -->
+      <div *ngIf="isUserSelectedIndGeneral" style="margin-top: 12px;">
+        <nz-form-label [nzSpan]="2" nzFor="label">Usuarios</nz-form-label>
+
+        <!-- Tabla de usuarios (solo si es búsqueda por usuarios) -->
+        <nz-table [nzData]="pagedData" [nzFrontPagination]="false" [nzShowPagination]="false">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of pagedData">
+              <td>{{ u.firstName }} {{ u.lastName }}</td>
+              <td>{{ u.email }}</td>
+              <td>
+                <ng-container [ngSwitch]="u.status">
+                  <span *ngSwitchCase="'pending'" style="color: gray;">Pendiente</span>
+                  <span *ngSwitchCase="'sending'" style="color: orange;">Enviando...</span>
+                  <span *ngSwitchCase="'sent'" style="color: green;">Enviado ✅</span>
+                  <span *ngSwitchCase="'error'" style="color: red;">Error ❌</span>
+                </ng-container>
+              </td>
+            </tr>
+          </tbody>
+        </nz-table>
+        <nz-pagination [nzPageIndex]="pageIndex" [nzPageSize]="pageSize" [nzTotal]="userObjG.length"
+          (nzPageIndexChange)="onPageIndexChange($event)">
+        </nz-pagination>
+
       </div>
-      <div *ngIf="isEjecutoresSelectedIndGeneral">
-        <nz-form-label [nzSpan]="2" nzFor="label">Ejecutores </nz-form-label>
+      <!-- Ejecutores -->
+      <div *ngIf="isEjecutoresSelectedIndGeneral" style="margin-top: 12px;">
+        <nz-form-label [nzSpan]="2" nzFor="label">Ejecutores</nz-form-label>
         <nz-select [nzMaxTagCount]="3" style="width: 70%;">
-          <nz-option *ngFor="let pr of ejecutorObjG" [nzLabel]="pr.label" [nzValue]="pr.id">
-          </nz-option>
+          <nz-option *ngFor="let pr of ejecutorObjG" [nzLabel]="pr.label" [nzValue]="pr.id"></nz-option>
         </nz-select>
       </div>
 
-      <div>
+      <!-- Mensaje -->
+      <div style="margin-top: 20px;">
         <nz-divider nzPlain nzText="Mensaje"></nz-divider>
         <textarea rows="4" nz-input [(ngModel)]="newMessageG" placeholder="Mensaje"></textarea>
       </div>
-      <button class="m-r-10" nz-button style=" background-color: #4F6F57; color: #f6f3ea;"
-        (click)="sendGeneralMessage()"><i nz-icon nzType="plus"></i>Enviar
-        Mensaje</button>
+
+      <!-- Botón único para enviar -->
+      <div style="margin-top: 12px;">
+        <button nz-button nzType="primary" style="background-color: #4f6f57; color: #f6f3ea;"
+          (click)="sendGeneralMessage()">
+          <i nz-icon nzType="plus"></i>
+          {{ isUserSelectedIndGeneral ? 'Enviar Mensaje' : 'Enviar Mensaje' }}
+        </button>
+      </div>
     </nz-tab>
-  <!--   <nz-tab nzTitle="Segmentación">
+
+    <!--   <nz-tab nzTitle="Segmentación">
       <div>
         <p>Nota: Los registros encontrados solo se muestran si cuentan con un token.
           <br>

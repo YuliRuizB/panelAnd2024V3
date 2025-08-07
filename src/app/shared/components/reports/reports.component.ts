@@ -237,9 +237,7 @@ export class ReportsComponent {
             return enrichedLogs$.length > 0 ? forkJoin(enrichedLogs$) : of([]);
           })
         ).subscribe((enrichedLogs: any[]) => {
-
-          this.filteredUserDataScan = enrichedLogs;
-          console.log(enrichedLogs);
+          this.filteredUserDataScan = enrichedLogs;          
         });
 
       }
@@ -255,5 +253,12 @@ export class ReportsComponent {
     // Access the selected start and end dates from the form group
 
   }
+
+  onDateChange(): void {
+  // Limpia la tabla
+  this.filteredUserDataScan = [];
+  this.listOfCurrentPageDataScan = [];
+  this.selectedRouteIdScan = ""; // Opcional: limpiar selección de ruta
+}
 
 }

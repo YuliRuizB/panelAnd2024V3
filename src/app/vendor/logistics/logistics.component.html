@@ -146,6 +146,93 @@
         </nz-row>
       </nz-card> -->
     </nz-tab>
+    <nz-tab nzTitle="Actividad En Vivo">
+      <nz-card>
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Selecciona</h5>
+        </div>
+        <nz-row [nzGutter]="16">
+          <!-- Date Range Form -->
+          <form [formGroup]="dateRangeFormLive" (ngSubmit)="onDateRangeChangeLive()" class="form-inline">
+            <nz-date-picker formControlName="startDate" id="startDate" class="form-control"></nz-date-picker>
+            <nz-date-picker formControlName="endDate" id="endDate" class="form-control"></nz-date-picker>
+
+            <nz-select style="width: 250px;" formControlName="customerId" id="customerId" nzAllowClear
+              (ngModelChange)="loadRoutes()" nzPlaceHolder="Selecciona el Cliente" class="form-control">
+              <nz-option *ngFor="let o of accountsList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id">
+                {{ o.name }}
+              </nz-option>
+            </nz-select>
+            <div>
+              <label for="routeFilter1" style="margin-right: 8px; font-weight: bold;">Filtrar por Ruta:</label>
+              <nz-select id="routeFilter1" formControlName="routeId" (ngModelChange)="loadData()"
+                nzPlaceHolder="Selecciona una Operación">
+                <nz-option *ngFor="let route of routesList" [nzValue]="route.routeId" [nzLabel]="route.routeName">
+                </nz-option>
+              </nz-select>
+            </div>
+            <!-- Submit Button -->
+            <!-- Botones -->
+            <button nz-button style="background-color: #4F6F57; color: #f6f3ea;" type="submit" class="btn btn-primary">
+              Aceptar
+            </button>
+
+            <button nz-button style="margin-left: 8px; background-color: #4F6F57; color: #f6f3ea;" type="button"
+              (click)="exportScan()">
+              Exportar
+            </button>
+          </form>
+        </nz-row>
+      </nz-card>
+      <nz-card [nzTitle]="'Registro de Actividad en Vivo'">
+        <nz-row [nzGutter]="16">
+          <nz-col [nzSpan]="12">
+            <nz-statistic [nzValue]="(filteredUserDataScan.length | number)!"
+              [nzTitle]="'Total de Usuarios Activos'"></nz-statistic>
+          </nz-col>
+        </nz-row>
+      </nz-card>
+
+      <nz-table [nzData]="filteredUserDataScan" [nzPageSize]="pageSize" [nzFrontPagination]="true"
+        [nzShowPagination]="true" (nzCurrentPageDataChange)="listOfCurrentPageDataScan = $event.slice()"
+        [nzScroll]="{ x: '1000px' }" [nzSize]="'middle'">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Nombre</th>
+            <th>Grupo</th>
+            <!--     <th>Teléfono</th>
+                    <th>Curp</th>
+                    <th>Edad</th>
+                    <th>Direccion</th>  -->
+
+            <th>Operación</th>
+            <th>Turno</th>
+            <th>Vehículo</th>
+            <th>Chofer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let data of listOfCurrentPageDataScan">
+            <tr>
+              <td>{{ data.date}}</td>
+              <td>{{ data.studentName}}</td>
+              <td>{{ data.user.group }}</td>
+              <!--   <td>{{ data.user.email}}</td>
+                          <td>{{ data.phoneNumber}}</td>
+                        <td>{{ data.curp}}</td>
+                        <td>{{ data.age}}</td>
+                        <td>{{ data.adress}}</td>   -->
+              <td>{{ data.op}}</td>
+              <td>{{ data.round}}</td>
+              <td>{{ data.driver}}</td>
+              <td>{{ data.vehicleName}}</td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </nz-table>
+
+    </nz-tab>
     <nz-tab nzTitle="Mapas" (nzClick)="getAccountsMaps()">
       <nz-card nzTitle="Empresa">
         <div class="d-flex justify-content-between align-items-center">

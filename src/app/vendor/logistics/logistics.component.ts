@@ -386,7 +386,7 @@ export class LogisticsComponent implements OnInit {
       customerName: [],
       routeId: [],
       routeName: [],
-      driverId: [null]
+      driverId: ['']
     });
 
 
@@ -493,7 +493,8 @@ export class LogisticsComponent implements OnInit {
   }
 
   onDateRangeChangeMap(): void {
-    const selectedDriverId = this.dateRangeFormMap.controls['driversId'].value; // Obtener el ID seleccionado
+
+    const selectedDriverId = this.dateRangeFormMap.get('driverId')?.value; // Obtener el ID seleccionado
 
     // Filtrar el objeto correspondiente en driversList
     const selectedDriver = this.driversList.find((driver: any) => driver.driverId === selectedDriverId);

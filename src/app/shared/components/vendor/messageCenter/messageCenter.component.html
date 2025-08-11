@@ -53,7 +53,7 @@
       <!-- Empresa -->
       <div>
         <nz-form-label [nzSpan]="4" nzFor="label">Empresa</nz-form-label>
-        <nz-select [nzMaxTagCount]="3" style="width: 250px;" nzPlaceHolder="Selecciona una empresa"
+        <nz-select [nzMaxTagCount]="3" style="width: 50%;" nzPlaceHolder="Selecciona una empresa"
           [(ngModel)]="selectedCustomerGral" (ngModelChange)="changesOverClientGral($event)">
           <nz-option *ngFor="let customer of listOfCustomerGeneral" [nzLabel]="customer.name"
             [nzValue]="customer.id"></nz-option>
@@ -63,12 +63,28 @@
       <!-- Tipo de Búsqueda -->
       <div style="margin-top: 12px;">
         <nz-form-label [nzSpan]="4" nzFor="label">Tipo Búsqueda</nz-form-label>
-        <nz-select [nzMaxTagCount]="3" style="width: 250px;" [(ngModel)]="selectedSearchTypeG"
+        <nz-select [nzMaxTagCount]="3" style="width: 47%;" [(ngModel)]="selectedSearchTypeG"
           nzPlaceHolder="Selecciona un tipo de Búsqueda" (ngModelChange)="selectedCriteriaG($event)">
           <nz-option nzValue="ejecutores" nzLabel="Ejecutores"></nz-option>
           <nz-option nzValue="usuarios" nzLabel="Usuarios"></nz-option>
         </nz-select>
       </div>
+      <div  *ngIf="isUserSelectedIndGeneral" style='margin-top: 15px'>
+        <nz-form-label [nzSpan]="5" nzFor="label">Operación </nz-form-label>
+        <nz-select style="width: 50%;" nzAllowClear nzPlaceHolder="Selecciona la Operación"
+          [(ngModel)]="listOfSelectedRoutes" (ngModelChange)="selectedRouteG()">
+          <nz-option *ngFor="let o of routes" nzCustomContent [nzLabel]="o.routeName" [nzValue]="o.routeId"><i nz-icon
+              nzType="fork"></i> {{ o.routeName }}</nz-option>
+        </nz-select>
+      </div>  
+     <!--   <div  *ngIf="isUserSelectedIndGeneral" style='margin-top: 15px'>
+        <nz-form-label [nzSpan]="5" nzFor="label">Pase de Abordar </nz-form-label>
+        <nz-select style="width: 46%;" nzAllowClear nzPlaceHolder="Selecciona la Pase de Abordar"
+          [(ngModel)]="listOfSelectedProducts" (ngModelChange)="selectedRouteG()">
+          <nz-option *ngFor="let o of productsList" nzCustomContent [nzLabel]="o.name" [nzValue]="o.id"><i nz-icon
+              nzType="fork"></i> {{ o.name }}</nz-option>
+        </nz-select>
+      </div>   -->
 
       <!-- Nota -->
       <div style="margin-top: 12px;">
@@ -81,7 +97,7 @@
 
       <!-- Usuarios -->
       <div *ngIf="isUserSelectedIndGeneral" style="margin-top: 12px;">
-        <nz-form-label [nzSpan]="2" nzFor="label">Usuarios</nz-form-label>
+      <nz-form-label [nzSpan]="2" nzFor="label">Usuarios</nz-form-label>        
 
         <!-- Tabla de usuarios (solo si es búsqueda por usuarios) -->
         <nz-table [nzData]="pagedData" [nzFrontPagination]="false" [nzShowPagination]="false">

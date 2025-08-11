@@ -1101,7 +1101,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       }))
     )
       .subscribe({
-        next: (lastestPurchaseDetail) => {
+        next: (lastestPurchaseDetail) => {       
+          
           this.lastestPurchaseDetail = lastestPurchaseDetail;
         },
         error: (err) => {

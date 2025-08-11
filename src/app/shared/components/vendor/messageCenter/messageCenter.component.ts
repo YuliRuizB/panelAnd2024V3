@@ -15,6 +15,7 @@ import { AuthenticationService } from '../../../services/authentication.service'
 import { UsersService } from '../../../services/users.service';
 import { ConsoleSqlOutline } from '@ant-design/icons-angular/icons';
 import { DriversService } from '../../../services/drivers.service';
+import { Product } from '../../../interfaces/product.type';
 
 @Component({
   selector: 'app-shared-messageCenter',
@@ -41,6 +42,7 @@ export class MessageCenterComponent implements OnInit {
   listOfCustomerGeneral: any;
   listOfRoutes: any;
   listOfSelectedRoutes: any;
+  listOfSelectedProducts: any;
   isShowUsers: boolean = false;
   listOfUsers: any;
   listofUsersPreview: any[] = [];
@@ -107,6 +109,7 @@ export class MessageCenterComponent implements OnInit {
   pageSize: number = 10;
   pageIndex = 1;
   pagedData: any[] = [];
+  productsList: Product[] = [];
 
   constructor(
     private afs: AngularFirestore,
@@ -161,15 +164,7 @@ export class MessageCenterComponent implements OnInit {
         this.listOfCustomerGeneral = accounts;
       });
     }
-    const routesObservable: Observable<any> = this.accountId$.pipe(
-      switchMap(accountId => this.afs.collection('customers').doc(accountId)
-        .collection('routes', ref => ref.where('active', '==', true))
-        .valueChanges({ idField: 'routeId' })
-      ));
-    // subscribe to changes
-    routesObservable.subscribe((routes: any) => {
-      this.routes = routes;
-    });
+
   }
 
   ngOnInit() {
@@ -753,7 +748,7 @@ export class MessageCenterComponent implements OnInit {
   changesOverClientGral(event: any) {
     this.IdCustomerLiveGral = event;
     this.selectedSearchTypeG = "";
-
+    this.productsList=[];
     // Limpiar listas anteriores
     this.userObjG = [];
     this.ejecutorObjG = [];
@@ -779,35 +774,70 @@ export class MessageCenterComponent implements OnInit {
 
   }
 
-  selectedCriteriaG(event: any) {
+  selectedRouteG() {    
+    
+    this.userObjG = [];
+    //this.accountsSubscription = this.userService.getUserByAccount(this.IdCustomerLiveGral).subscribe((data1: any[]) => {      
+    //console.log(this.listOfSelectedProducts);
+    
+  this.accountsSubscription = this.messageCenterService
+  .getUserByRoundCustomerG(this.listOfSelectedRoutes)
+  .subscribe((data1: any[]) => {
+    //console.log(data1);
+    
+    data1.forEach(action => {
+      const data = action.payload.doc.data();
+      if (data["token"] != "") {
+        const userObj = {
+          active: true,
+          id: data['uid'],
+          label: `${data['firstName']} ${data['lastName']} // ${data['email']}`,
+          phoneNumber: data['phoneNumber'],
+          firstName: data['firstName'],
+          lastName: data['lastName'],
+          email: data['email'],
+          displayName: data['displayName'],
+          token: data['token'],
+          status: 'pending'
+        };
+        this.userObjG.push(userObj); 
+      }
+    });
+    this.updatePagedData();
+  });
 
-    if (event == "usuarios") {
+  }
+
+  getProducts() {
+    this.customerService.getAccountProducts(this.IdCustomerLiveGral).pipe(
+      map((actions: any) => actions.map((a: any) => {
+        const id = a.payload.doc.id;
+        const data = a.payload.doc.data() as Product;
+        return { ...data, id }; // Include id property only once
+      }))
+    ).subscribe((products: Product[]) => {
+      this.productsList = products;
+    });
+
+  }
+
+  selectedCriteriaG(event: any) {
+    if (event == "usuarios") {    
+
       this.isUserSelectedIndGeneral = true;
       this.isEjecutoresSelectedIndGeneral = false;
-      this.userObjG = [];
-      this.accountsSubscription = this.userService.getUserByAccount(this.IdCustomerLiveGral).subscribe((data1: any[]) => {
-        console.log("entro");
-
-        data1.forEach(action => {
-          const data = action.payload.doc.data();
-          if (data["token"] != "") {
-            let userObj = {
-              active: true,
-              id: data['uid'],
-              label: data['firstName'] + ' ' + data['lastName'] + ' // ' + data['email'],
-              phoneNumber: data['phoneNumber'],
-              firstName: data['firstName'],
-              lastName: data['lastName'],
-              email: data['email'],
-              displayName: data['displayName'],
-              token: data['token'],
-              status: 'pending'
-            }
-            this.userObjG.push(userObj);
-          }
-        });
-        this.updatePagedData();
+      this.routeService.getRoutes(this.IdCustomerLiveGral).pipe(
+        takeUntil(this.stopSubscription$),
+        map((actions: any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data();
+          return { routeId: id, routeName: data.description ?? 'Sin nombre' };
+        }))
+      ).subscribe((routes: any) => {
+        this.routes = routes;
+        this.getProducts();        
       });
+
     } else { // Selecciono Ejecutores
       this.isEjecutoresSelectedIndGeneral = true;
       this.isUserSelectedIndGeneral = false;

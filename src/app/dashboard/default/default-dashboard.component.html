@@ -787,9 +787,9 @@
                         <tr *ngFor="let data of tableReference.data">
                           <td> {{ data.creation_date | date: 'medium' }}</td>
                           <td>{{ data.name }}</td>
-                          <td>{{ data.payment }}</td>
                           <td>{{ data.typePayment }}</td>
-                          <td> $ {{ data.amountPayment }}</td>
+                          <td>{{ data.type }}</td>
+                          <td> $ {{ data.amount }}</td>
                           <td>
                             <div *ngIf="data.typePayment == 'Transferencia'">
                               <a href="{{data.fileURL}}" target="_blank">Ver Comprobante</a>

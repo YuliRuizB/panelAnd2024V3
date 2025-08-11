@@ -107,6 +107,18 @@ export class ProgramService {
     return programmedAssignments.snapshotChanges();
   }
 
+    getProgramsByDayLive(date: Date) {
+
+    let start = date;
+    let end = addDays(start, 1);
+    const programmedAssignments = this.afs.collectionGroup('live', ref =>
+      ref.where('startAt', '>=', start)
+        .where('startAt', '<=', end)
+        .where('active', '==', true)
+        .orderBy('startAt', 'asc')
+    );
+    return programmedAssignments.snapshotChanges();
+  }
   getProgramsByDaybyCustomer(date: Date, customerId: string) {
 
     let start = date;
@@ -120,6 +132,20 @@ export class ProgramService {
     );
     return programmedAssignments.snapshotChanges();
   }
+
+   getProgramsByDaybyCustomerLive(date: Date, customerId: string) {
+    let start = date;
+    let end = addDays(start, 1);
+    const programmedAssignments = this.afs.collectionGroup('live', ref =>
+      ref.where('startAt', '>=', start)
+        .where('startAt', '<=', end)
+        .where('active', '==', true)
+        .where('customerId', '==', customerId)
+        .orderBy('startAt', 'asc')
+    );
+    return programmedAssignments.snapshotChanges();
+  }
+
   getProgrambyCustomer(programId: string, customerId: string) {
     const programRef = this.afs.collection('customers').doc(customerId).collection('program').doc(programId);
     return programRef.snapshotChanges(); // Ensure this returns an Observable of DocumentSnapshot
@@ -188,12 +214,28 @@ export class ProgramService {
       .catch(err => this.sendMessage('error', `¡Oops! Algo salió mal ... ${err}`));
   }
 
-  deleteProgram(programId: string, customerId: any) {
+  updateProgram(programId: string, customerId: any) {
 
-    const programRef = this.afs.collection('customers').doc(customerId).collection('program').doc(programId);
+    /* const programRef = this.afs.collection('customers').doc(customerId).collection('program').doc(programId);
     return programRef.delete()
       .then(() => this.sendMessage('success', 'La  programacion ha sido eliminada.'))
+      .catch(err => this.sendMessage('error', `¡Oops! Algo salió mal ... ${err}`)); */
+       const programRef = this.afs.collection('customers').doc(customerId).collection('program').doc(programId);
+    return programRef.update({
+     isLive:false
+    })
+      .then(() => this.messageService.success('La Programación ha sido modificada. Favor de Actualizar la tabla.'))
       .catch(err => this.sendMessage('error', `¡Oops! Algo salió mal ... ${err}`));
+
+  }
+   updateLive(programId: string, customerId: any) {
+      const programRef = this.afs.collection('customers').doc(customerId).collection('program').doc(programId);
+    return programRef.update({
+     isLive:false
+    })
+      .then(() => this.messageService.success('La Programación ha sido modificada. Favor de Actualizar la tabla.'))
+      .catch(err => this.sendMessage('error', `¡Oops! Algo salió mal ... ${err}`));
+
   }
 
   sendMessage(type: string, message: string): void {

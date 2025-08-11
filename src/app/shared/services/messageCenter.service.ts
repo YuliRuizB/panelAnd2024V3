@@ -63,6 +63,12 @@ export class MessageCenterService {
       );
       return usersBoardingPassesByCustomer;
   }
+
+  getUserByRoundCustomerG(idRoute: string) {
+  return this.afs.collection('users', (ref) =>
+    ref.where('defaultRoute', '==', idRoute)
+  ).snapshotChanges(); 
+}
   
   getUserByRouteRound(round: string, idRoute: string) {
 

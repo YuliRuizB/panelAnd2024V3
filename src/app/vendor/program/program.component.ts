@@ -91,6 +91,7 @@ export class ProgramComponent implements OnInit, OnDestroy {
   markers: any;
   columnFleetDefs = LiveProgramColumnDefs
   rowData!: IActivityLog[];
+  rowDataLive!: IActivityLog[];
   rowDataAsignPostProg!: IActivityLog[];
   rowDataAsignModal!: IActivityLogAssing[];
   stopSubscription$: Subject<boolean> = new Subject();
@@ -99,6 +100,7 @@ export class ProgramComponent implements OnInit, OnDestroy {
   endDate: Date;
   numAssing: string = "(0)";
   numAssingPro: string = "(0)";
+  numAssingProLive:string = "(0)";
   regSelected: string = "(0)";
   regFound!: string;
   signupForm!: UntypedFormGroup;
@@ -381,6 +383,21 @@ export class ProgramComponent implements OnInit, OnDestroy {
           this.rowDataAsignPostProg = data;
         })
       ).subscribe();
+       this.programService.getProgramsByDaybyCustomerLive(this.date, this.user.customerId).pipe(
+        take(1),
+        map((actions: any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data }
+        })),
+        tap((data: any) => {
+          this.loading = false;
+          this.total = data.length;
+          this.rowDataLive = data;
+          this.numAssingProLive = " ( " + data.length + " ) ";
+        //  this.rowDataAsignPostProg = data;
+        })
+      ).subscribe();
     } else {
       this.programService.getProgramsByDay(this.date).pipe(
         take(1),
@@ -396,6 +413,22 @@ export class ProgramComponent implements OnInit, OnDestroy {
           this.rowData = data;
           this.numAssingPro = " ( " + data.length + " ) ";
           this.rowDataAsignPostProg = data;
+        })
+      ).subscribe();
+
+       this.programService.getProgramsByDayLive(this.date).pipe(
+        take(1),
+        map((actions: any) => actions.map((a: any) => {
+          const id = a.payload.doc.id;
+          const data = a.payload.doc.data() as any;
+          return { id, ...data }
+        })),
+        tap((data: any) => {
+          this.loading = false;
+          this.total = data.length;
+          this.rowDataLive = data;
+          this.numAssingProLive = " ( " + data.length + " ) ";
+         // this.rowDataAsignPostProg = data;
         })
       ).subscribe();
 
@@ -699,9 +732,16 @@ export class ProgramComponent implements OnInit, OnDestroy {
   }
 
   okDeleteAssign(event: any) {
-    this.programService.deleteProgram(event.id, event.customerId);
+    this.programService.updateProgram(event.id, event.customerId);
     this.searchData(true);
   }
+
+  okDeleteAssignLive(event: any) {
+    
+     this.programService.updateLive(event.id, event.customerId);
+    this.searchData(true);
+  }
+
 
   handleCancelDel() {
   }

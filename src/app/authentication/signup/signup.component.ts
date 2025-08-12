@@ -45,7 +45,7 @@ export class SignupComponent implements OnInit {
     this.signUpForm = this.fb.group({
       email: [null, [Validators.email, Validators.required]],
       password: [null, [Validators.required, Validators.minLength(8), Validators.pattern('^[A-Za-z0-9 ]+$')]],
-      checkPassword: [null, [Validators.required]],
+      checkPassword: [null, [Validators.required, Validators.minLength(8), Validators.pattern('^[A-Za-z0-9 ]+$')]],
       firstName: [null, [Validators.required, Validators.minLength(5), Validators.maxLength(50)]],
       lastName: [null, [Validators.required, Validators.minLength(5), Validators.maxLength(60)]],
       userName: [''],
@@ -55,7 +55,7 @@ export class SignupComponent implements OnInit {
       defaultRouteName: [''],
       defaultRound: [''],
       round: [''],
-      customerId: [''],
+      customerId: [null, [Validators.required, Validators.minLength(5), Validators.maxLength(20)]],
       customerName: [''],
       studentId: [''],
       terms: [true],
@@ -71,7 +71,7 @@ export class SignupComponent implements OnInit {
         Validators.minLength(7),
         Validators.maxLength(7),
         Validators.pattern('[0-9]+')]], */
-      agree: [null],
+       agree: [null, [Validators.requiredTrue]],
       roundTrip: [],
       turno: [],
       rolId: ['54YNS3xlSLPc6UzNq2HJ'], //rol mas sencillo de ver

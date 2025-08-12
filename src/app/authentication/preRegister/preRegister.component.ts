@@ -41,7 +41,7 @@ export class preRegisterComponent implements OnInit {
     this.signUpForm = this.fb.group({
       email: [null, [Validators.email, Validators.required]],
       password: [null, [Validators.required, Validators.minLength(8), Validators.pattern('^[A-Za-z0-9 ]+$')]],
-      checkPassword: [],//null, [Validators.required, this.confirmationValidator]],
+      checkPassword:  [null, [Validators.required, Validators.minLength(8), Validators.pattern('^[A-Za-z0-9 ]+$')]],
       firstName: [null, [Validators.required, Validators.minLength(5), Validators.maxLength(50)]],
       lastName: [null, [Validators.required, Validators.minLength(5), Validators.maxLength(60)]],
       // phoneNumber: [null, [Validators.required, Validators.minLength(10), Validators.maxLength(10), Validators.pattern('[0-9]+')]],
@@ -52,14 +52,14 @@ export class preRegisterComponent implements OnInit {
       defaultRound: [],
       round: [],
       roundTrip: [],
-      customerId: [],
+      customerId: [null, [Validators.required, Validators.minLength(5), Validators.maxLength(20)]],
       customerName: [],
       studentId: [null, [Validators.required,
       Validators.minLength(7),
       Validators.maxLength(7),
       Validators.pattern('[0-9]+')]],
       status: [],
-      agree: [null]
+      agree: [null, [Validators.requiredTrue]]
     });
     this.cCollection = this.afs.collection<any>('customers', ref => ref.where('active', '==', true));
     this.customers = this.cCollection.snapshotChanges().pipe(
@@ -74,21 +74,42 @@ export class preRegisterComponent implements OnInit {
   }
 
   submitForm(): void {
-    for (const i in this.signUpForm.controls) {
-      this.signUpForm.controls[i].markAsDirty();
-      this.signUpForm.controls[i].updateValueAndValidity();
-    }
-    if (this.signUpForm.valid) {
-      this.signUpForm.controls['status'].setValue("preRegister");
-      this.isLoadingOne = true;
-      this.authService.signUp(this.signUpForm.value).then(
-        (result) => {
-          this.isLoadingOne = false;
-        }).catch((error) => {
-          this.notification.create('error', 'Submit form error', error);
-        });
-    }
+  // Marcar todos los controles como "dirty" para activar validaciones visuales
+  for (const i in this.signUpForm.controls) {
+    this.signUpForm.controls[i].markAsDirty();
+    this.signUpForm.controls[i].updateValueAndValidity();
   }
+console.log("1");
+
+  if (this.signUpForm.valid) {
+    this.signUpForm.controls['status'].setValue("preRegister");
+    this.isLoadingOne = true;
+    this.authService.signUp(this.signUpForm.value).then(
+      (result) => {
+        this.isLoadingOne = false;
+        this.notification.create('success', 'Registro exitoso', 'El formulario fue enviado correctamente.');
+      }).catch((error) => {
+        this.isLoadingOne = false;
+        this.notification.create('error', 'Error al enviar', error.message || error);
+      });
+  } else {
+    console.log("2");
+    
+    // Encontrar los controles inválidos y armar un mensaje con ellos
+    const invalidFields = [];
+    for (const i in this.signUpForm.controls) {
+      if (this.signUpForm.controls[i].invalid) {
+        invalidFields.push(i);
+      }
+    }
+    this.notification.create(
+      'warning',
+      'Faltan campos de ingresar',
+      `Por favor revisa los siguientes campos: ${invalidFields.join(', ')}`
+    );
+  }
+}
+
 
   updateConfirmValidator(): void {
     Promise.resolve().then(() => this.signUpForm.controls['checkPassword'].updateValueAndValidity());

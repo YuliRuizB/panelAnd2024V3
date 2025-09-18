@@ -430,7 +430,7 @@
                       </nz-descriptions-item>
                       <nz-descriptions-item nzTitle="Valido desde">
                         {{ lastPurchase!.validFrom.toDate() | date: 'mediumDate' }}</nz-descriptions-item>
-                      <nz-descriptions-item nzTitle="Valido hasta">
+                      <nz-descriptions-item nzTitle="Valido hasta 1">
                         {{ !canUpdateValidTo ? (lastPurchase!.validTo.toDate() | date: 'mediumDate') : null }}
                         <nz-date-picker *ngIf="canUpdateValidTo" [(ngModel)]="lastPurchase!.due_date"
                           (ngModelChange)="onValidToUpdated($event)"></nz-date-picker>
@@ -622,7 +622,7 @@
             </nz-descriptions-item>
             <nz-descriptions-item nzTitle="Valido desde">
               {{ lastPurchase!.validFrom.toDate() | date: 'mediumDate' }}</nz-descriptions-item>
-            <nz-descriptions-item nzTitle="Valido hasta">
+            <nz-descriptions-item nzTitle="Valido hasta 2">
               {{ !canUpdateValidTo ? (lastPurchase!.validTo.toDate() | date: 'mediumDate') : null }}
               <nz-date-picker *ngIf="canUpdateValidTo" [(ngModel)]="lastPurchase!.due_date"
                 (ngModelChange)="onValidToUpdated($event)"></nz-date-picker>

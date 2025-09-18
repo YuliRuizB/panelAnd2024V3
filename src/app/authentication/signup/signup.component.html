@@ -13,45 +13,71 @@
             <h2 class="m-t-20">Registrarse</h2>
             <p class="m-b-30">Cree su cuenta para obtener acceso</p>
             <form nz-form [formGroup]="signUpForm" nzLayout="horizontal" class="login-form" (ngSubmit)="submitForm()">
+
               <nz-form-item>
                 <nz-form-label [nzSpan]="8" nzRequired nzFor="name">Nombre</nz-form-label>
                 <nz-form-control nzHasFeedback [nzSpan]="16">
                   <input type="text" nz-input formControlName="firstName" placeholder="Nombre" id="firstName">
                 </nz-form-control>
               </nz-form-item>
+
               <nz-form-item>
                 <nz-form-label [nzSpan]="8" nzRequired nzFor="lastName">Apellidos</nz-form-label>
                 <nz-form-control nzHasFeedback [nzSpan]="16">
                   <input type="text" nz-input formControlName="lastName" placeholder="Apellidos" id="lastName">
                 </nz-form-control>
               </nz-form-item>
+
               <nz-form-item>
                 <nz-form-label nzRequired [nzSpan]="8" nzFor="email">Correo</nz-form-label>
                 <nz-form-control nzHasFeedback [nzSpan]="16">
                   <input type="email" nz-input formControlName="email" placeholder="Correo Electrónico" id="email">
                 </nz-form-control>
               </nz-form-item>
-              <nz-form-item>
-                <nz-form-label nzRequired [nzSpan]="8" nzFor="password">
-                  <span>
-                    Contraseña
-                    <i nz-icon nz-tooltip
-                      nzTitle="La contraseña deberá contener al menos 8 caracteres y sólo acepta letras y números"
-                      type="question-circle" nzTheme="outline"></i>
-                  </span>
-                </nz-form-label>
-                <nz-form-control nzHasFeedback [nzSpan]="16">
-                  <input type="password" nz-input formControlName="password" placeholder="Contraseña" id="password">
 
+              <!-- Contraseña -->
+              <nz-form-item>
+                <nz-form-label nzFor="password" [nzSpan]="8" nzRequired>Contraseña</nz-form-label>
+                <nz-form-control nzHasFeedback [nzSpan]="16">
+                  <nz-input-group [nzSuffix]="passwordEye">
+                    <input [type]="passwordVisible ? 'text' : 'password'" nz-input formControlName="password"
+                      placeholder="Contraseña" id="password" />
+                  </nz-input-group>
+                  <ng-template #passwordEye>
+                    <i nz-icon [nzType]="passwordVisible ? 'eye-invisible' : 'eye'"
+                      (click)="passwordVisible = !passwordVisible">
+                    </i>
+                  </ng-template>
                 </nz-form-control>
               </nz-form-item>
+
+              <!-- Confirmar contraseña -->
               <nz-form-item>
                 <nz-form-label nzFor="checkPassword" [nzSpan]="8" nzRequired>Confirmar</nz-form-label>
-                <nz-form-control nzHasFeedback [nzSpan]="16">
-                  <input nz-input type="password" formControlName="checkPassword" placeholder="Confirmar contraseña"
-                    id="checkPassword">
+                <nz-form-control nzHasFeedback [nzSpan]="16" [nzErrorTip]="passwordErrorTpl">
+                  <nz-input-group [nzSuffix]="confirmEye">
+                    <input [type]="confirmVisible ? 'text' : 'password'" nz-input formControlName="checkPassword"
+                      placeholder="Confirmar contraseña" id="checkPassword" />
+                  </nz-input-group>
+                  <ng-template #confirmEye>
+                    <i nz-icon [nzType]="confirmVisible ? 'eye-invisible' : 'eye'"
+                      (click)="confirmVisible = !confirmVisible"></i>
+                  </ng-template>
+
+                  <ng-template #passwordErrorTpl let-control>
+                    <ng-container *ngIf="control.hasError('mismatch')">
+                      Las contraseñas no coinciden
+                    </ng-container>
+                    <ng-container *ngIf="control.hasError('required')">
+                      Confirma tu contraseña
+                    </ng-container>
+                  </ng-template>
                 </nz-form-control>
+
               </nz-form-item>
+
+
+              <!-- Teléfono -->
               <nz-form-item>
                 <nz-form-label [nzSpan]="8" nzFor="phoneNumber">
                   <span>
@@ -64,26 +90,8 @@
                     name="phoneNumber" minlength="10" maxlength="10" />
                 </nz-form-control>
               </nz-form-item>
-              <!--    <nz-form-item>
-                    <nz-form-label [nzSpan]="8" nzFor="studentId" nzRequired>
-                      <span>
-                        Identificación
-                      </span>
-                    </nz-form-label>
-                   <nz-form-control nzHasFeedback [nzSpan]="16" [nzErrorTip]="combineTplStudentId">
-                      <input nz-input formControlName="studentId" placeholder="1234567" id="studentId"
-                        name="studentId" minlength="7" maxlength="7" required />
-                      <ng-template #combineTplStudentId let-control>
-                        <ng-container *ngIf="control.hasError('maxlength')">
-                          Número de Identificación es de 7 dígitos
-                        </ng-container>
-                        <ng-container *ngIf="control.hasError('minlength')">al menos son 7 dígitos
-                        </ng-container>
-                        <ng-container *ngIf="control.hasError('required')">Este dato es obligatorio
-                        </ng-container>
-                      </ng-template>
-                    </nz-form-control> 
-                  </nz-form-item>-->
+
+              <!-- Empresa -->
               <nz-form-item>
                 <nz-form-label [nzSpan]="8">Empresa</nz-form-label>
                 <nz-form-control [nzSm]="14" [nzXs]="24">
@@ -95,24 +103,8 @@
                   </nz-select>
                 </nz-form-control>
               </nz-form-item>
-              <!--   <nz-form-item>
-                    <nz-form-label  [nzSpan]="8" >Operación</nz-form-label>
-                    <nz-form-control [nzSm]="14" [nzXs]="24">
-                      <nz-select formControlName="defaultRoute" nzAllowClear nzPlaceHolder="Selecciona la Operación"
-                      (ngModelChange)="onRouteEditUserSelected($event, userRoutes)">
-                        <nz-option *ngFor="let o of userRoutes" nzCustomContent [nzLabel]="o.name" [nzValue]="o.routeId"><i
-                            nz-icon></i> {{ o.name }}</nz-option>
-                      </nz-select>
-                    </nz-form-control>
-                  </nz-form-item>
-                  <nz-form-item>
-                    <nz-form-label   [nzSpan]="8">Turno</nz-form-label>
-                    <nz-select style="width: 240px;" formControlName="defaultRound" nzAllowClear nzPlaceHolder="Selecciona Turno">
-                      <nz-option nzValue="Día" nzLabel="Día"></nz-option>
-                      <nz-option nzValue="Tarde" nzLabel="Tarde"></nz-option>
-                      <nz-option nzValue="Noche" nzLabel="Noche"></nz-option>
-                    </nz-select>
-                  </nz-form-item> -->
+
+              <!-- Aceptar términos -->
               <div class="d-flex align-items-center justify-content-between">
                 <nz-form-item>
                   <nz-form-control [nzErrorTip]="agreeErrorTpl">
@@ -120,13 +112,14 @@
                       <span>He leído y acepto los <a (click)="showModalTerms()">términos</a></span>
                     </label>
                   </nz-form-control>
-
                   <ng-template #agreeErrorTpl let-control>
                     <ng-container *ngIf="control.hasError('required') || control.hasError('requiredTrue')">
                       Debes aceptar los términos para continuar.
                     </ng-container>
                   </ng-template>
                 </nz-form-item>
+
+                <!-- Botón -->
                 <nz-form-item>
                   <nz-form-control>
                     <div>

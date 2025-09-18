@@ -229,7 +229,7 @@ export class ProgramService {
 
   }
    updateLive(programId: string, customerId: any) {
-      const programRef = this.afs.collection('customers').doc(customerId).collection('program').doc(programId);
+      const programRef = this.afs.collection('customers').doc(customerId).collection('live').doc(programId);
     return programRef.update({
      isLive:false
     })

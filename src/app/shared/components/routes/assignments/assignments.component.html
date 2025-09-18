@@ -9,7 +9,6 @@
 <nz-table *ngIf="routesList.length > 0" #programsListTable [nzData]="programsList" [nzLoading]="loading" nzShowSizeChanger [(nzPageSize)]="pageSize">
   <thead>
     <tr>
-      <th >Asignado A</th>
       <th >Operación</th>
       <th >Tarea</th>
       <th >Días</th>
@@ -24,7 +23,6 @@
   </thead>
   <tbody>
     <tr *ngFor="let data of programsListTable.data">
-      <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'">{{ data.vendorName }}</td>
       <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'">{{ getRouteName(data.routeId) }}</td>
       <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'"><nz-tag [nzColor]="data.program == 'M' ? 'green' : 'red'">{{ data.program == 'M' ? 'Mete' : 'Saca' }}</nz-tag>
       </td>
@@ -44,9 +42,11 @@
         <i *ngIf="data.acRequired" nz-icon nzType="deployment-unit"></i>
         <span>{{ data.acRequired ? '':'No' }}</span>
       </nz-tag></td>
-      <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'"><nz-tag nzColor="green">{{ data.stopBeginHour}}</nz-tag> {{ data.stopBeginName }}</td>
-      <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'"><nz-tag nzColor="orange">{{ data.stopEndHour}}</nz-tag> {{ data.stopEndName }}</td>
-      <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'">{{ data.type }}</td>
+      <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'">
+        <nz-tag nzColor="green">{{ data.stopBeginHour}}</nz-tag> </td>
+      <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'">
+        <nz-tag nzColor="orange">{{ data.stopEndHour}}</nz-tag> </td>
+     
       <td [class]="data.active ? 'text-dark' : 'text-muted font-italic'">
         <a nz-dropdown [nzDropdownMenu]="menu" nzPlacement="bottomRight">
           <i nz-icon nzType="ellipsis" nzTooltipTitle="Más información" nzTooltipPlacement="topLeft" nz-tooltip></i>

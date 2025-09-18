@@ -415,7 +415,7 @@ export class LogisticsComponent implements OnInit {
       },
       { headerName: 'Alumno', field: 'studentName', filter: true, floatingFilter: true },
       { headerName: 'Identificación', field: 'studentId', filter: true, floatingFilter: true },
-      { headerName: 'Ingreso con', field: 'studentId', floatingFilter: true, enableValue: true, filter: true, allowedAggFuncs: ['count'] },
+      { headerName: 'Ingreso con', field: 'studentId', floatingFilter: true, enableValue: true, filter: true },
       { headerName: 'Evento', field: 'event', filter: true, floatingFilter: true },
       { headerName: 'Tipo', field: 'type', filter: true, floatingFilter: true },
       { headerName: 'Descripción', field: 'description', filter: true, floatingFilter: true },
@@ -1018,6 +1018,7 @@ export class LogisticsComponent implements OnInit {
   }
 
   loadData() {
+
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual
       this.logisticsService.getActivityLogByCustomer(this.startDate, this.endDate, this.user.customerId).pipe(
         map((actions: any) => {
@@ -1028,6 +1029,8 @@ export class LogisticsComponent implements OnInit {
           });
         })
       ).subscribe((result: IActivityLog[]) => {
+       
+        
         this.rowData = result;
 
         this.activityList = this.rowData.slice(0, 5);
@@ -1051,6 +1054,7 @@ export class LogisticsComponent implements OnInit {
           });
         })
       ).subscribe((result: IActivityLog[]) => {
+         console.log(result);
         this.rowData = result;
         this.activityList = this.rowData.slice(0, 5);
         this.chartData = _.map(this.rowData, (x: any) => { // Correct usage of _.map()

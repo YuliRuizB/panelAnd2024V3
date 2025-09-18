@@ -27,6 +27,8 @@ export class SignupComponent implements OnInit {
   customers$: Observable<any[]> | undefined;
   accountId$ = new Subject<string>();
   customerSuscription: Subscription | undefined;
+  passwordVisible: boolean = false;
+  confirmVisible: boolean = false;
 
 
   constructor(
@@ -45,11 +47,10 @@ export class SignupComponent implements OnInit {
     this.signUpForm = this.fb.group({
       email: [null, [Validators.email, Validators.required]],
       password: [null, [Validators.required, Validators.minLength(8), Validators.pattern('^[A-Za-z0-9 ]+$')]],
-      checkPassword: [null, [Validators.required, Validators.minLength(8), Validators.pattern('^[A-Za-z0-9 ]+$')]],
+      checkPassword: [null, [Validators.required]],
       firstName: [null, [Validators.required, Validators.minLength(5), Validators.maxLength(50)]],
       lastName: [null, [Validators.required, Validators.minLength(5), Validators.maxLength(60)]],
       userName: [''],
-      // phoneNumber: [null, [Validators.required, Validators.minLength(10), Validators.maxLength(10), Validators.pattern('[0-9]+')]],
       phoneNumber: [''],
       defaultRoute: [''],
       defaultRouteName: [''],
@@ -67,14 +68,10 @@ export class SignupComponent implements OnInit {
       dateCreateUserFormat: [''],
       dateCreateUserFull: [''],
       status: ['active'],
-      /*  studentId: [null, [Validators.required,
-        Validators.minLength(7),
-        Validators.maxLength(7),
-        Validators.pattern('[0-9]+')]], */
-       agree: [null, [Validators.requiredTrue]],
+      agree: [null, [Validators.requiredTrue]],
       roundTrip: [],
       turno: [],
-      rolId: ['54YNS3xlSLPc6UzNq2HJ'], //rol mas sencillo de ver
+      rolId: ['54YNS3xlSLPc6UzNq2HJ'],
       photoURL: [''],
       deviceInfo: this.fb.group({
         lastDataConnectWithHour: [''],
@@ -99,7 +96,10 @@ export class SignupComponent implements OnInit {
           idDoc: ['']
         })
       })
+    }, {
+      validator: this.passwordMatchValidator.bind(this) 
     });
+
 
     this.customers$ = this.cCollection.snapshotChanges().pipe(
       map((actions: any[]) => actions.map(a => {
@@ -171,5 +171,20 @@ export class SignupComponent implements OnInit {
       this.customerSuscription.unsubscribe();
     }
   }
+
+ passwordMatchValidator(form: UntypedFormGroup) {
+  const password = form.get('password')?.value;
+  const checkPassword = form.get('checkPassword');
+
+  if (password && checkPassword && password !== checkPassword.value) {
+    checkPassword.setErrors({ mismatch: true });
+  } else {
+    if (checkPassword?.hasError('mismatch')) {
+      checkPassword.setErrors(null);
+    }
+  }
+  return null;
+}
+
 
 }

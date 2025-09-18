@@ -204,6 +204,40 @@ export class CustomersService {
       });
   }
 
+  updatePurchase(uid: string, purchaseId: string, routeId: string, routeName: String,
+    stopId: string, stopName:string, stopDescription:string, round: string, validFrom: Date, validTo: Date) {
+
+    if (!validFrom || !validTo) {
+        this.sendMessage('error','Fechas invalidas');
+      return;
+    }
+
+    const newValidTo = Timestamp.fromDate(validTo); // convierte JS Date a Firestore Timestamp
+    const newvalidFrom = Timestamp.fromDate(validFrom);
+    const updateData = {
+      validTo: newValidTo,
+      validFrom: newvalidFrom,
+      routeId,
+      round,
+      stopId,    
+      stopDescription,
+      routeName
+    };
+    console.log(updateData);
+    
+
+    const userDoc = this.usersCollection.doc(uid);
+    const purchaseDoc = userDoc.collection('boardingPasses').doc(purchaseId);
+    
+    purchaseDoc.update(updateData)
+      .then(() => {
+         this.sendMessage('sucess','Campos actualizados correctamente');
+      })
+      .catch(err => {
+        this.sendMessage('error', err);
+      });
+  }
+
   deletePurchase(uid: string, purchaseId: string) {
     this.user = this.usersCollection.doc(uid);
     this.purchase = this.user.collection('boardingPasses').doc(purchaseId);
@@ -304,10 +338,10 @@ export class CustomersService {
   }
 
   getUserTransferInfo(userId: string) {
-    
+
     const getpre = this.afs.collection('users')
       .doc(userId)
-      .collection('transfers', ref => 
+      .collection('transfers', ref =>
         ref.orderBy('dateTime', 'desc')
       );
     return getpre.valueChanges({ idField: 'uid' });

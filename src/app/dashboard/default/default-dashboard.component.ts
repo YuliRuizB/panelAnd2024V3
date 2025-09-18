@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import * as _ from 'lodash';
 import { Firestore } from 'firebase/firestore';
 import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
@@ -83,10 +83,11 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   isDone: boolean = false;
   isCreatingBoardingPasses: boolean = false;
   isCreatingCredentials: boolean = false;
+  isModalEditVisible: boolean = false;
   sendUser: any;
   idBoardingPass!: string;
   isCollapsed = true;
-  dataTransfer: any[] = [] ;
+  dataTransfer: any[] = [];
   listOfSelection = [
     {
       text: 'Seleccionar todas las páginas',
@@ -138,11 +139,11 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     status: string; id: string;
     token: any; defaultRoute: any;
     displayName: any; photoURL: any;
-    userName: any; customerName: any;
+    username: any; customerName: any;
     defaultRound: any; defaultRouteName: any;
     defaultStopName: any; defaultStopId: any;
     turno: string; roundTrip: string;
-    curp:string; age:string; group:string; adress:string;
+    curp: string; age: string; group: string; adress: string;
   };
   currentSelectedCustomerId: string | undefined;
   loadingLastPurchase = false;
@@ -156,14 +157,14 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   latestBoardingPasses: any;
   loadingLatestBoardingPasses: boolean | undefined;
   latestUserPurchasesCollection: AngularFirestoreCollection<any> | undefined;
-  latestPurchases: null | undefined;
+  latestPurchases: any[] = [];
   latestPurRequest: null | undefined;
   lastestPurchaseDetail: any;
   userCredentials: null | undefined;
   loadingUserCredentials = false;
   loadingLatestPurchases = false;
   loadinglatestPurRequest = false;
-  loadinglatestTransfer= false;
+  loadinglatestTransfer = false;
   isVisible = false;
   isProductVisible = false;
   isEditUserVisible = false;
@@ -171,6 +172,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   isConfirmLoading = false;
   productSelectedValue: string = "";
   validateForm!: UntypedFormGroup;
+  editPayment!: UntypedFormGroup;
   credentialForm!: UntypedFormGroup;
   validateEditForm!: UntypedFormGroup;
   validateLiqForm!: UntypedFormGroup;
@@ -256,13 +258,13 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     private fb: UntypedFormBuilder,
     private aff: AngularFireFunctions,
     private bucketStorage: AngularFireStorage,
-    private msg: NzMessageService
+    private msg: NzMessageService, private cdr: ChangeDetectorRef
   ) {
 
-    this.authService.user.subscribe(user => {    
+    this.authService.user.subscribe(user => {
       if (user) {
         this.user = user;
-        
+
         this.userCustomerId = this.user.customerId;
         this.accountsService.getSegmentLevel(this.user.idSegment).pipe(
           map((a: any) => {
@@ -415,7 +417,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       firstName: [''],
       lastName: [''],
       displayName: [''],
-      userName: ['', [Validators.required]],
+      username: ['', [Validators.required]],
       studenId: ['', [Validators.required]],
       email: ['', [Validators.required]],
       customerName: ['', [Validators.required]],
@@ -427,6 +429,64 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       phoneNumber: [''],
       defaultStopId: [''],
       defaultStopName: ['']
+    });
+
+    this.editPayment = this.fb.group({
+      id: [''],
+      active: [true],
+      amount: [0],
+      authorization: [''],
+      category: [''],
+      conciliated: [false],
+      creation_date: [new Date().toISOString()],
+      currency: ['MXN'],
+      customer_id: [''],
+      customerId: [''],
+      date_created: [new Date()],
+      due_date: [new Date()],
+      description: [''],
+      error_message: [''],
+      fee: this.fb.group({
+        amount: [0],
+        currency: ['MXN'],
+        tax: [0]
+      }),
+      is_courtesy: [false],
+      method: ['cash'],
+      name: [''],
+      operation_date: [new Date().toISOString()],
+      operation_type: ['in'],
+      order_id: [''],
+      payment_method: this.fb.group({
+        barcode_url: [''],
+        reference: [''],
+        type: ['cash']
+      }),
+      price: [0],
+      product_description: [''],
+      product_id: [''],
+      round: [''],
+      routeId: [''],
+      routeName: [''],
+      status: ['completed'],
+      stopDescription: [''],
+      stopId: [''],
+      stopName: [''],
+      transaction_type: ['charge'],
+      validFrom: [new Date()],
+      validTo: [new Date(),],
+      isTaskIn: [false],
+      isTaskOut: [false],
+      isOpenpay: [false],
+      paidApp: ['web'],
+      realValidTo: [],
+      payment: [''],
+      amountPayment: [0],
+      typePayment: [''],
+      promiseDate: [new Date()],
+      baja: [''],
+      fileURL: [''],
+      frequencies: ['']
     });
 
     this.validateLiqForm = this.fb.group({
@@ -631,6 +691,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   searchloadUsers() {
     this.getUsersList();
   }
+
   getUsersList() {
 
     if (!this.selectedOption) {
@@ -639,27 +700,27 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     }
 
 
-    this.isLoadingUsers = true;   
+    this.isLoadingUsers = true;
     this.afs
-  .collection('users', (ref) =>
-    ref.where('customerId', '==', this.selectedOption)
-  )
-  .get()
-  .subscribe({
-    next: (snapshot) => {
-      const users: any[] = [];
-      snapshot.forEach((doc) => {
-        users.push(doc.data());
+      .collection('users', (ref) =>
+        ref.where('customerId', '==', this.selectedOption)
+      )
+      .get()
+      .subscribe({
+        next: (snapshot) => {
+          const users: any[] = [];
+          snapshot.forEach((doc) => {
+            users.push(doc.data());
+          });
+          this.loadUsers(users);
+          this.isCollapsed = false;
+          this.isLoadingUsers = false;
+        },
+        error: (error: any) => {
+          console.error('Error al obtener usuarios:', error);
+          this.isLoadingUsers = false;
+        },
       });
-      this.loadUsers(users);
-      this.isCollapsed = false;
-      this.isLoadingUsers = false;
-    },
-    error: (error: any) => {
-      console.error('Error al obtener usuarios:', error);
-      this.isLoadingUsers = false;
-    },
-  });
   }
 
   setUserDisabled(disabled: boolean) {
@@ -694,8 +755,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     uid: string; studentId: string; paymentId: string; disabled: any; customerId: string; firstName: any; photoURL: any;
     lastName: any; email: any; phoneNumber: any; status: string; id: string; token: any; defaultRoute: any; emailVerified: any;
     turno: string; roundTrip: string;
-    displayName: any; userName: any; customerName: any; defaultRound: any; defaultRouteName: any; defaultStopName: any; defaultStopId: any;
-    curp:any; age:any; group:any; adress:any
+    displayName: any; username: any; customerName: any; defaultRound: any; defaultRouteName: any; defaultStopName: any; defaultStopId: any;
+    curp: any; age: any; group: any; adress: any
   }) {
     this.currentUserSelected = data;
     this.currentSelectedCustomerId = this.currentUserSelected.customerId;
@@ -1050,6 +1111,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       this.sendMessage('error', 'currentUserSelected or uid is null or undefined');
     }
   }
+
   getLatestPurchases(userId: string) {
     this.loadingLatestPurchases = true;
     this.customersService.getLatestUserPurchases(userId, 10).pipe(
@@ -1065,7 +1127,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           this.loadingLatestPurchases = false;
         },
         error: (err) => {
-          this.latestPurchases = null;
+          this.latestPurchases = [];
           this.loadingLatestPurchases = false;
         }
       });
@@ -1101,8 +1163,8 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       }))
     )
       .subscribe({
-        next: (lastestPurchaseDetail) => {       
-          
+        next: (lastestPurchaseDetail) => {
+
           this.lastestPurchaseDetail = lastestPurchaseDetail;
         },
         error: (err) => {
@@ -1168,7 +1230,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
 
   showModalEditUser(currentUserSelected: {
-    firstName: any; lastName: any; displayName: any; userName: any;
+    firstName: any; lastName: any; displayName: any; username: any;
     studentId: any; email: any; customerId: any; customerName: any; phoneNumber: any; defaultRound: any;
     defaultRoute: any; defaultRouteName: any; defaultStopId: any; defaultStopName: any;
   }) {
@@ -1177,7 +1239,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.validateEditForm.controls['firstName'].setValue(currentUserSelected.firstName);
     this.validateEditForm.controls['lastName'].setValue(currentUserSelected.lastName);
     this.validateEditForm.controls['displayName'].setValue(currentUserSelected.displayName);
-    this.validateEditForm.controls['userName'].setValue(currentUserSelected.userName);
+    this.validateEditForm.controls['username'].setValue(currentUserSelected.username);
     this.validateEditForm.controls['studenId'].setValue(currentUserSelected.studentId);
     this.validateEditForm.controls['email'].setValue(currentUserSelected.email);
     this.validateEditForm.controls['customerId'].setValue(currentUserSelected.customerId);
@@ -1284,6 +1346,18 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     const record = recordArray[0];
     this.validateForm.controls['routeName'].setValue(record.name);
 
+
+    const recordb = routes.find((rb: any) => rb.routeId === event);
+    if (!recordb) return;
+
+    // Solo actualizar el formulario si el modal está visible
+    if (this.isModalEditVisible) {
+
+      // Usar { emitEvent: false } para que no dispare valueChanges ni ngModelChange otra vez
+      // this.editPayment.controls['routeId'].setValue(record.routeId, { emitEvent: false });
+      this.editPayment.controls['routeName'].setValue(recordb.name, { emitEvent: false });
+    }
+
   }
 
   onStopPointEditUserSelected(event: string, stopPointsList: any) {
@@ -1306,6 +1380,13 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     const record = recordArray[0];
     this.validateForm.controls['stopName'].setValue(record.name);
     this.validateForm.controls['stopDescription'].setValue(record.description);
+
+    if (this.isModalEditVisible) {
+
+      //  this.editPayment.controls['stopId'].setValue(record.stopId);
+      //this.editPayment.controls['stopName'].setValue(record.stopName);
+      this.editPayment.controls['stopDescription'].setValue(record.description);
+    }
   }
 
   onCustomerSelected(event: any, customers: any) {
@@ -1333,11 +1414,138 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   }
 
   onCanUpdateValidTo() {
-    this.canUpdateValidTo = true;
+    setTimeout(() => {
+      this.canUpdateValidTo = true;
+    }, 0);
+    this.cdr.detectChanges();
   }
-  onValidToUpdated(event: any) {
-    this.canUpdateValidTo = false;
+
+  editPurchase(data: any) {
+    const asDate = (v: any): Date | null => {
+      if (!v) return null;
+      if (v instanceof Date) return v;
+      if (typeof v.toDate === 'function') return v.toDate(); // Firestore Timestamp
+      if (typeof v.seconds === 'number') {
+        return new Date(v.seconds * 1000 + (v.nanoseconds || 0) / 1e6);
+      }
+      return null;
+    };
+    const dateTo = asDate(data.validTo);
+    const dateFrom = asDate(data.validFrom)
+
+    this.isModalEditVisible = true;
+    this.editPayment.patchValue({
+      id: data.id,
+      active: data.active,
+      amount: data.amount,
+      authorization: data.authorization,
+      category: data.category,
+      conciliated: data.conciliated,
+      creation_date: data.creation_date,
+      currency: data.currency,
+      customer_id: data.customer_id,
+      customerId: data.customerId,
+      date_created: data.date_created,
+      due_date: data.due_date,
+      description: data.description,
+      error_message: data.error_message,
+      fee: {
+        amount: data.fee?.amount,
+        currency: data.fee?.currency,
+        tax: data.fee?.tax
+      },
+      is_courtesy: data.is_courtesy,
+      method: data.method,
+      name: data.name,
+      operation_date: data.operation_date,
+      operation_type: data.operation_type,
+      order_id: data.order_id,
+      payment_method: {
+        barcode_url: data.payment_method?.barcode_url,
+        reference: data.payment_method?.reference,
+        type: data.payment_method?.type
+      },
+      price: data.price,
+      product_description: data.product_description,
+      product_id: data.product_id,
+      round: data.round,
+      routeId: data.routeId,
+      routeName: data.routeName,
+      status: data.status,
+      stopDescription: data.stopDescription,
+      stopId: data.stopId,
+      stopName: data.stopName,
+      transaction_type: data.transaction_type,
+      validFrom: dateFrom,
+      validTo: dateTo,
+      isTaskIn: data.isTaskIn,
+      isTaskOut: data.isTaskOut,
+      isOpenpay: data.isOpenpay,
+      paidApp: data.paidApp,
+      realValidTo: data.realValidTo,
+      payment: data.typePayment,
+      amountPayment: data.amount,
+      typePayment: data.typePayment,
+      promiseDate: data.promiseDate,
+      baja: data.baja,
+      fileURL: data.fileURL,
+      frequencies: data.frequencies
+    });
   }
+
+  saveUpdateBoardingPass() {
+    const routeId = this.editPayment.controls['routeId'].value;
+    const id = this.editPayment.controls['id'].value;
+    const stopId = this.editPayment.controls['stopId'].value;
+    const stopName = this.editPayment.controls['stopName'].value;
+    const stopDescription = this.editPayment.controls['stopDescription'].value;
+    const round = this.editPayment.controls['round'].value;
+    const routeName = this.editPayment.controls['routeName'].value;
+    const validFrom = this.editPayment.controls['validFrom'].value;
+    const validTo = this.editPayment.controls['validTo'].value;
+    
+    if (id) {
+      this.customersService.updatePurchase(
+        this.currentUserSelected.uid,
+        id,
+        routeId,
+        routeName,
+        stopId,
+        stopName,
+        stopDescription,
+        round,
+        validFrom,
+        validTo
+      );
+    }
+    if (this.latestPurchases) {
+      const index = this.latestPurchases.findIndex(p => p.id === id);
+      if (index !== -1) {     
+
+        // Solo actualizamos si hay cambios reales
+        const purchase = this.latestPurchases[index];
+     
+
+        if (purchase.routeId !== routeId ||   purchase.stopDescription !== stopDescription ||
+           purchase.stopId !== stopId || purchase.round !== round ||
+          purchase.validFrom !== validFrom ||
+           purchase.validTo !== validTo) {
+          this.latestPurchases[index] = {
+            ...purchase,
+            routeId,
+            stopId,
+            round,
+            stopDescription,
+            validFrom,
+            validTo
+          };
+        }
+      }
+    }
+    this.isModalEditVisible = false;
+
+  }
+
   handleOk(): void {
     this.isConfirmLoading = true;
     setTimeout(() => {
@@ -1354,6 +1562,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     this.isEditUserVisible = false;
     this.isVisiblePurchasePay = false;
     this.canUpdatePayment = false;
+    this.isModalEditVisible = false;
   }
 
   handleCancelProduct(): void {
@@ -1430,16 +1639,16 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
             token: '',
             defaultRoute: '',
             displayName: '',
-            userName: '',
+            username: '',
             customerName: '',
             defaultRound: '',
             defaultRouteName: '',
             defaultStopName: '',
             defaultStopId: '',
             curp: '',
-            age:'',
-            group:'',
-            adress:''
+            age: '',
+            group: '',
+            adress: ''
           };
           this.isUserSelected = false;
         },
@@ -1450,6 +1659,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
     }
 
   }
+
   getCustomersList() {
     if (this.infoSegment.nivelNum !== undefined && this.infoSegment.nivelNum == 1) { //Individual    
       const customersCollection = this.afs.collection('customers').doc(this.userCustomerId);
@@ -1491,6 +1701,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       ).subscribe();
     }
   }
+
   currentPageDataChange($event: any): void {
     this.listOfDisplayData = $event;
     this.refreshStatus();
@@ -1711,6 +1922,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   submitReceipt() {
     // this.customersService.createPurchaseCloud(this.sendUser,this.currentUserSelected,this.idBoardingPass);
   }
+
   async createPurchaseRequest(userID: string, purchaseDetail: any) {
     const newId = this.afs.createId();
     const user = this.afs.collection('users').doc(userID).collection("purchaseRequests").doc(newId).set(purchaseDetail)
@@ -1799,7 +2011,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       const lastName = this.validateEditForm.controls['lastName'].value == undefined ? "" : this.validateEditForm.controls['lastName'].value;
       const phoneNumber = this.validateEditForm.controls['phoneNumber'].value == undefined ? "" : this.validateEditForm.controls['phoneNumber'].value;
       const studentId = this.validateEditForm.controls['studenId'].value == undefined ? "" : this.validateEditForm.controls['studenId'].value;
-      const userName = this.validateEditForm.controls['userName'].value == undefined ? "" : this.validateEditForm.controls['userName'].value;
+      const username = this.validateEditForm.controls['username'].value == undefined ? "" : this.validateEditForm.controls['username'].value;
       const defaultStopId = this.validateEditForm.controls['defaultStopId'].value == undefined ? "" : this.validateEditForm.controls['defaultStopId'].value;
       const defaultStopName = this.validateEditForm.controls['defaultStopName'].value == undefined ? "" : this.validateEditForm.controls['defaultStopName'].value;
       const uid = this.currentUserSelected.uid;
@@ -1808,7 +2020,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         this.msg.error("Al cambiar de  Empresa es necesario asignar una operación y estación acorde a la empresa.");
         validForm = false;
       }
-      if (userName == "") {
+      if (username == "") {
         this.msg.error("El Usuario es un valor requerido, favor de validar.");
         validForm = false;
       }
@@ -1841,7 +2053,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
         lastName: lastName,
         phoneNumber: phoneNumber,
         studentId: studentId,
-        userName: userName,
+        username: username,
         defaultStopId: defaultStopId,
         defaultStopName: defaultStopName
       };
@@ -1852,7 +2064,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
           this.currentUserSelected.firstName = firstName;
           this.currentUserSelected.lastName = lastName;
           this.currentUserSelected.displayName = displayName;
-          this.currentUserSelected.userName = userName;
+          this.currentUserSelected.username = username;
           this.currentUserSelected.studentId = studentId;
           this.currentUserSelected.email = email;
           this.currentUserSelected.customerId = customerId;
@@ -1931,16 +2143,17 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       this.getLatestPurchaseDetail(this.currentUserSelected.uid, this.productsReference.id);
     }
   }
+
   nzClicTransfer() {
-    
-    this.loadinglatestTransfer = true;  
-    
-    this.customersService.getUserTransferInfo(this.currentUserSelected.uid).subscribe((data) => {       
+
+    this.loadinglatestTransfer = true;
+
+    this.customersService.getUserTransferInfo(this.currentUserSelected.uid).subscribe((data) => {
       this.dataTransfer = data.length ? data : [];
-      this.loadinglatestTransfer = false;  
+      this.loadinglatestTransfer = false;
     }, (error) => {
       console.error("Error al obtener transferencias", error);
-      this.dataTransfer = []; 
+      this.dataTransfer = [];
       this.loadinglatestTransfer = false;
     });
   }
@@ -1952,7 +2165,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
   private getBase64(file: File, callback: (img: string) => void): void {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => callback(reader.result as string);    
+    reader.onload = () => callback(reader.result as string);
   }
 
   handleChange2(event: NzUploadChangeParam): void {
@@ -2084,6 +2297,7 @@ export class DefaultDashboardComponent implements OnInit, OnDestroy {
       this.sendMessage('error', e);
     }
   }
+
   generatePurchasePDF(data: any) {
     this.reciboPago.push({
       amount: data.amount,
